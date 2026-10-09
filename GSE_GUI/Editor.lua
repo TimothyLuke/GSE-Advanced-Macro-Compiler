@@ -8647,9 +8647,13 @@ function GSE.ShowKeyBindings()
         treeStatus.groups["KEYBINDINGS\001AO"] = true
         treeStatus.groups["KEYBINDINGS\001KB"] = true
     end
-    editor.treeContainer:SelectByValue("KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()
+    -- Select on the next frame, once the window is shown and laid out. The
+    -- binding panels size and pin their rows from the container's real size;
+    -- drawn into a just-created, still-hidden editor (the reopen after a
+    -- /reload) they wrapped and stacked until the page was clicked again.
+    C_Timer.After(0, function() editor.treeContainer:SelectByValue("KEYBINDINGS") end)
 end
 
 function GSE.ShowVariables()

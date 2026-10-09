@@ -2287,7 +2287,14 @@ local function ManageTree(editframe)
                         seOpts.lastArea    = area
                         seOpts.lastKey     = key
                         seOpts.lastClassId = classid
+                        -- Reopen through ShowSequences, which restores this node
+                        -- (RestoreLastNode). openMode otherwise stays whatever
+                        -- first opened the editor, so a reload went back there.
+                        seOpts.openMode    = "sequences"
                     end
+                elseif area == "KEYBINDINGS" then
+                    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
+                    if seOpts then seOpts.openMode = "keybindings" end
                 end
 
                 -- Left-click dispatch table
