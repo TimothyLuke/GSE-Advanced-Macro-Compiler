@@ -335,7 +335,152 @@ local function getCurrentGSEAction(seq)
     return executionseq[step]
 end
 
+-- "Successful Casts Only" (Options > Action Bar Overrides, on by default): while a
+-- sequence runs, its override buttons show the spell that last went off from a
+-- press of them, not the next step's. A press arms it; the first successful
+-- player cast inside the tracker's SuccessCastWindow claims it -- the tracker's
+-- own rule, so a cast from a key that has nothing to do with GSE is ignored.
+local lastCastIcon = {}
+local pendingLastCast
+local lastCastHooked = setmetatable({}, {__mode = "k"})
+local function showLastCast()
+    return GSEOptions and GSEOptions.actionBarShowLastCast ~= false
+end
+local function noteOverridePress(button)
+    -- The sequence's own button (named by its id), or a bar button carrying it.
+    local name = button.GetName and button:GetName()
+    local seq = (button.GetAttribute and button:GetAttribute("gse-button"))
+        or (name and GSE.SequencesExec and GSE.SequencesExec[name] and name)
+    if seq then pendingLastCast = {sequence = seq, time = GetTime()} end
+end
+-- A held key on an override button arrives as repeated presses whose down and
+-- up land in the same frame, so the button is PUSHED and NORMAL again before
+-- anything is drawn and the press-down never shows (a normal spell button
+-- stays pushed while held). Keep the pushed art up briefly after such a press.
+-- Visual only, so it works in combat.
+local PRESS_FLASH_SECONDS = 0.1
+local pressFlashHooked = setmetatable({}, {__mode = "k"})
+local function hookPressFlash(button)
+    if not (button and button.GetPushedTexture and not pressFlashHooked[button]) then return end
+    pressFlashHooked[button] = true
+    local pushedAt
+    hooksecurefunc(button, "SetButtonState", function(self, state)
+        if not self:GetAttribute("gse-button") then return end
+        if state == "PUSHED" then
+            pushedAt = GetTime()
+        elseif state == "NORMAL" and pushedAt and GetTime() - pushedAt < 0.02 then
+            local pushed = self:GetPushedTexture()
+            if pushed then
+                pushed:Show()
+                C_Timer.After(PRESS_FLASH_SECONDS, function()
+                    if self:GetButtonState() == "NORMAL" then pushed:Hide() end
+                end)
+            end
+        end
+    end)
+end
+-- Once per sequence button.
+local function hookLastCastPress(button)
+    if button and button.HookScript and not lastCastHooked[button] then
+        lastCastHooked[button] = true
+        button:HookScript("PostClick", noteOverridePress)
+    end
+end
+do
+    -- Spells lit up by a proc (Blizzard's SPELL_ACTIVATION_OVERLAY_GLOW), by
+    -- spell ID; the glow can drop just before the cast reports success, so a
+    -- spell whose glow ended a moment ago still counts as proc'd.
+    local procLit, procEndedAt = {}, {}
+    local PROC_GRACE_SECONDS = 0.5
+    local function wasProcced(spellID)
+        local base = FindBaseSpellByID and FindBaseSpellByID(spellID)
+        for _, id in ipairs({spellID, base}) do
+            if procLit[id] or (procEndedAt[id] and GetTime() - procEndedAt[id] < PROC_GRACE_SECONDS) then
+                return true
+            end
+        end
+        return false
+    end
+    -- A proc'd spell going off from a sequence plays Blizzard's proc burst on
+    -- that sequence's override buttons: its spell alert, shown and taken down
+    -- once the burst has played (a GSE slot has no action, so Blizzard never
+    -- shows one there itself).
+    local PROC_FLASH_SECONDS = 0.75
+    local function flashProc(sequenceId)
+        local alerts = _G.ActionButtonSpellAlertManager
+        for buttonName, seq in pairs(GSE.ButtonOverrides or {}) do
+            local button = seq == sequenceId and _G[buttonName]
+            if button then
+                if alerts and alerts.ShowAlert then
+                    pcall(alerts.ShowAlert, alerts, button)
+                    C_Timer.After(PROC_FLASH_SECONDS, function() pcall(alerts.HideAlert, alerts, button) end)
+                elseif _G.ActionButton_ShowOverlayGlow then
+                    pcall(_G.ActionButton_ShowOverlayGlow, button)
+                    C_Timer.After(PROC_FLASH_SECONDS, function() pcall(_G.ActionButton_HideOverlayGlow, button) end)
+                end
+            end
+        end
+    end
+
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE")
+    watcher:SetScript("OnEvent", function(_, event, ...)
+        if event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" then
+            local spellID = ...
+            if spellID then procLit[spellID] = true end
+            return
+        elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" then
+            local spellID = ...
+            if spellID then
+                procLit[spellID] = nil
+                procEndedAt[spellID] = GetTime()
+            end
+            return
+        end
+        local _, _, spellID = ...
+        local pending = pendingLastCast
+        if not pending then return end
+        pendingLastCast = nil
+        if GetTime() - pending.time > Statics.TrackerConfig.SuccessCastWindow then return end
+        if wasProcced(spellID) then flashProc(pending.sequence) end
+        if not showLastCast() then return end
+        local icon = (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID))
+            or (GetSpellTexture and GetSpellTexture(spellID))
+        if not icon then return end
+        lastCastIcon[pending.sequence] = icon
+        GSE.RefreshActionBarOverrideIcons(pending.sequence)
+    end)
+end
+
 local function getGSESequenceIcon(seq)
+    -- Successful Casts Only: the last spell it actually cast, kept until GSE
+    -- resets the sequence (GSE.ResetButtons) -- a press that casts nothing
+    -- still advances the step, and a sequence that loops passes step 1 again
+    -- mid-run, so neither the step nor "step 1" can say what to show. Before
+    -- its first cast: its starting icon. Without the option: the step icons in
+    -- combat; out of combat the icon stays at rest (presses there still move
+    -- the step, which resets on leaving combat).
+    if showLastCast() and lastCastIcon[seq] then return lastCastIcon[seq] end
+    local frame = seq and _G[seq]
+    local step = frame and frame:GetAttribute("step") or 1
+    local iteration = frame and frame:GetAttribute("iteration") or 1
+    local atRest = step <= 1 and iteration <= 1
+    if frame and not atRest and (showLastCast() or not InCombatLockdown()) then
+        -- Not moving with the step: a base icon the player picked, the first
+        -- block's icon (where this GSE has them), else the first compiled step's.
+        local start = GSE.GetSequenceBaseIcon and GSE.GetSequenceBaseIcon(seq)
+        if not start and GSE.GetSequenceFirstBlockIcon then
+            start = GSE.GetSequenceFirstBlockIcon(GSE.GetSequence and GSE.GetSequence(seq))
+        end
+        if not start and GSE.GetCurrentButtonIconInfo then
+            local firstStep = {GetAttribute = function() return 1 end, GetName = function() return seq end}
+            local info = GSE.GetCurrentButtonIconInfo(firstStep, false)
+            if info and info.iconID and not isGSEFallbackTexture(info.iconID) then start = info.iconID end
+        end
+        if start then return start end
+    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -428,6 +573,20 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
+end
+
+-- A reset sequence (GSE.ResetButtons, on leaving combat) forgets its last
+-- cast, and its buttons repaint to its starting icon.
+function GSE.ClearSequenceLastCast(sequenceId)
+    if not sequenceId then return end
+    lastCastIcon[sequenceId] = nil
+    GSE.RefreshActionBarOverrideIcons(sequenceId)
+end
+
+-- The icon a sequence's override buttons show now (Successful Casts Only, at
+-- rest out of combat), for painters outside this file (GSE.UpdateIcon).
+function GSE.GetOverrideButtonIcon(sequenceId)
+    return getGSESequenceIcon(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -744,6 +903,10 @@ local function overrideActionButton(savedBind, force)
         string.sub(Button, 1, 4) == "NDui_" and "2" or
         "1"
     _G[Button]:SetAttribute("gse-button", Sequence)
+    -- The sequence's own button: mouse and key presses both end in its click
+    -- (a key on Blizzard's bars does not run the bar button's click scripts).
+    hookLastCastPress(_G[Sequence])
+    hookPressFlash(_G[Button])
     if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
         local cmd = _G[Button].commandName
         if cmd then

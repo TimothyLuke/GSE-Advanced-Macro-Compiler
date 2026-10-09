@@ -1067,3 +1067,5 @@ L["A macro named %s already exists."] = true
 L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
 L["The version used where no other version has been configured."] = true
 L["Everything that uses it is %s."] = true
+L["Successful Casts Only"] = true
+L["While a sequence runs, its actionbar override buttons show the spell it last cast instead of the next step. At rest they show its starting icon."] = true

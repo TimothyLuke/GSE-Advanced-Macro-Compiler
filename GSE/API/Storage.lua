@@ -3061,6 +3061,7 @@ function GSE.ResetButtons()
         local gsebutton = _G[k]
         gsebutton:SetAttribute("step", 1)
         GSE.UpdateIcon(gsebutton, true)
+        if GSE.ClearSequenceLastCast then GSE.ClearSequenceLastCast(k) end
         GSE.UsedSequences[k] = nil
     end
 end
@@ -3719,6 +3720,10 @@ function GSE.UpdateIcon(self, reseticon)
             GSE.RefreshActionBarOverrideIcons(gsebutton, false)
         end
         if GSE.ButtonOverrides and not reseticon then
+            -- What the override buttons show: the same choice their repaint
+            -- makes (Successful Casts Only, at rest out of combat), not always
+            -- the step's icon -- painted last, this used to win over it.
+            local barIcon = (GSE.GetOverrideButtonIcon and GSE.GetOverrideButtonIcon(gsebutton)) or spellinfo.iconID
             for k, v in pairs(GSE.ButtonOverrides) do
                 if v == gsebutton and _G[k] then
                     if
@@ -3728,7 +3733,7 @@ function GSE.UpdateIcon(self, reseticon)
                         -- Yield to a real action the player dropped into this slot (matches the
                         -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
                         if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
-                            _G[k].icon:SetTexture(spellinfo.iconID)
+                            _G[k].icon:SetTexture(barIcon)
                         end
                     else
                         if GSE.GameMode >= 11 then
@@ -3738,7 +3743,7 @@ function GSE.UpdateIcon(self, reseticon)
                             if actionSlot then
                                 local at = GetActionInfo(actionSlot)
                                 if GSE.isEmpty(at) then
-                                    _G[k].icon:SetTexture(spellinfo.iconID)
+                                    _G[k].icon:SetTexture(barIcon)
 
                                     _G[k].icon:Show()
                                     -- Sequence-name label on the override button.
@@ -3754,7 +3759,7 @@ function GSE.UpdateIcon(self, reseticon)
                                 if not InCombatLockdown() then
                                     _G[k]:Show()
                                 end
-                                _G[k].icon:SetTexture(spellinfo.iconID)
+                                _G[k].icon:SetTexture(barIcon)
                                 _G[k].icon:Show()
                             -- _G[k].TextOverlayContainer.Count:SetText(label)
                             -- _G[k].TextOverlayContainer.Count:SetTextScale(0.6)

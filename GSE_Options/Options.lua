@@ -1599,6 +1599,20 @@ local function AddActionBarIconColourOption(optionsCategory)
     end
 end
 
+-- On by default: override buttons show the spell their sequence last cast
+-- while it runs (see "Successful Casts Only" in GSE/API/Events.lua).
+local function AddActionBarLastCastOption(optionsCategory)
+    local function GetValue()
+        return GSEOptions.actionBarShowLastCast ~= false
+    end
+    local function SetValue(val)
+        GSEOptions.actionBarShowLastCast = val == true
+        if GSE.RefreshActionBarOverrideIcons then GSE.RefreshActionBarOverrideIcons() end
+    end
+    local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarShowLastCast", Settings.VarType.Boolean, L["Successful Casts Only"], true, GetValue, SetValue)
+    Settings.CreateCheckbox(optionsCategory, setting, L["While a sequence runs, its actionbar override buttons show the spell it last cast instead of the next step. At rest they show its starting icon."])
+end
+
 local function AddActionBarClickBehaviorOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -3034,6 +3048,7 @@ function GSE:CreateConfigPanels()
         AddActionBarWatermarkOption(generalOptions)
         AddActionBarLabelOption(generalOptions)
         AddActionBarIconColourOption(generalOptions)
+        AddActionBarLastCastOption(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
