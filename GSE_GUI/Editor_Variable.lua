@@ -246,7 +246,8 @@ end]]}},
 
     local eventToggle = UI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
-    eventToggle:SetWidth(150)
+    -- 130: the dropdown and Trigger Events box start 20 further left than at 150.
+    eventToggle:SetWidth(130)
     eventToggle:SetValue(isEventEnabled)
     eventToggle:SetCallback(
         "OnEnter",
@@ -264,7 +265,11 @@ end]]}},
     local eventEditBox = UI:Create("EditBox")
     eventEditBox:SetLabel(L["Trigger Events"])
     eventEditBox:SetWidth(210)
-    eventEditBox:SetHeight(30)
+    -- Box 7 below its label (not 2) so it sits level with the Add from List
+    -- dropdown's box, whose Blizzard art centres ~6 lower under the same-height
+    -- label (measured off an in-game screenshot). Height = label 15 + 7 + box 22.
+    if eventEditBox.SetLabelBoxPadding then eventEditBox:SetLabelBoxPadding(7) end
+    eventEditBox:SetHeight(44)
     if eventEditBox.SetFlowFillRemaining then eventEditBox:SetFlowFillRemaining(true) end
     eventEditBox:DisableButton(true)
     eventEditBox:SetDisabled(not isEventEnabled)
@@ -313,7 +318,9 @@ end]]}},
     local eventDropdown = UI:Create("Dropdown")
     eventDropdown:SetLabel(L["Add from List"])
     eventDropdown:SetWidth(300)
-    eventDropdown:SetHeight(30)
+    -- 48, the widget's own height with a label: its Blizzard art draws 16 to 48
+    -- down, so at 30 it hung out of the bottom of its frame.
+    eventDropdown:SetHeight(48)
     if eventDropdown.SetMaxVisibleItems then eventDropdown:SetMaxVisibleItems(20) end
     local eventOrder = {}
     for key, _ in pairs(Statics.VariableEventList or {}) do
@@ -367,11 +374,19 @@ end]]}},
     eventCallbackGroup:SetFullWidth(true)
     if eventCallbackGroup.SetFlowPadding then eventCallbackGroup:SetFlowPadding(0, 8, 8, 8) end
     if eventCallbackGroup.SetFlowGap    then eventCallbackGroup:SetFlowGap(4) end
-    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("MIDDLE") end
+    -- Tops aligned, so the Add from List and Trigger Events labels share a line.
+    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("TOP") end
     eventCallbackGroup:AddChild(eventToggle)
-    -- The dropdown/editbox carry labels above their boxes (~14px), pushing those
-    -- boxes down. Nudge the checkbox down so its box lines up with them on one row.
-    if eventToggle.SetFlowOffset then eventToggle:SetFlowOffset(0, -8) end
+    -- Centred vertically in the row: the tallest item is the Trigger Events
+    -- box at 44, the check square 24, so (44 - 24) / 2 = 10 down, plus 5
+    -- tuned in game.
+    -- Box + label centred across the 130 the row gives the toggle (its frame
+    -- is only the check square, so the label's width is measured).
+    local toggleWidth = (eventToggle.checkbg and eventToggle.checkbg:GetWidth() or 24)
+        + (eventToggle.text and eventToggle.text:GetStringWidth() or 0)
+    if eventToggle.SetFlowOffset then
+        eventToggle:SetFlowOffset(math.max(0, math.floor((130 - toggleWidth) / 2)), -15)
+    end
     eventCallbackGroup:AddChild(eventDropdown)
     eventCallbackGroup:AddChild(eventEditBox)
     container:AddChild(eventCallbackGroup)
@@ -481,17 +496,26 @@ end]]}},
 
     -- Which version runs where: Default and the context overrides.
     if GSE.GUI.DrawElementVersionConfig then
+        -- 4 of space above the Configuration heading.
+        local configGap = UI:Create("Spacer")
+        configGap:SetHeight(4)
+        container:AddChild(configGap)
         local configHeading = UI:Create("Heading")
         configHeading:SetText(L["Configuration"])
         configHeading:SetFullWidth(true)
+        if configHeading.SetJustifyH then configHeading:SetJustifyH("CENTER") end
         container:AddChild(configHeading)
+        local configHeadingGap = UI:Create("Spacer")
+        configHeadingGap:SetHeight(8)
+        container:AddChild(configHeadingGap)
         GSE.GUI.DrawElementVersionConfig(editframe, container, variable)
     end
 
     local buttonRow = UI:Create("SimpleGroup")
     buttonRow:SetLayout("Flow")
-    buttonRow:SetWidth(400)
-    if buttonRow.SetFlowOffset then buttonRow:SetFlowOffset(-4, 0) end
+    -- Full width with the buttons centred on the page.
+    buttonRow:SetFullWidth(true)
+    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
     if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
     if buttonRow.SetFlowGap then buttonRow:SetFlowGap(10) end
 
