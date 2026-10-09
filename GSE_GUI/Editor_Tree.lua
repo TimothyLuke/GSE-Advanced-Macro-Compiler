@@ -1513,9 +1513,9 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         editframe.metadataContentWidth = nil
         -- Apply padding AFTER draw — GUIDrawMetadataEditor resets it internally
         -- Match GUIDrawMetadataEditor's own padding exactly (Editor_Metadata line ~896:
-        -- left=right=30, top=15) so the area stays put and left/right padding are equal
+        -- left=right=30, top=5) so the area stays put and left/right padding are equal
         -- whether drawn here on entry or re-drawn on tab switch.
-        if contentcontainer.SetListPadding then contentcontainer:SetListPadding(CONFIG_CONTENT_LEFT_PADDING + 10, 15, CONFIG_CONTENT_LEFT_PADDING + 10, CONFIG_CONTENT_LEFT_PADDING + 10) end
+        if contentcontainer.SetListPadding then contentcontainer:SetListPadding(CONFIG_CONTENT_LEFT_PADDING + 10, 5, CONFIG_CONTENT_LEFT_PADDING + 10, CONFIG_CONTENT_LEFT_PADDING + 10) end
         if contentcontainer.DoLayout then contentcontainer:DoLayout() end
         editframe:SetTitle(L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Configuration"] .. ")")
         ShowSequenceFooter(editframe)   -- full editor buttons (Save/Delete/Export/...) on the config page

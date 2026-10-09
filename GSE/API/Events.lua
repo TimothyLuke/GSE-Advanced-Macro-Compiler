@@ -336,6 +336,15 @@ local function getCurrentGSEAction(seq)
 end
 
 local function getGSESequenceIcon(seq)
+    -- A base icon the player picked shows while the sequence is at rest (its
+    -- first step, first time through); running, the step icons show as before.
+    local base = GSE.GetSequenceBaseIcon(seq)
+    if base then
+        local frame = _G[seq]
+        local step = frame and frame:GetAttribute("step") or 1
+        local iteration = frame and frame:GetAttribute("iteration") or 1
+        if step <= 1 and iteration <= 1 then return base end
+    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -454,6 +463,21 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
+end
+
+-- A sequence's base icon: picked on its Config page (right-click the drag
+-- icon) so sequences that open with the same spell do not all look alike on
+-- the bars. Kept on this PC only (GSEOptions), never in the sequence itself.
+function GSE.GetSequenceBaseIcon(sequenceId)
+    local icons = GSEOptions and GSEOptions.SequenceBaseIcons
+    return sequenceId and icons and icons[sequenceId] or nil
+end
+
+function GSE.SetSequenceBaseIcon(sequenceId, icon)
+    if not sequenceId then return end
+    GSEOptions.SequenceBaseIcons = GSEOptions.SequenceBaseIcons or {}
+    GSEOptions.SequenceBaseIcons[sequenceId] = icon
+    GSE.RefreshActionBarOverrideIcons(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -1387,10 +1411,45 @@ end
 -- any bar works -- Blizzard, Bartender, ElvUI, Dominos, ConsolePort, Forever's
 -- gamepad bars -- as long as its buttons are named, which overrides need.
 
--- The icon of the sequence's first compiled step, as the override button would
--- show it, or nil.
+-- The icon on the sequence's first block (action.Icon, the one the editor shows
+-- on it) in its default version. Nested blocks (loops, if branches) keep their
+-- children in the array part, so one walk covers them. A question mark is no
+-- icon.
+local function isPlaceholderIcon(icon)
+    return icon == 134400 or (type(icon) == "string" and icon:lower():find("questionmark", 1, true) ~= nil)
+end
+local function firstBlockIcon(actions)
+    if type(actions) ~= "table" then return nil end
+    for _, action in ipairs(actions) do
+        if type(action) == "table" then
+            if not GSE.isEmpty(action.Icon) and not isPlaceholderIcon(action.Icon) then return action.Icon end
+            local nested = firstBlockIcon(action)
+            if nested then return nested end
+        end
+    end
+end
+--- The first block icon of a sequence table, in its default version. The
+--- editor's own copy carries the icons it has filled in; the stored copy may
+--- not (the editor does not save them back), so callers with an editor pass
+--- that copy.
+function GSE.GetSequenceFirstBlockIcon(sequence)
+    local versions = type(sequence) == "table" and sequence.Versions
+    if type(versions) ~= "table" then return nil end
+    local default = tonumber(sequence.MetaData and sequence.MetaData.Default) or 1
+    local version = versions[default] or versions[1]
+    return type(version) == "table" and firstBlockIcon(version.Actions) or nil
+end
+local function sequenceFirstBlockIcon(sequenceId)
+    return GSE.GetSequenceFirstBlockIcon(GSE.GetSequence and GSE.GetSequence(sequenceId))
+end
+
+-- The sequence's icon for the drag: its first block's icon, else the icon of
+-- its first compiled step as the override button would show it, or nil.
 function GSE.GetSequenceStartIcon(sequenceId)
-    if not sequenceId or not (GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then return nil end
+    if not sequenceId then return nil end
+    local blockIcon = sequenceFirstBlockIcon(sequenceId)
+    if blockIcon then return blockIcon end
+    if not (GSE.SequencesExec and GSE.SequencesExec[sequenceId]) then return nil end
     local firstStep = {
         GetAttribute = function() return 1 end,
         GetName = function() return sequenceId end,
@@ -1519,7 +1578,9 @@ function GSE.CancelSequenceDrag()
 end
 
 -- Start dragging a sequence. Returns false (and says why) when it cannot.
-function GSE.BeginSequenceDrag(sequenceId)
+-- icon, optional: what the dragged image shows, so it matches the icon the
+-- drag started from; else GSE.GetSequenceStartIcon.
+function GSE.BeginSequenceDrag(sequenceId, icon)
     if drag then endDrag() end
     if InCombatLockdown() then
         GSE.Print(L["Sequences cannot be put on action buttons in combat."])
@@ -1530,14 +1591,27 @@ function GSE.BeginSequenceDrag(sequenceId)
         return false
     end
     ensureDragFrames()
-    -- Every action button shown now; the drag tests these for the mouse.
-    local candidates = {}
-    pcall(collectOverrideTargets, UIParent, candidates)
-    drag = { sequenceId = sequenceId, candidates = candidates }
-    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    local thisDrag = { sequenceId = sequenceId, candidates = {} }
+    drag = thisDrag
+    -- The icon first, at the cursor, so it shows the moment the drag starts:
+    -- the player's base icon, else the given or start icon.
+    dragIcon.texture:SetTexture(GSE.GetSequenceBaseIcon(sequenceId) or icon
+        or GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    dragIcon:ClearAllPoints()
+    dragIcon:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
     pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
     dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
     dragIcon:Show()
+    -- Every action button shown now; the drag tests these for the mouse. It
+    -- runs on the next frame so the icon shows first.
+    C_Timer.After(0, function()
+        if drag ~= thisDrag then return end
+        local candidates = {}
+        pcall(collectOverrideTargets, UIParent, candidates)
+        thisDrag.candidates = candidates
+    end)
     return true
 end
 
