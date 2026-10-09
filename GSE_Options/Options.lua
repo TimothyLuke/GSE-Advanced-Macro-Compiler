@@ -1560,7 +1560,7 @@ local function AddActionBarWatermarkOption(optionsCategory)
                 GSE.SetActionBarWatermarkEnabled(GSEOptions.showActionBarWatermark ~= false)
             end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarWatermark", Settings.VarType.Boolean, L["Show Button Binding Watermark"], true, GetValue, SetValue)
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarWatermark", Settings.VarType.Boolean, L["Show Watermark"], true, GetValue, SetValue)
         Settings.CreateCheckbox(optionsCategory, setting, L["Show the GSE logo as a small watermark on actionbar override buttons."])
     end
 end
@@ -1576,7 +1576,7 @@ local function AddActionBarLabelOption(optionsCategory)
                 GSE.SetActionBarLabelEnabled()
             end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Button Binding Label"], true, GetValue, SetValue)
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarLabel", Settings.VarType.Boolean, L["Show Label"], true, GetValue, SetValue)
         Settings.CreateCheckbox(optionsCategory, setting, L["Show the sequence name as a text label on actionbar override buttons."])
     end
 end
@@ -1594,7 +1594,7 @@ local function AddActionBarIconColourOption(optionsCategory)
                 GSE.SetActionBarKeepIconColour(GSEOptions.actionBarKeepIconColour)
             end
         end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarKeepIconColour", Settings.VarType.Boolean, L["Keep Button Binding Icons in Full Colour"], false, GetValue, SetValue)
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarKeepIconColour", Settings.VarType.Boolean, L["Force Icon Coloring"], false, GetValue, SetValue)
         Settings.CreateCheckbox(optionsCategory, setting, L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."])
     end
 end
@@ -3028,7 +3028,7 @@ function GSE:CreateConfigPanels()
         end
         -- Button Binding popup (Retail only - Classic requires a different menu API)
         if GSE.GameMode > 10 then
-            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Button Binding Popup"], true)
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
         AddActionBarWatermarkOption(generalOptions)

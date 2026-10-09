@@ -1,13 +1,14 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
-L["Enable Button Binding Popup"] = true
+L["Enable Popup"] = true
 L["GSE Sequence"] = true
-L["Show Button Binding Watermark"] = true
+L["Show Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
-L["Show Button Binding Label"] = true
+L["Show Label"] = true
 L["Show the sequence name as a text label on actionbar override buttons."] = true
-L["Keep Button Binding Icons in Full Colour"] = true
+L["Force Icon Coloring"] = true
+L["Sort %s"] = true
 L["Copy this link with Ctrl+C:"] = true
 L["Click to copy this link"] = true
 L["Sequences cannot be put on action buttons in combat."] = true
