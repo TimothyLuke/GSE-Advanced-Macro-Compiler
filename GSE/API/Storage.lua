@@ -3635,6 +3635,7 @@ local function GetDebuggerTraceSpell(action, foundSpell)
 end
 
 function GSE.UpdateIcon(self, reseticon)
+    if not reseticon and GSE.NoteSequencePress then GSE.NoteSequencePress(self) end
     local step = self:GetAttribute("step") or 1
     local iteration = self:GetAttribute("iteration") or 1
     -- Same flat index as GSE.GetCurrentButtonIconInfo computes. It is needed
