@@ -383,11 +383,37 @@ end
 -- Blizzard/other bars that don't provide the method. Combat-guarded by Dominos.
 local GSE_FORCE_SHOWGRID_REASON = 262144 -- 0x40000, a single high bit
 
+-- Blizzard's own bars (Retail and Forever) do the same with the "showgrid"
+-- attribute: with "Always Show Buttons" off, ActionBarMixin:UpdateShownButtons
+-- shows a button only when it has an action or showgrid is non-zero. The same
+-- private bit goes into showgrid inside the SecureHandler -- written from
+-- insecure Lua the attribute would be tainted, and Blizzard's secure bar code
+-- reads it (the #1931 lesson) -- and the button is shown at once.
+local SHOWGRID_ON = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 0 then b:SetAttribute("showgrid", grid + 262144) end
+    b:Show()
+]]
+local SHOWGRID_OFF = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 1 then b:SetAttribute("showgrid", grid - 262144) end
+]]
 local function setOverrideButtonForcedShown(buttonOrName, shown)
     local btn = type(buttonOrName) == "string" and _G[buttonOrName] or buttonOrName
-    if not btn or not btn.SetShowGridInsecure then return end
-    if InCombatLockdown() then return end
-    btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
+    if not btn or InCombatLockdown() then return end
+    if btn.SetShowGridInsecure then
+        btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
+    elseif btn.GetShowGrid and btn.bar and btn.bar.UpdateShownButtons then
+        -- Only when the bit has to change: repaints call this often.
+        local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
+        if hasBit == (shown and true or false) and (not shown or btn:IsShown()) then return end
+        SHBT:SetFrameRef("gseGridButton", btn)
+        SHBT:Execute(shown and SHOWGRID_ON or SHOWGRID_OFF)
+    end
 end
 
 local function repaintGSEOverrideButton(button, defer)
