@@ -370,15 +370,6 @@ end
 ---
 --- Prefixed rather than bare, so a group of 1 or 2 can never be mistaken for a
 --- config id of 1 or 2.
---- Does GSE bind sequences to keys here? Always, except on WoW Forever, where
---- it never does: Forever's gamepad handling is still moving, so there a
---- sequence goes on an action-bar button (Button Bindings) and WoW binds the
---- button (#2109). There is no option to turn it on.
-function GSE.KeybindingsEnabled()
-    local _, _, _, tocversion = GetBuildInfo()
-    return GSE.TOCFlavour(tocversion) ~= "forever"
-end
-
 function GSE.GetBindingLoadoutKey()
     local currentSpecID = GSE.GetCurrentSpecID()
     local saved =
