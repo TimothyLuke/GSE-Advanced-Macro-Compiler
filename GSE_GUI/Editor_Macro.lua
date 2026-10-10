@@ -392,7 +392,7 @@ local function showMacro(editframe, node, container, selected)
         local managedtext = DecodeMacroEditorText(GSE.WithSpellRanks(version.Ranks, GSE.CompileMacroText,
             authored, Statics.TranslatorMode.Current))
         managedMacro:SetText(managedtext)
-        managedMacro:SetNumLines(8)
+        managedMacro:SetNumLines(7)
         managedMacro:SetFullWidth(true)
         SetMacroTextCounter(managedMacro, managedtext)
 
@@ -487,7 +487,7 @@ local function showMacro(editframe, node, container, selected)
         SetMultiLineLabelGap(macro, 2)
         SetMultiLineContentPadding(macro, 2)
         macro:SetText(DecodeMacroEditorText((version and version.text) or node.text or ""))
-        macro:SetNumLines(8)
+        macro:SetNumLines(7)
         macro:SetFullWidth(true)
         SetMacroTextCounter(macro)
         macro:SetCallback("OnTextChanged", function(self, _, text)
@@ -522,10 +522,18 @@ local function showMacro(editframe, node, container, selected)
 
     -- Which version runs where: Default and the context overrides.
     if element and GSE.GUI.DrawElementVersionConfig then
+        -- 4 of space above the Configuration heading.
+        local configGap = UI:Create("Spacer")
+        configGap:SetHeight(4)
+        container:AddChild(configGap)
         local configHeading = UI:Create("Heading")
         configHeading:SetText(L["Configuration"])
         configHeading:SetFullWidth(true)
+        if configHeading.SetJustifyH then configHeading:SetJustifyH("CENTER") end
         container:AddChild(configHeading)
+        local configHeadingGap = UI:Create("Spacer")
+        configHeadingGap:SetHeight(8)
+        container:AddChild(configHeadingGap)
         GSE.GUI.DrawElementVersionConfig(editframe, container, element, commit)
     end
 
@@ -541,7 +549,8 @@ local function showMacro(editframe, node, container, selected)
             local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
             rows[#rows+1] = { name = entry.name, author = author, updated = updated }
         end
-        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true, rightInset = 38 })
+        -- Full width, flush with the Configuration rows above it.
+        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
     end
 
     manageGSE:SetCallback(
