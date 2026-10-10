@@ -6,6 +6,7 @@ local GSE = ns.GSE
 local L = GSE.L
 local Statics = GSE.Static
 local LibQTip = LibStub("LibQTip-2.0")
+local TOOLTIP_MAX_WIDTH = 360
 
 local function AnchorTooltipToCursor(tooltip)
   local x, y = GetCursorPosition()
@@ -43,7 +44,17 @@ function GSE.CreateToolTip(title, tip, GSEFrame)
 
   GSEFrame.tooltip = tooltip
   tooltip:AddHeadingRow(GSEOptions.TitleColour .. title .. Statics.StringReset)
-  tooltip:AddRow(tip)
+  -- Wrap the text: a QTip cell is as wide as its text, so a long tip ran the
+  -- full width of the screen. The width is applied when the text is set, so
+  -- set it on the empty cell first.
+  local row = tooltip:AddRow()
+  local cell = row and row.GetCell and row:GetCell(1)
+  if cell and cell.SetMaxWidth and cell.SetText then
+    cell:SetMaxWidth(TOOLTIP_MAX_WIDTH)
+    cell:SetText(tip)
+  else
+    tooltip:AddRow(tip)
+  end
   AnchorTooltipToCursor(tooltip)
   tooltip:SetScript("OnUpdate", AnchorTooltipToCursor)
 

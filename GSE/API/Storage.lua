@@ -3456,7 +3456,7 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
         foundSpell = label
     elseif action.type == "macro" and action.macrotext then
         local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
-        if macroIconInfo and #macroIconInfo > 1 then
+        if macroIconInfo and #macroIconInfo > 0 then
             macroIconInfo = macroIconInfo[1]
         end
 
@@ -3570,7 +3570,10 @@ function GSE.GetSpellsFromString(str, suppressUIErrors)
                         local elements = GSE.split(etc, ",")
 
                         for _, v1 in ipairs(elements) do
-                            local spellstuff = safeGetSpellInfo(string.trim(v1))
+                            -- "reset=combat/target Serpent Sting": the reset
+                            -- clause sits in front of the first spell.
+                            local name = string.trim(v1):gsub("^reset=%S+%s*", "")
+                            local spellstuff = safeGetSpellInfo(name)
                             if spellstuff and spellstuff.name and not processed[v1] then
                                 table.insert(returnspells, spellstuff)
                                 processed[v1] = true
@@ -3578,7 +3581,9 @@ function GSE.GetSpellsFromString(str, suppressUIErrors)
                         end
                     end
                 end
-                return returnspells
+                -- A line naming no spell this client knows is not the answer;
+                -- the next line may be.
+                if #returnspells > 0 then return returnspells end
             elseif Statics.CastCmds[strlower(cmd)] then
                 local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
                 if string.sub(etc, 1, 1) == "/" then
@@ -3613,7 +3618,7 @@ local function GetDebuggerTraceSpell(action, foundSpell)
 
     if action.type == "macro" and action.macrotext then
         local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext, true) or GSE.GetSpellsFromString(action.macrotext, true)
-        if macroIconInfo and #macroIconInfo > 1 then
+        if macroIconInfo and #macroIconInfo > 0 then
             macroIconInfo = macroIconInfo[1]
         end
         if macroIconInfo and macroIconInfo.name then return macroIconInfo.name end
@@ -4817,7 +4822,7 @@ local function getManagedMacroSequenceIcon(sequenceName)
             local iconInfo
             if action.type == "macro" and action.macrotext then
                 iconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
-                if iconInfo and #iconInfo > 1 then
+                if iconInfo and #iconInfo > 0 then
                     iconInfo = iconInfo[1]
                 end
             elseif action.type == "macro" and action.macro then
