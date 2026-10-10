@@ -5260,7 +5260,13 @@ local function createTreeGroup()
     -- Toggling this checkbox flips GSEOptions.filterList["All"] (the same
     -- backing field as the "Show All Sequences in Editor" option), then asks
     -- all open editors to rebuild their trees.
-    local NAV_CHECKBOX_AREA  = 26  -- vertical space reserved for the checkbox row
+    -- The tree's list ends as high above the window's bottom as the editor's
+    -- main box does above its footer -- footer 30 up + 52 tall + 6 gap = 88
+    -- (Editor_Tree's footer settings). In that space, centred both ways: the
+    -- grouping button, and the All Sequences checkbox under it.
+    local NAV_CHECKBOX_AREA  = 88 - navPadBottom  -- list bottom above navContent's
+    local NAV_STACK_GAP      = 6
+    local NAV_ROW_BOTTOM     = math.floor((NAV_CHECKBOX_AREA - (22 + NAV_STACK_GAP + 22)) / 2)
     local NAV_CHECKBOX_SIZE  = 22
     local NAV_CHECKBOX_GAP   = 2   -- gap between the checkbox and its text label
     local allSeqCheckbox = CreateFrame("CheckButton", nil, navContent, "UICheckButtonTemplate")
@@ -5276,10 +5282,10 @@ local function createTreeGroup()
     --   by (textWidth + gap) / 2. To center the unit on navContent we shift the
     --   checkbox anchor LEFT by that same amount. WoW's anchor system keeps the
     --   center dynamic as navContent resizes — no per-frame recompute needed.
-    -- Left-aligned now: the row's right side holds the grouping switch.
     local function recenterCheckbox()
+        local textWidth = allSeqCheckbox.text and allSeqCheckbox.text:GetStringWidth() or 0
         allSeqCheckbox:ClearAllPoints()
-        allSeqCheckbox:SetPoint("BOTTOMLEFT", navContent, "BOTTOMLEFT", 0, 2)
+        allSeqCheckbox:SetPoint("BOTTOM", navContent, "BOTTOM", -math.floor((textWidth + NAV_CHECKBOX_GAP) / 2), NAV_ROW_BOTTOM)
     end
     recenterCheckbox()
     local function syncAllSeqCheckbox()
@@ -5309,15 +5315,16 @@ local function createTreeGroup()
     local GROUPINGS = { "type", "class", "collection" }
     local GROUPING_LABEL = { type = "By Type", class = "By Class", collection = "By Collection" }
     local groupingButton = CreateFrame("Button", nil, navContent, "UIPanelButtonTemplate")
-    groupingButton:SetSize(96, NAV_CHECKBOX_SIZE)
-    groupingButton:SetPoint("BOTTOMRIGHT", navContent, "BOTTOMRIGHT", 0, 2)
+    groupingButton:SetSize(150, NAV_CHECKBOX_SIZE)  -- fits "Sort By Collection"
+    groupingButton:SetPoint("BOTTOM", navContent, "BOTTOM", 0, NAV_ROW_BOTTOM + NAV_CHECKBOX_SIZE + NAV_STACK_GAP)
     local function currentGrouping()
         local g = GSEOptions and GSEOptions.editorTreeGrouping
         return GROUPING_LABEL[g] and g or "type"
     end
     local function syncGroupingButton()
         local label = GROUPING_LABEL[currentGrouping()]
-        groupingButton:SetText(L and L[label] or label)
+        -- "Sort By Type": the grouping's own string inside "Sort %s".
+        groupingButton:SetText(string.format(L and L["Sort %s"] or "Sort %s", L and L[label] or label))
     end
     groupingButton:SetScript("OnClick", function()
         if not GSEOptions then GSEOptions = {} end
