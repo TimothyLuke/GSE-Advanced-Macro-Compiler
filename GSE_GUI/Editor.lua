@@ -2211,6 +2211,52 @@ local function getAllConditionalBranchSpells(line)
     if #candidates > 0 then return candidates end
 end
 
+-- The icons a block's Select Icon menu offers, as {name, iconID}: a spell
+-- block's spell; for a macro block every spell on every line, in every
+-- conditional branch, plus the variable / in-game macro icon. Shared with the
+-- Configuration page's base icon menu, so both list the same choices.
+function GSE.GetActionIconCandidates(action)
+    local spellinfolist = {}
+    if action.type == "macro" then
+        if isVariableAction(action) then
+            table.insert(spellinfolist, {
+                name = "GSE Variable",
+                iconID = VARIABLE_BLOCK_ICON,
+            })
+        elseif isInGameMacroAction(action) then
+            table.insert(spellinfolist, {
+                name = "In-Game Macro",
+                iconID = INGAME_MACRO_BLOCK_ICON,
+            })
+        end
+
+        local macro = GSE.UnEscapeString(action.macro)
+        if macro and GSE.IsMacroTextBody(macro) then
+            local lines = GSE.SplitMeIntoLines(macro)
+            for _, v in ipairs(lines) do
+                addIconMenuCandidates(spellinfolist, GSE.GetSpellsFromString(v, true))
+                addIconMenuCandidates(spellinfolist, getAllConditionalBranchSpells(v))
+                addIconMenuCandidates(spellinfolist, getMacroLineFallbackIconInfo(v))
+            end
+        else
+            local spellinfo = {}
+            spellinfo.name = action.macro
+            local macindex = GetMacroIndexByName(spellinfo.name)
+            local _, iconid, _ = GetMacroInfo(macindex)
+            if macindex and iconid then
+                spellinfo.iconID = iconid
+                table.insert(spellinfolist, spellinfo)
+            end
+        end
+    elseif action.type == "spell" then
+        local spellinfo = GSE.GetSpellInfo(action.spell)
+        if spellinfo and spellinfo.iconID then
+            table.insert(spellinfolist, spellinfo)
+        end
+    end
+    return spellinfolist
+end
+
 function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     local iconSize = 28
     local lbl = UI:Create("Icon")
@@ -2255,44 +2301,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     registerActionIconControl(lbl)
     refreshIcon()
 
-    local spellinfolist = {}
-    if action.type == "macro" then
-        if isVariableAction(action) then
-            table.insert(spellinfolist, {
-                name = "GSE Variable",
-                iconID = VARIABLE_BLOCK_ICON,
-            })
-        elseif isInGameMacroAction(action) then
-            table.insert(spellinfolist, {
-                name = "In-Game Macro",
-                iconID = INGAME_MACRO_BLOCK_ICON,
-            })
-        end
-
-        local macro = GSE.UnEscapeString(action.macro)
-        if macro and GSE.IsMacroTextBody(macro) then
-            local lines = GSE.SplitMeIntoLines(macro)
-            for _, v in ipairs(lines) do
-                addIconMenuCandidates(spellinfolist, GSE.GetSpellsFromString(v, true))
-                addIconMenuCandidates(spellinfolist, getAllConditionalBranchSpells(v))
-                addIconMenuCandidates(spellinfolist, getMacroLineFallbackIconInfo(v))
-            end
-        else
-            local spellinfo = {}
-            spellinfo.name = action.macro
-            local macindex = GetMacroIndexByName(spellinfo.name)
-            local _, iconid, _ = GetMacroInfo(macindex)
-            if macindex and iconid then
-                spellinfo.iconID = iconid
-                table.insert(spellinfolist, spellinfo)
-            end
-        end
-    elseif action.type == "spell" then
-        local spellinfo = GSE.GetSpellInfo(action.spell)
-        if spellinfo and spellinfo.iconID then
-            table.insert(spellinfolist, spellinfo)
-        end
-    end
+    local spellinfolist = GSE.GetActionIconCandidates(action)
 
     lbl:SetCallback("OnClick", function(widget, button)
         GSE.OpenContextMenu(frame, function(ownerRegion, rootDescription)
