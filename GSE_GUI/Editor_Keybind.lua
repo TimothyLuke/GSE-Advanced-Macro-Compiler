@@ -204,7 +204,30 @@ local function reselect(editframe)
     end
 end
 
--- "Shared with every <class> character": whether this spec's binds and
+-- An override made or removed outside the panel -- a sequence dragged from the
+-- tree or the Config tab onto a bar button, or the bar's right-click menu --
+-- shows at once in any open editor that is on a Bindings page. Other pages are
+-- left alone, so unsaved sequence edits are never redrawn away.
+local function refreshOpenBindingPages()
+    for _, editor in ipairs((GSE.GUI and GSE.GUI.editors) or {}) do
+        local tc = editor and editor.treeContainer
+        local st = tc and (tc.status or tc.localstatus)
+        local selected = st and st.selected
+        if editor.frame and editor.frame:IsShown() and type(selected) == "string"
+            and selected:sub(1, #"KEYBINDINGS") == "KEYBINDINGS" then
+            reselect(editor)
+        end
+    end
+end
+for _, name in ipairs({"CreateActionBarOverride", "RemoveActionBarOverride"}) do
+    if type(GSE[name]) == "function" then
+        hooksecurefunc(GSE, name, function()
+            if C_Timer and C_Timer.After then C_Timer.After(0, refreshOpenBindingPages) else refreshOpenBindingPages() end
+        end)
+    end
+end
+
+-- "Shared with ALL <class> Characters": whether this spec's binds and
 -- overrides are the class's shared profile (Profiles.lua) or this character's
 -- own. Unticking gives the character its own copy of the profile's; ticking
 -- drops its own for the profile's, after asking, since they are gone then.
@@ -214,8 +237,25 @@ local function sharedProfileRow(editframe, specialization, classname)
     row:SetLayout("Flow")
     if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
     local box = UI:Create("CheckBox")
-    box:SetLabel(string.format(L["Shared with every %s character"], classname or ""))
-    box:SetWidth(360)
+    box:SetLabel(string.format(L["Shared with ALL %s Characters"], classname or ""))
+    -- The same font as the hint line under it; the checkbox default was too
+    -- small to read. The widget pool restores the font on reuse.
+    if box.text and GameFontNormal then
+        -- An explicit SetFont: on a recycled checkbox the pool has restored the
+        -- label's font with SetFont, and SetFontObject did not override that
+        -- (captured on Forever: 10pt right after SetFontObject(GameFontNormal)).
+        local face, size, flags = GameFontNormal:GetFont()
+        if face then box.text:SetFont(face, size, flags or "") else box.text:SetFontObject(GameFontNormal) end
+        -- The ElvUI hover effect remembers the label's font on first hover and
+        -- restores it on leave; drop any remembered font from the label's
+        -- previous use so it is taken from this one.
+        box.text.GSETextButtonBaseFont = nil
+    end
+    -- The widget's frame is only the check square; its label hangs off the
+    -- right. Size the slot to square + label so the row's CENTER align centres
+    -- what is drawn, not a fixed slot with the square at its left edge.
+    local labelWidth = box.text and box.text:GetStringWidth() or 0
+    box:SetWidth(math.ceil((box.checkbg and box.checkbg:GetWidth() or 24) + labelWidth))
     box:SetValue(GSE.UsesSharedProfile(specialization))
     box:SetCallback("OnEnter", function()
         GSE.CreateToolTip(L["Shared Profile"],
@@ -247,6 +287,23 @@ local function sharedProfileRow(editframe, specialization, classname)
     end)
     row:AddChild(box)
     return row
+end
+
+-- The Shared row sits just over Save's hint line, pinned with Save rather than
+-- added to the scrolling list: it belongs with the action that commits the
+-- binds. Parented to the ScrollFrame's own frame like Save; released with the
+-- pane. Returns the height the bottom gutter must add for it.
+local SHARED_ROW_WIDTH = 360
+local function pinSharedRow(rightContainer, saveHint, row)
+    row:SetWidth(SHARED_ROW_WIDTH)
+    row.frame:SetParent(rightContainer.frame)
+    row.frame:SetFrameLevel(rightContainer.frame:GetFrameLevel() + 10)
+    row.frame:ClearAllPoints()
+    row.frame:SetPoint("BOTTOM", saveHint, "TOP", 0, 4)
+    row.frame:Show()
+    if row.DoLayout then row:DoLayout() end
+    local height = row.frame:GetHeight()
+    return (height and height > 0 and height or 24) + 4
 end
 
 -- Defined further down beside the widget helpers; the tree builder only runs
@@ -976,7 +1033,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow or centeredRow(loadoutLabel))
-    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
+    local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 
@@ -1018,17 +1075,21 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     local saveHint = rightContainer.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     saveHint:SetPoint("BOTTOM", saveButton.frame, "TOP", 0, 4)
     saveHint:SetText(L["Set All of your Binds and Click Save!"])
+    local sharedRowHeight = sharedRow and pinSharedRow(rightContainer, saveHint, sharedRow) or 0
     pinSave()
     -- The footer lays out on the same frame this panel is built in, so its
     -- button may not have its final position yet on the first pass.
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
-    rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
+    rightContainer:SetCallback("OnRelease", function()
+        saveButton:Release()
+        if sharedRow then sharedRow:Release() end
+    end)
 
     -- Without a gutter the last row scrolls underneath the pinned button.
     local bottomGutter = UI:Create("Spacer")
     bottomGutter:SetFullWidth(true)
-    bottomGutter:SetHeight(saveButton.frame:GetHeight() + KB_SAVE_INSET * 2 + 18)
+    bottomGutter:SetHeight(saveButton.frame:GetHeight() + KB_SAVE_INSET * 2 + 18 + sharedRowHeight)
     rightContainer:AddChild(bottomGutter)
 
     redraw()
@@ -1038,8 +1099,37 @@ end
 -- ---------------------------------------------------------------------------
 -- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
-local AO_COL_BUTTON, AO_COL_STATE, AO_COL_SEQ = 200, 110, 220
-local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 24
+-- Button fits the longest Blizzard bar button name, MultiBarBottomRightButton12
+-- (~188 wide in the button font, measured off an in-game screenshot, plus the
+-- button's insets).
+-- The room came from the State and Sequence dropdowns, which gained ~26 each
+-- when the dropdown art was made to fill its frame. State then took what was
+-- left over in the row (676 wide at the default editor width, measured in
+-- game; cells + 5 gaps of 6 = 654) less 1: at exactly 676 the row's
+-- fractional width still wrapped the X onto a second line.
+local AO_COL_BUTTON, AO_COL_STATE, AO_COL_SEQ = 205, 91, 180
+-- Backup key: the bar button's second WoW binding, as on WoW's key binding
+-- screen (its first is the button itself).
+local AO_COL_KEY = 125
+local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEY + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
+
+-- The WoW binding command a bar button is keyed by: Blizzard's bars set
+-- button.commandName (ACTIONBUTTON1...), Dominos a "commandName" attribute.
+-- Nil for a bar addon that keeps its keys itself (LibActionButton bars bind
+-- through their own keybind mode), so its keys are not edited here.
+local function bindingCommandFor(bind)
+    local b = not GSE.isEmpty(bind) and _G[bind]
+    if type(b) ~= "table" then return nil end
+    local cmd = b.commandName or (b.GetAttribute and b:GetAttribute("commandName"))
+    if type(cmd) == "string" and cmd ~= "" then return cmd end
+    return nil
+end
+
+-- What WoW has bound to a bar button right now: key 1, key 2.
+local function boundKeysFor(bind)
+    local cmd = bindingCommandFor(bind)
+    if cmd and GetBindingKey then return GetBindingKey(cmd) end
+end
 
 -- Every action button this client can override, name -> name.  One scan per
 -- panel build, not per row: ButtonForge alone is a thousand _G lookups.
@@ -1194,20 +1284,60 @@ end
 -- same terms the keybind one was; refactoring a panel Larry has just signed
 -- off on to save 120 lines is the wrong trade today.
 local showOverridePanel
+-- A row's backup key into WoW, on Save: replace the bar button's second
+-- binding, leaving its first alone (a key used by another action moves here,
+-- as on WoW's own screen). True when written; out of combat only (WoW blocks
+-- SetBinding in combat), so a key saved in combat stays pending.
+local function writeBackupKey(row)
+    local cmd = row.keysChanged and bindingCommandFor(row.bind)
+    if not cmd or InCombatLockdown() then return false end
+    local _, old2 = GetBindingKey(cmd)
+    if old2 then SetBinding(old2) end
+    if row.key2 then SetBinding(row.key2, cmd) end
+    row.keysChanged = nil
+    return true
+end
+-- The binding set WoW is using (account or character); GSE's own save
+-- elsewhere writes the character set (2), the fallback.
+local function saveWoWBindings()
+    if not SaveBindings then return end
+    local getSet = _G.GetCurrentBindingSet
+    SaveBindings(getSet and getSet() or 2)
+end
+-- The open Button Bindings panel's row refreshers (showOverridePanel).
+local activeKeyRefreshers
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("UPDATE_BINDINGS")
+    watcher:SetScript("OnEvent", function()
+        for _, refresh in ipairs(activeKeyRefreshers or {}) do pcall(refresh) end
+    end)
+end
 showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
     local rows = {}
+    -- One per shown row: re-reads its backup key from WoW. Run when WoW's
+    -- bindings change (UPDATE_BINDINGS, below), so a key set in WoW's own Key
+    -- Bindings shows here at once instead of on the next visit to the page.
+    local keyRefreshers = {}
+    activeKeyRefreshers = keyRefreshers
     local saveButton, rowContainer, redraw
     -- One chain per row: the row's frames left to right, and for each frame
     -- that is a dropdown, the frame + pad whose RIGHT edge is its visible
     -- edge (dropdownFieldEdge).  The heading cells are a chain too, shifted
     -- by whatever the first row measured so they stay over their columns.
     local rowChains, headingFrames = {}, {}
+    -- headingFrames[i] heads row column headingColumns[i]; a heading that spans
+    -- columns (headingSpan) has no cell of its own for the columns it covers.
+    local headingColumns = {}
     -- Per-column heading offset from the measured centre, negative = left.
     -- Part of the target, not an extra slide, so the measured pass still
     -- converges instead of re-applying it on every run.
-    local headingNudge = {[2] = -10}
+    local headingNudge = {}
+    -- A heading centred over a run of columns: [heading column] = last column.
+    -- "Actionbar Buttons" covers the button and its backup key.
+    local headingSpan = {[2] = 3}
     local buttonNames, buttonOrder = actionButtonNames()
 
     -- Negative `by` slides right; both directions are used below.
@@ -1257,14 +1387,19 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- over the frame, which the native dropdown never fills.
         if first then
             for i, headingFrame in ipairs(headingFrames) do
-                local control, edge = first.frames[i], first.edges[i]
+                local col = headingColumns[i] or i
+                local control, edge = first.frames[col], first.edges[col]
                 if control and headingFrame.GetCenter and control.GetLeft then
                     local left = control:GetLeft()
+                    local last = headingSpan[col] or col
+                    if last ~= col then
+                        control, edge = first.frames[last], first.edges[last]
+                    end
                     local right = edge and edge.frame and edge.frame.GetRight and edge.frame:GetRight()
-                    right = right and (right + (edge.pad or 0)) or (control.GetRight and control:GetRight())
+                    right = right and (right + (edge.pad or 0)) or (control and control.GetRight and control:GetRight())
                     local have = headingFrame:GetCenter()
                     if left and right and have then
-                        slideLeft(headingFrame, have - ((left + right) / 2 + (headingNudge[i] or 0)))
+                        slideLeft(headingFrame, have - ((left + right) / 2 + (headingNudge[col] or 0)))
                     end
                 end
             end
@@ -1344,6 +1479,16 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         if loadout and not next(scope) then
             GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout] = nil
         end
+
+        -- Backup keys changed on rows go to WoW on Save, and WoW's own Key
+        -- Bindings screen shows them then (it refreshes on UPDATE_BINDINGS).
+        -- Before ReloadOverrides, which reads the button's keys for bars that
+        -- route them through GSE.
+        local keysChanged = false
+        for _, r in ipairs(rows) do
+            if writeBackupKey(r) then keysChanged = true end
+        end
+        if keysChanged then saveWoWBindings() end
 
         -- LoadOverrides reverts every live override before re-arming from the
         -- data, so rows removed here go dead on this call.
@@ -1462,11 +1607,61 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local function refreshButtonText()
             button:SetText(GSE.isEmpty(model.bind) and L["Pick a button"] or model.bind)
         end
+
+        -- Backup key: the bar button's second WoW binding (its first is the
+        -- button itself, e.g. 1 for ActionButton1). Opens on what WoW has bound
+        -- now, so an existing backup shows; written to WoW's bindings on Save.
+        if not model.keysRead then
+            model.key1, model.key2 = boundKeysFor(model.bind)
+            model.keysRead = true
+        end
+        local keyField = UI:Create("ControllerKeybinding")
+        local function refreshKeys()
+            keyField:SetKey(model.key2 or "")
+            keyField:SetDisabled(bindingCommandFor(model.bind) == nil)
+        end
+        keyField:SetWidth(AO_COL_KEY)
+        keyField:SetHeight(KB_ROW_HEIGHT)
+        -- Close the widget's 20px right reserve on this instance, as the
+        -- keybind panel does (ControllerKeybinding is not pooled).
+        if keyField.button and keyField.frame then
+            keyField.button:SetPoint("BOTTOMRIGHT", keyField.frame, "BOTTOMRIGHT", 0, 0)
+        end
+        keyField:SetCallback("OnKeyChanged", function(_, _, key)
+            model.key2 = (key ~= "" and key) or nil
+            model.keysChanged = true
+            -- A key WoW already uses for something else moves on Save, as on
+            -- WoW's own screen; say what it is bound to now.
+            local action = model.key2 and GetBindingAction and GetBindingAction(model.key2)
+            if action and action ~= "" and action ~= bindingCommandFor(model.bind) then
+                GSE.Print(string.format(L["%s is bound to %s now; Save moves it to %s."],
+                    model.key2, _G.GetBindingName and _G.GetBindingName(action) or action, model.bind), L["Button Bindings"])
+            end
+            markDirty()
+        end)
+        keyField:SetCallback("OnEnter", function()
+            local tip = bindingCommandFor(model.bind)
+                and L["This button's second key in WoW's Key Bindings, its backup. Click, then press a key; Esc clears it. Saved with Save."]
+                or L["This bar keeps its keys in its own addon; set them there."]
+            GSE.CreateToolTip(L["Backup Key"], tip, editframe)
+        end)
+        keyField:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        refreshKeys()
+        -- A backup key typed here and not yet saved is kept.
+        keyRefreshers[#keyRefreshers + 1] = function()
+            if model.keysChanged or not (keyField.frame and keyField.frame:IsVisible()) then return end
+            model.key1, model.key2 = boundKeysFor(model.bind)
+            refreshKeys()
+        end
+
         local function choose(name)
             model.bind = name
             model.state = nil
+            model.key1, model.key2 = boundKeysFor(name)
+            model.keysChanged = nil
             refreshButtonText()
             refreshStates()
+            refreshKeys()
             markDirty()
         end
         button:SetCallback("OnClick", function()
@@ -1546,9 +1741,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         compactDropdown(sequence)
         refreshStates()
 
-        -- Column order: button, sequence, state.
-        local chain = {frames = {addSlot.frame, button.frame, sequence.frame, state.frame, remove.frame}, edges = {}}
-        for i, dropdown in pairs({[3] = sequence, [4] = state}) do
+        -- Column order: button, backup key, sequence, state.
+        local chain = {frames = {addSlot.frame, button.frame, keyField.frame,
+            sequence.frame, state.frame, remove.frame}, edges = {}}
+        for i, dropdown in pairs({[4] = sequence, [5] = state}) do
             local edgeFrame, pad = dropdownFieldEdge(dropdown)
             chain.edges[i] = {frame = edgeFrame, pad = pad}
         end
@@ -1556,6 +1752,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
         row:AddChild(addSlot)
         row:AddChild(button)
+        row:AddChild(keyField)
         row:AddChild(sequence)
         row:AddChild(state)
         row:AddChild(remove)
@@ -1566,6 +1763,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     redraw = function()
         if #rows == 0 then table.insert(rows, {}) end
         wipe(rowChains)
+        wipe(keyRefreshers)
         rowContainer:ReleaseChildren()
         for i = 1, #rows do
             rowContainer:AddChild(buildRow(i))
@@ -1659,36 +1857,46 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if headings.SetFlowGap then headings:SetFlowGap(6) end
     if headings.SetFlowPadding then headings:SetFlowPadding(0, 0, 0, 0) end
     if headings.SetFlowHAlign then headings:SetFlowHAlign("CENTER") end
+    -- Every heading cell the same height, the icon headings' (their text is
+    -- 23.4 high). Set after SetText, which re-sizes a Label to its text.
+    local AO_HEADING_HEIGHT = 28
     local function heading(width, icon, text)
         local h = UI:Create("Heading")
         h:SetWidth(width)
-        h:SetHeight(KB_ROW_HEIGHT)
         h:SetJustifyH("CENTER")
         h:SetJustifyV("MIDDLE")
         h:SetText(icon and iconText(icon, KB_HEADING_COLOUR .. text .. Statics.StringReset)
             or (KB_HEADING_COLOUR .. text .. Statics.StringReset))
+        h:SetHeight(AO_HEADING_HEIGHT)
         return h
     end
     local blankAdd = UI:Create("Label"); blankAdd:SetWidth(KB_COL_ADD); blankAdd:SetText("")
+    blankAdd:SetHeight(AO_HEADING_HEIGHT)
     local blankRemove = UI:Create("Label"); blankRemove:SetWidth(KB_COL_REMOVE); blankRemove:SetText("")
-    -- Same order as the row: button, sequence, state.  Recorded so the
-    -- tighten pass can slide each heading by what its column moved.
+    blankRemove:SetHeight(AO_HEADING_HEIGHT)
+    -- Same order as the row: button, backup key, sequence, state.  Recorded
+    -- so the tighten pass can slide each heading by what its column moved.
     wipe(headingFrames)
-    for _, cell in ipairs({
-        blankAdd,
-        heading(AO_COL_BUTTON, Statics.Icons.Button, L["Actionbar Buttons"]),
-        heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]),
-        heading(AO_COL_STATE, nil, L["State"]),
-        blankRemove,
+    wipe(headingColumns)
+    -- {cell, row column it heads}. "Actionbar Buttons" is exactly the span it
+    -- heads -- button + gap + backup key -- so the heading row is as wide as a
+    -- binding row and every cell lines up with its column.
+    for _, entry in ipairs({
+        {blankAdd, 1},
+        {heading(AO_COL_BUTTON + 6 + AO_COL_KEY, Statics.Icons.Button, L["Actionbar Buttons"]), 2},
+        {heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]), 4},
+        {heading(AO_COL_STATE, nil, L["State"]), 5},
+        {blankRemove, 6},
     }) do
-        headings:AddChild(cell)
-        headingFrames[#headingFrames + 1] = cell.frame
+        headings:AddChild(entry[1])
+        headingFrames[#headingFrames + 1] = entry[1].frame
+        headingColumns[#headingFrames] = entry[2]
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
     rightContainer:AddChild(loadoutRow)
-    if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
+    local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
 
@@ -1717,14 +1925,18 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     local saveHint = rightContainer.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     saveHint:SetPoint("BOTTOM", saveButton.frame, "TOP", 0, 4)
     saveHint:SetText(L["Set All of your Binds and Click Save!"])
+    local sharedRowHeight = sharedRow and pinSharedRow(rightContainer, saveHint, sharedRow) or 0
     pinSave()
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
-    rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
+    rightContainer:SetCallback("OnRelease", function()
+        saveButton:Release()
+        if sharedRow then sharedRow:Release() end
+    end)
 
     local bottomGutter = UI:Create("Spacer")
     bottomGutter:SetFullWidth(true)
-    bottomGutter:SetHeight(saveButton.frame:GetHeight() + KB_SAVE_INSET * 2 + 18)
+    bottomGutter:SetHeight(saveButton.frame:GetHeight() + KB_SAVE_INSET * 2 + 18 + sharedRowHeight)
     rightContainer:AddChild(bottomGutter)
 
     redraw()
