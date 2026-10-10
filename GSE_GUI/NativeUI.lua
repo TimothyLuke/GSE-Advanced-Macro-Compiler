@@ -3672,7 +3672,11 @@ local function createDropdown()
 
     local function nativeDropdownWidth()
         local width = widget.width or safeWidth(frame, 200)
-        return math.max(40, width - 40)
+        -- Blizzard's art carries transparent ends; anchored 16 left of the frame
+        -- and this much narrower, its visible right edge lands on the frame's
+        -- right edge (width - 40 left it ~26 short, as GSE drew it after
+        -- AceGUI was removed in #1914).
+        return math.max(40, width - 14)
     end
 
     local function nativeDropdownMenuAnchor()
@@ -4191,8 +4195,13 @@ local function createDropdown()
         end
 
         overlay:ClearAllPoints()
-        overlay:SetPoint("TOPLEFT", widget.nativeDropdown, "TOPLEFT", 0, 0)
-        overlay:SetPoint("BOTTOMRIGHT", widget.nativeDropdown, "BOTTOMRIGHT", 0, 0)
+        -- Blizzard's frame runs past the widget on both sides (its transparent
+        -- ends); the click area stays within the widget's own width so it
+        -- never takes a click meant for the control beside it.
+        overlay:SetPoint("TOP", widget.nativeDropdown, "TOP", 0, 0)
+        overlay:SetPoint("BOTTOM", widget.nativeDropdown, "BOTTOM", 0, 0)
+        overlay:SetPoint("LEFT", frame, "LEFT", 0, 0)
+        overlay:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
         if overlay.SetFrameLevel and widget.nativeDropdown.GetFrameLevel then
             overlay:SetFrameLevel((widget.nativeDropdown:GetFrameLevel() or frame:GetFrameLevel()) + 30)
         end
