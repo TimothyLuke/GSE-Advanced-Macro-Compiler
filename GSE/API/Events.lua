@@ -1349,7 +1349,20 @@ function GSE.CreateActionBarOverride(buttonName, sequenceId)
         Bind = buttonName,
         Sequence = sequenceId
     }
-    GSE.SpecOverrides(GetSpec(), true)[buttonName] = bind
+    -- Into the active saved talent loadout's layer, where the Bindings panel
+    -- lists it under that loadout. Without one (Classic, Forever's spec groups,
+    -- which the panel has no nodes for) the spec level, as before.
+    local loadout = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
+    if tonumber(loadout) then
+        local spec = GetSpec()
+        local loadouts = GSE_C["ActionBarBinds"]["LoadOuts"] or {}
+        GSE_C["ActionBarBinds"]["LoadOuts"] = loadouts
+        loadouts[spec] = loadouts[spec] or {}
+        loadouts[spec][loadout] = loadouts[spec][loadout] or {}
+        loadouts[spec][loadout][buttonName] = bind
+    else
+        GSE.SpecOverrides(GetSpec(), true)[buttonName] = bind
+    end
     GSE.ReloadOverrides()
 end
 
