@@ -3307,25 +3307,6 @@ local function trimMacroIconCandidate(value)
     return trimmed
 end
 
-local function stripLeadingMacroIconConditionals(value)
-    value = trimMacroIconCandidate(value)
-    while string.sub(value, 1, 1) == "[" do
-        local closing = string.find(value, "]", 1, true)
-        if not closing then break end
-        value = trimMacroIconCandidate(string.sub(value, closing + 1))
-    end
-    return value
-end
-
-local function normaliseMacroIconCandidate(value)
-    value = stripLeadingMacroIconConditionals(value)
-    value = trimMacroIconCandidate(value:gsub("^reset=%S+%s*", ""))
-    while string.sub(value, 1, 1) == "!" do
-        value = trimMacroIconCandidate(string.sub(value, 2))
-    end
-    return value
-end
-
 local function getMacroIconItemInfo(candidate)
     local icon = select(10, C_Item.GetItemInfo(candidate))
     if icon then
@@ -3337,7 +3318,7 @@ local function getMacroIconItemInfo(candidate)
 end
 
 local function getMacroIconSpellOrItemInfo(candidate, preferItem)
-    candidate = normaliseMacroIconCandidate(candidate)
+    candidate = GSE.GetMacroClauseTarget(candidate)
     if candidate == "" then return nil end
 
     if preferItem then
@@ -3359,7 +3340,7 @@ end
 
 local function getMacroIconFallbackCandidateInfo(candidate, preferItem)
     for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
-        semicolonCandidate = normaliseMacroIconCandidate(semicolonCandidate)
+        semicolonCandidate = GSE.GetMacroClauseTarget(semicolonCandidate)
         for _, commaCandidate in ipairs(GSE.split(semicolonCandidate, ",")) do
             local iconInfo = getMacroIconSpellOrItemInfo(commaCandidate, preferItem)
             if iconInfo then return iconInfo end
@@ -3566,18 +3547,11 @@ function GSE.GetSpellsFromString(str, suppressUIErrors)
                 local processed = {}
                 for _, y in ipairs(GSE.split(oetc, ";")) do
                     for _, v in ipairs(GSE.SplitCastSequence(y)) do
-                        local _, _, etc = GSE.GetConditionalsFromString(v)
-                        local elements = GSE.split(etc, ",")
-
-                        for _, v1 in ipairs(elements) do
-                            -- "reset=combat/target Serpent Sting": the reset
-                            -- clause sits in front of the first spell.
-                            local name = string.trim(v1):gsub("^reset=%S+%s*", "")
-                            local spellstuff = safeGetSpellInfo(name)
-                            if spellstuff and spellstuff.name and not processed[v1] then
-                                table.insert(returnspells, spellstuff)
-                                processed[v1] = true
-                            end
+                        local name = GSE.GetMacroClauseTarget(v)
+                        local spellstuff = safeGetSpellInfo(name)
+                        if spellstuff and spellstuff.name and not processed[name] then
+                            table.insert(returnspells, spellstuff)
+                            processed[name] = true
                         end
                     end
                 end

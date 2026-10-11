@@ -1347,25 +1347,6 @@ local function getManualActionIcon(action)
     end
 end
 
-local function stripLeadingIconConditionals(value)
-    value = trimIconCandidate(value)
-    while string.sub(value, 1, 1) == "[" do
-        local closing = string.find(value, "]", 1, true)
-        if not closing then break end
-        value = trimIconCandidate(string.sub(value, closing + 1))
-    end
-    return value
-end
-
-local function normaliseIconCandidate(value)
-    value = stripLeadingIconConditionals(value)
-    value = trimIconCandidate(value:gsub("^reset=%S+%s*", ""))
-    while string.sub(value, 1, 1) == "!" do
-        value = trimIconCandidate(string.sub(value, 2))
-    end
-    return value
-end
-
 local function getItemIconInfo(candidate)
     local icon = select(10, C_Item.GetItemInfo(candidate))
     if icon then
@@ -1419,7 +1400,7 @@ local function getSpellNameFallbackIconInfo(candidate, skipForms)
 end
 
 local function getSpellOrItemIconInfo(candidate, preferItem, skipForms)
-    candidate = normaliseIconCandidate(candidate)
+    candidate = GSE.GetMacroClauseTarget(candidate)
     if candidate == "" then return nil end
     if preferItem and tonumber(candidate) and tonumber(candidate) <= 19 then
         return getEquipmentSlotIconInfo(candidate)
@@ -1462,7 +1443,7 @@ local function getFallbackCandidateIconInfo(candidate, preferItem, skipForms)
     local knownIconInfo
     for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
         knownIconInfo = knownIconInfo or getKnownConditionalIconInfo(semicolonCandidate, skipForms)
-        semicolonCandidate = normaliseIconCandidate(semicolonCandidate)
+        semicolonCandidate = GSE.GetMacroClauseTarget(semicolonCandidate)
         for _, commaCandidate in ipairs(GSE.split(semicolonCandidate, ",")) do
             local iconInfo = getSpellOrItemIconInfo(commaCandidate, preferItem, skipForms)
             if iconInfo then return iconInfo end
@@ -1526,7 +1507,7 @@ local function getMacroLineFallbackIconInfo(line, skipForms)
     end
 
     local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(parsedEtc, true)
-    local candidate = resolved and trimIconCandidate(resolved) or stripLeadingIconConditionals(parsedEtc)
+    local candidate = resolved and trimIconCandidate(resolved) or GSE.GetMacroClauseTarget(parsedEtc)
 
     return getFallbackCandidateIconInfo(candidate, preferItem, skipForms)
 end
@@ -1545,7 +1526,7 @@ local function getMacroLineResolvedIconCandidate(line)
     end
 
     local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(parsedEtc, true)
-    return resolved and trimIconCandidate(resolved) or stripLeadingIconConditionals(parsedEtc)
+    return resolved and trimIconCandidate(resolved) or GSE.GetMacroClauseTarget(parsedEtc)
 end
 
 local function isMacroLineFormOrStance(line)
@@ -1775,13 +1756,12 @@ local function getMacroIconDebugCandidate(macro)
             if cmd == "castsequence" then
                 for _, semicolonCandidate in ipairs(GSE.split(etc, ";")) do
                     for _, sequenceCandidate in ipairs(GSE.SplitCastSequence(semicolonCandidate)) do
-                        local _, _, sequenceEtc = GSE.GetConditionalsFromString(sequenceCandidate)
-                        local candidate = normaliseIconCandidate(sequenceEtc)
+                        local candidate = GSE.GetMacroClauseTarget(sequenceCandidate)
                         if candidate ~= "" then return cmd .. "=" .. candidate end
                     end
                 end
             elseif Statics.CastCmds[cmd] and cmd ~= "stopmacro" and cmd ~= "cancelaura" and cmd ~= "cancelform" then
-                local candidate = normaliseIconCandidate(etc)
+                local candidate = GSE.GetMacroClauseTarget(etc)
                 if candidate ~= "" then return cmd .. "=" .. candidate end
             end
         end
