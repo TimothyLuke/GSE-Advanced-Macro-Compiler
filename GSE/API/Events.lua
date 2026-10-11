@@ -1243,6 +1243,444 @@ local function normalizeBindKey(key)
     return (key:gsub("MiddleButton", "BUTTON3"):gsub("Button4", "BUTTON4"):gsub("Button5", "BUTTON5"))
 end
 
+-- Key slots: keybinds WoW knows about. WoW's Key Bindings only hold bindings
+-- an addon declares in Bindings.xml; a key bound to anything else (a sequence
+-- button by name) sits in the unsaved live set, which Blizzard's own
+-- LoadBindings calls throw away, and no Blizzard UI shows or guards it.
+-- GSE/Bindings.xml declares KEY_SLOT_COUNT bindings, each a click on one of
+-- the fixed buttons made here at load. A sequence's key is bound to a slot,
+-- and the slot forwards to the sequence's button, as an action bar override
+-- does. That bind is an ordinary saved WoW binding: listed under GSE in Key
+-- Bindings, kept across LoadBindings, and conflict-checked by Blizzard's UI.
+local KEY_SLOT_COUNT = 24 -- as many as GSE/Bindings.xml declares
+local keySlots = {}
+local usedKeySlots, keySlotsDirty = {}, false
+local keyTakenWarned = {}
+local slottedKeys = {} -- key -> sequence id, for the keys the last rebuild put on slots
+local slotSequence = {} -- slot -> sequence id it carries
+local keySlotOf = {} -- key -> the slot the last rebuild gave it
+local lockRetakes = {} -- key -> times the lock took it back from another override
+local function keySlotCommand(slot)
+    return "CLICK GSEKeySlot" .. slot .. ":LeftButton"
+end
+_G["BINDING_HEADER_GSEKEYSLOTS"] = L["GSE Key Slots"]
+for slot = 1, KEY_SLOT_COUNT do
+    keySlots[slot] = CreateFrame("Button", "GSEKeySlot" .. slot, nil, "SecureActionButtonTemplate")
+    _G["BINDING_NAME_" .. keySlotCommand(slot)] = string.format(L["GSE Key Slot %d"], slot)
+end
+
+--- Whether sequence keybinds go through key slots here. MoP first.
+function GSE.UsesKeySlots()
+    return GSE.GameMode == 5
+end
+
+-- Keys the player has just bound in GSE (the Keybindings page, /gse bind):
+-- those GSE takes, whatever holds them. Session only.
+local claimedKeys = {}
+local claimOrder, claimCount = {}, 0 -- key -> when it was claimed: a row's key before its backup
+function GSE.ClaimSequenceKey(key)
+    if GSE.isEmpty(key) then return end
+    key = normalizeBindKey(key)
+    claimedKeys[key] = true
+    claimCount = claimCount + 1
+    claimOrder[key] = claimCount
+    -- Bound again by the player: what was answered about this key (the lock's
+    -- popup, GSE_C.KeyLockAnswers) no longer stands.
+    if GSE_C and GSE_C.KeyLockAnswers then GSE_C.KeyLockAnswers[key] = nil end
+end
+
+--- Lock Keys to GSE (Options, on by default): each sequence key also gets a
+--- priority override onto its slot, so the key reaches its sequence whatever
+--- another addon or WoW's Key Bindings binds it to. Off, a key something else
+--- takes is left to it and the keybind goes off.
+function GSE.KeysLocked()
+    return GSE.UsesKeySlots() and GSEOptions.lockSequenceKeys ~= false
+end
+local keyLockOwner = CreateFrame("Frame", "GSEKeyLockOwner")
+
+--- What WoW's bindings give a key to when that is not a GSE key slot -- the
+--- action's name. nil when the key is on a slot or free, and where key slots
+--- are not used.
+function GSE.KeyHolder(key)
+    if not GSE.UsesKeySlots() or GSE.isEmpty(key) then return nil end
+    local action = GetBindingAction(normalizeBindKey(key)) or ""
+    if action == "" or string.find(action, "^CLICK GSEKeySlot%d+:LeftButton$") then return nil end
+    return action
+end
+
+--- The same, when it means the sequence's keybind is off: not with the keys
+--- locked, where the key still reaches GSE. The Keybindings page marks these.
+function GSE.KeySlotHolder(key)
+    if GSE.KeysLocked() then return nil end
+    return GSE.KeyHolder(key)
+end
+
+--- A key the player took out of GSE's keybinds: what GSE kept about it goes
+--- too -- that it was on a slot (GSE_C.KeySlotKeys) and what the lock's popup
+--- was answered (GSE_C.KeyLockAnswers) -- so binding it again starts clean.
+function GSE.ForgetSequenceKey(key)
+    if GSE.isEmpty(key) or not GSE_C then return end
+    key = normalizeBindKey(key)
+    if GSE_C.KeySlotKeys then GSE_C.KeySlotKeys[key] = nil end
+    if GSE_C.KeyLockAnswers then GSE_C.KeyLockAnswers[key] = nil end
+end
+
+-- The slot a key is bound to; else a slot with no key, which gets this one.
+-- A key GSE had on a slot before (GSE_C.KeySlotKeys) that another action now
+-- holds was taken by the player or another addon since: it is left where it
+-- is -- second return true -- or the two would trade it back and forth on
+-- every rebuild. A key never on a slot is taken, as the direct binds took it.
+local function keySlotFor(key)
+    local action = GetBindingAction(key) or ""
+    local slot = tonumber(string.match(action, "^CLICK GSEKeySlot(%d+):LeftButton$"))
+    GSE_C.KeySlotKeys = GSE_C.KeySlotKeys or {}
+    if slot and keySlots[slot] then
+        GSE_C.KeySlotKeys[key] = true
+        keyTakenWarned[key] = nil -- back on its slot: a later steal is news again
+        return slot
+    end
+    -- (Not the action GSE gave the key back to itself, restoreKey: a spec
+    -- that does not use the key hands it back, and the next one takes it.)
+    local prior = GSE_C.KeySlotPrior and GSE_C.KeySlotPrior[key]
+    if action ~= "" and GSE_C.KeySlotKeys[key] and not claimedKeys[key]
+        and not (prior and prior.action == action) then
+        if not GSE.KeysLocked() then return nil, true end
+        -- Locked: WoW's binding stays with whoever took it, and a slot with no
+        -- key of its own carries this one through the lock's override.
+        for free = 1, KEY_SLOT_COUNT do
+            if not usedKeySlots[free] and not GetBindingKey(keySlotCommand(free)) then return free, true end
+        end
+        return nil, true
+    end
+    claimedKeys[key] = nil
+    for free = 1, KEY_SLOT_COUNT do
+        if not usedKeySlots[free] and not GetBindingKey(keySlotCommand(free)) then
+            -- What the key did before, and whether it was that binding's
+            -- first key, so it can go back there (restoreKey).
+            GSE_C.KeySlotPrior = GSE_C.KeySlotPrior or {}
+            GSE_C.KeySlotPrior[key] = action ~= "" and {action = action, first = GetBindingKey(action) == key} or nil
+            if not SetBinding(key, keySlotCommand(free)) then return nil end
+            keySlotsDirty = true
+            GSE_C.KeySlotKeys[key] = true
+            return free
+        end
+    end
+end
+
+-- A key GSE is done with goes back to what it did before GSE took it
+-- (GSE_C.KeySlotPrior): ACTIONBUTTON1 gets "1" again. Back as that binding's
+-- first key if it was -- WoW orders a binding's keys as they are bound, so
+-- the key there now is bound again after it. A binding that has since been
+-- given two keys of its own keeps them.
+-- shortcut: a key taken with no record (slotted before records were kept, or
+-- by a direct bind) falls back to the main action bar's default keys only;
+-- WoW has no call that gives one key's default without loading the whole
+-- default set over the player's bindings. Widen if other defaults matter.
+local DEFAULT_ACTIONBAR_KEYS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="}
+local function restoreKey(key)
+    SetBinding(key)
+    keySlotsDirty = true
+    local prior = GSE_C.KeySlotPrior and GSE_C.KeySlotPrior[key]
+    if not prior then
+        for button, default in ipairs(DEFAULT_ACTIONBAR_KEYS) do
+            if default == key then prior = {action = "ACTIONBUTTON" .. button, first = true} end
+        end
+    end
+    if not prior then return end
+    local first, second = GetBindingKey(prior.action)
+    if second then return end
+    if prior.first and first then
+        SetBinding(first)
+        SetBinding(key, prior.action)
+        SetBinding(first, prior.action)
+    else
+        SetBinding(key, prior.action)
+    end
+end
+
+-- Point a slot at a sequence's button. It fires on the edge the player's
+-- ActionButtonUseKeyDown asks for and forwards a click the sequence button
+-- takes on its own edge, like the key-down relay (GSE.GetKeybindClickTarget).
+local function pointKeySlot(slot, sequenceId)
+    local button, executor = keySlots[slot], _G[sequenceId]
+    if not executor then return end
+    local onDown = C_CVar.GetCVar("ActionButtonUseKeyDown") == "1"
+    button:RegisterForClicks(onDown and "AnyDown" or "AnyUp")
+    button:SetAttribute("type", "click")
+    button:SetAttribute("clickbutton", executor)
+    button:SetAttribute("useOnKeyDown", onDown)
+end
+
+--- A sequence's button was just made: point the slots that carry it. At
+--- login the keys are bound before the sequences are compiled, so the first
+--- pointKeySlot finds no button -- a direct bind named it and did not care.
+function GSE.PointKeySlotsFor(sequenceId)
+    if InCombatLockdown() or not GSE.UsesKeySlots() then return end
+    for slot, carried in pairs(slotSequence) do
+        if carried == sequenceId then pointKeySlot(slot, sequenceId) end
+    end
+end
+
+--- Where WoW's bindings hold a key: slot * 10 + 1 for a slot's first key, + 2
+--- for its second; nil when the key is not on a slot. The Keybindings page
+--- orders a sequence's key and backup by it.
+function GSE.KeySlotPosition(key)
+    if GSE.isEmpty(key) then return nil end
+    key = normalizeBindKey(key)
+    local slot = tonumber(string.match(GetBindingAction(key) or "", "^CLICK GSEKeySlot(%d+):LeftButton$"))
+    if not slot then return nil end
+    local first, second = GetBindingKey(keySlotCommand(slot))
+    return slot * 10 + ((first == key and 1) or (second == key and 2) or 3)
+end
+
+-- Two keys for one sequence share one slot, as a WoW binding holds a key and
+-- a backup: the first two of a sequence's keys go on the first one's slot,
+-- that key first. WoW gives a binding's keys their place in the order they
+-- are bound (Blizzard's KeybindListener:RebindKeysInOrder does the same), so
+-- both are cleared and bound again in order. First is the key bound first in
+-- GSE this session, else the one WoW already has first, else by name. Keys
+-- another action holds (not on a slot in WoW's own bindings) are left out.
+local function shareKeySlots()
+    local bySequence = {}
+    for key, sequenceId in pairs(slottedKeys) do
+        if GSE.KeySlotPosition(key) then
+            bySequence[sequenceId] = bySequence[sequenceId] or {}
+            table.insert(bySequence[sequenceId], key)
+        end
+    end
+    for _, keys in pairs(bySequence) do
+        if #keys >= 2 then
+            table.sort(keys, function(a, b)
+                local claimedA, claimedB = claimOrder[a] or math.huge, claimOrder[b] or math.huge
+                if claimedA ~= claimedB then return claimedA < claimedB end
+                local placeA, placeB = GSE.KeySlotPosition(a), GSE.KeySlotPosition(b)
+                if placeA ~= placeB then return placeA < placeB end
+                return a < b
+            end)
+            local first, second = keys[1], keys[2]
+            local slot, from = keySlotOf[first], keySlotOf[second]
+            if GSE.KeySlotPosition(first) ~= slot * 10 + 1 or GSE.KeySlotPosition(second) ~= slot * 10 + 2 then
+                -- Every key on the slot comes off first, so the two land in order.
+                for _, key in ipairs({GetBindingKey(keySlotCommand(slot))}) do SetBinding(key) end
+                SetBinding(first, keySlotCommand(slot))
+                SetBinding(second, keySlotCommand(slot))
+                keySlotsDirty = true
+                keySlotOf[second] = slot
+                if from ~= slot then
+                    -- The backup's old slot carries nothing now; the cleanup
+                    -- in finishKeySlots empties it.
+                    usedKeySlots[from] = nil
+                    slotSequence[from] = nil
+                    local answer = GSE_C.KeyLockAnswers and GSE_C.KeyLockAnswers[second]
+                    if GSE.KeysLocked() and not (answer and answer.take == false) then
+                        SetOverrideBindingClick(keyLockOwner, true, second, "GSEKeySlot" .. slot, "LeftButton")
+                    end
+                end
+            end
+        end
+    end
+end
+
+-- A slot this rebuild did not use gives its keys back and forwards nowhere;
+-- then WoW saves the set, which is what makes the binds last.
+local function finishKeySlots()
+    shareKeySlots()
+    for slot = 1, KEY_SLOT_COUNT do
+        if not usedKeySlots[slot] then
+            for _, key in ipairs({GetBindingKey(keySlotCommand(slot))}) do
+                restoreKey(key)
+            end
+            keySlots[slot]:SetAttribute("clickbutton", nil)
+        end
+    end
+    if keySlotsDirty then
+        keySlotsDirty = false
+        -- The set WoW is using (account or character); else the character's.
+        local getSet = _G.GetCurrentBindingSet
+        SaveBindings(getSet and getSet() or 2)
+    end
+end
+
+-- Say, once until the key is back, that another action has a sequence's key:
+-- with the keys locked GSE still has the press, without, the keybind is off.
+local function warnKeyTaken(key, sequenceId)
+    if keyTakenWarned[key] then return end
+    keyTakenWarned[key] = true
+    local text = GSE.KeysLocked()
+        and L["%s is also bound to %s. Lock Keys to GSE keeps it on %s; turn that option off to let the key go."]
+        or L["%s is now bound to %s, so GSE's keybind for %s is off. Bind it again in GSE to take the key back."]
+    GSE.Print(string.format(text, key, GetBindingAction(key), GSE.SequenceName(sequenceId) or sequenceId))
+end
+
+-- The lock is a priority override, and another addon's priority override set
+-- after it wins. Locked, a key's binding with overrides counted is its slot;
+-- anything else there took it. The player is asked: take it back, or let it
+-- go for this session. One key at a time (a StaticPopup shows one of a kind);
+-- answering checks the rest. LOCK_RETAKES times a key at most, so two addons
+-- that both insist do not ask forever; then it only says who has the key.
+-- Out of combat only, like every bind.
+local LOCK_RETAKES = 3
+local lockBeatenWarned, lockLetGo = {}, {}
+local overrideTakenBy = {} -- key -> the addon whose call last set an override on it
+local lockAsking -- the key the popup is up for
+local recheckKeySlots -- the watcher's check, below
+local function lockBeaten(key, effective, name)
+    if lockBeatenWarned[key] then return end
+    lockBeatenWarned[key] = true
+    GSE.Print(string.format(L["Another addon's override has %s (%s), and Lock Keys to GSE could not take it back for %s."], key, effective, name))
+end
+-- Take a locked key back from another override; says how it went.
+local function retakeLockedKey(key, effective, name)
+    local slot = keySlotOf[key]
+    if not slot then return end
+    lockRetakes[key] = (lockRetakes[key] or 0) + 1
+    SetOverrideBindingClick(keyLockOwner, true, key, "GSEKeySlot" .. slot, "LeftButton")
+    if GetBindingAction(key, true) == keySlotCommand(slot) then
+        GSE.Print(string.format(L["Lock Keys to GSE took %s back for %s."], key, name))
+    else
+        lockBeaten(key, effective, name)
+    end
+end
+-- The popup's answer is kept per character and key, with the addon it was
+-- about (GSE_C.KeyLockAnswers), so an addon that takes the key at every login
+-- is asked about once. Binding the key again in GSE forgets it
+-- (GSE.ClaimSequenceKey), as does GSE.ClearKeyBinding.
+local function rememberLockAnswer(key, addon, take)
+    GSE_C.KeyLockAnswers = GSE_C.KeyLockAnswers or {}
+    GSE_C.KeyLockAnswers[key] = {addon = addon or "", take = take}
+end
+-- true / false when the player already answered for this key and this addon.
+local function rememberedLockAnswer(key, addon)
+    local answer = GSE_C.KeyLockAnswers and GSE_C.KeyLockAnswers[key]
+    if answer and answer.addon == (addon or "") then return answer.take end
+end
+StaticPopupDialogs["GSE_KEY_OVERRIDDEN"] = {
+    text = "%s",
+    button1 = L["Take it back"],
+    button2 = L["Let it go"],
+    OnAccept = function(_, data)
+        lockAsking = nil
+        rememberLockAnswer(data.key, data.addon, true)
+        -- In combat the bind is blocked; leaving combat comes back to it.
+        if not InCombatLockdown() then retakeLockedKey(data.key, data.effective, data.name) end
+        recheckKeySlots()
+    end,
+    OnCancel = function(_, data)
+        lockAsking = nil
+        rememberLockAnswer(data.key, data.addon, false)
+        lockLetGo[data.key] = true
+        GSE.Print(string.format(L["%s is left with %s. GSE will remember that; bind %s again in GSE to take it back."], data.key, data.effective, data.key))
+        recheckKeySlots()
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = false,
+    preferredIndex = 3,
+}
+local function holdLockedKey(key, sequenceId)
+    local slot = keySlotOf[key]
+    local effective = GetBindingAction(key, true) or ""
+    if not slot or effective == keySlotCommand(slot) or InCombatLockdown() then return end
+    if lockAsking or lockLetGo[key] then return end
+    local name = GSE.SequenceName(sequenceId) or sequenceId
+    if (lockRetakes[key] or 0) >= LOCK_RETAKES then
+        lockBeaten(key, effective, name)
+        return
+    end
+    -- Answered "take it back" for this addon before: no need to ask again.
+    -- (A remembered "let it go" never gets here: the rebuild set no lock.)
+    if rememberedLockAnswer(key, overrideTakenBy[key]) then
+        retakeLockedKey(key, effective, name)
+        return
+    end
+    lockAsking = key
+    -- Headed as GSE's, and naming the addon that took the key when its call
+    -- was seen (the setter hooks below).
+    StaticPopup_Show("GSE_KEY_OVERRIDDEN",
+        GSEOptions.TitleColour .. L["GSE: Lock Keys to GSE"] .. Statics.StringReset .. "\n\n"
+            .. string.format(L["%s took %s with an override:\n%s\n\nGSE has %s locked to %s. Take it back?"],
+                overrideTakenBy[key] or L["Another addon"], key, effective, key, name),
+        nil, {key = key, effective = effective, name = name, addon = overrideTakenBy[key]})
+end
+
+-- Bindings changed (another addon, WoW's Key Bindings, LoadBindings): a key
+-- taken off its slot is noticed now, not at the next rebuild. A frame later,
+-- so a run of changes is checked once; again on leaving combat, where a
+-- taken key could not be put right. WoW fires no event when an override is
+-- set (UPDATE_BINDINGS did not come for one, in game), so the calls that set
+-- them are watched too.
+do
+    local watcher, queued = CreateFrame("Frame"), false
+    local function check()
+        if queued or not GSE.UsesKeySlots() then return end
+        queued = true
+        C_Timer.After(0, function()
+            queued = false
+            local locked = GSE.KeysLocked()
+            for key, sequenceId in pairs(slottedKeys) do
+                if GSE.KeyHolder(key) then warnKeyTaken(key, sequenceId) end
+                if locked then holdLockedKey(key, sequenceId) end
+            end
+        end)
+    end
+    recheckKeySlots = check
+    watcher:RegisterEvent("UPDATE_BINDINGS")
+    watcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+    watcher:SetScript("OnEvent", check)
+    for _, setter in ipairs({"SetOverrideBinding", "SetOverrideBindingClick", "SetOverrideBindingSpell",
+        "SetOverrideBindingItem", "SetOverrideBindingMacro"}) do
+        if type(_G[setter]) == "function" then
+            hooksecurefunc(setter, function(_, _, key)
+                -- Whose call it was, for the popup: the first addon on the
+                -- stack that is not GSE itself.
+                if type(key) == "string" and slottedKeys[key] and _G.debugstack then
+                    for addon in string.gmatch(_G.debugstack(2, 6, 0) or "", "AddOns[/\\]([^/\\]+)[/\\]") do
+                        if string.sub(addon, 1, 3) ~= "GSE" then
+                            overrideTakenBy[key] = addon
+                            break
+                        end
+                    end
+                end
+                check()
+            end)
+        end
+    end
+end
+
+-- Bind a key to a sequence: through a key slot, or straight to its button.
+local function bindSequenceKey(key, sequenceId, keybindingframe)
+    if GSE.UsesKeySlots() then
+        local slot, taken = keySlotFor(key)
+        if slot then
+            usedKeySlots[slot] = true
+            slottedKeys[key] = sequenceId
+            slotSequence[slot] = sequenceId
+            keySlotOf[key] = slot
+            pointKeySlot(slot, sequenceId)
+            local answer = GSE_C.KeyLockAnswers and GSE_C.KeyLockAnswers[key]
+            if answer and answer.take == false then
+                -- Let go for good (the lock's popup): no override, so the
+                -- addon that has it keeps it whichever of us binds first.
+                lockLetGo[key] = true
+            elseif GSE.KeysLocked() then
+                SetOverrideBindingClick(keyLockOwner, true, key, "GSEKeySlot" .. slot, "LeftButton")
+                if taken then warnKeyTaken(key, sequenceId) end
+            end
+        elseif taken then
+            warnKeyTaken(key, sequenceId)
+        else
+            GSE.Print(string.format(L["No free GSE key slot for %s."], key))
+        end
+        return
+    end
+    local target = GSE.GetKeybindClickTarget(sequenceId)
+    SetBindingClick(key, target, "LeftButton")
+    boundKeys[key] = true
+    if GSE.GameMode == 5 then
+        SetOverrideBindingClick(keybindingframe, false, key, target)
+    end
+end
+
 function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
         GSE_C = {}
@@ -1274,19 +1712,25 @@ function LoadKeyBindings(payload)
     end
     -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
     if not GSE.KeybindingsEnabled() then return end
+    -- Key slots read WoW's saved bindings and write to them, so they wait for
+    -- the full rebuild once the player is in the world, out of combat.
+    local slots = GSE.UsesKeySlots()
+    if slots then
+        if not payload or InCombatLockdown() then return end
+        wipe(usedKeySlots)
+        wipe(slottedKeys)
+        wipe(slotSequence)
+        wipe(keySlotOf)
+        wipe(lockLetGo)
+        ClearOverrideBindings(keyLockOwner) -- the lock, set again per key below
+    end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.
     for k, v in pairs(GSE.SpecKeyBinds(GetSpec(), false) or {}) do
         local button = k ~= "LoadOuts" and GSE.StoredSequenceId(v)
         if button and not InCombatLockdown() then
-            local target = GSE.GetKeybindClickTarget(button)
-            k = normalizeBindKey(k)
-            SetBindingClick(k, target, "LeftButton")
-            boundKeys[k] = true
-            if GSE.GameMode == 5 then
-                SetOverrideBindingClick(keybindingframe, false, k, target)
-            end
+            bindSequenceKey(normalizeBindKey(k), button, keybindingframe)
         -- print("Bound", k, v)
         end
     end
@@ -1304,16 +1748,13 @@ function LoadKeyBindings(payload)
                 --@end-debug@
                 for k, v in pairs(loadouts[selected]) do
                     k = normalizeBindKey(k)
-                    SetBinding(k)
-                    local target = GSE.GetKeybindClickTarget(GSE.StoredSequenceId(v) or v)
-                    SetBindingClick(k, target, "LeftButton")
-                    boundKeys[k] = true
-                    if GSE.GameMode == 5 then
-                        SetOverrideBindingClick(keybindingframe, false, k, target)
-                    end
+                    -- A slot's key stays on its slot; the slot is re-pointed.
+                    if not slots then SetBinding(k) end
+                    bindSequenceKey(k, GSE.StoredSequenceId(v) or v, keybindingframe)
                 end
             end
         end
+        if slots then finishKeySlots() end
         -- The spec and loadout read above may still name the ones being left,
         -- and can stay stale for seconds. See scheduleBindingRecheck.
         scheduleBindingRecheck(BINDING_RECHECK_ATTEMPTS)
@@ -1619,7 +2060,12 @@ function GSE.ClearKeyBinding(key)
         GSE.Print(string.format(L["Keybind %s will be cleared when combat ends."], key))
         return false
     end
-    SetBinding(key)
+    if GSE.UsesKeySlots() then
+        restoreKey(key) -- saved by the rebuild
+        GSE.ForgetSequenceKey(key)
+    else
+        SetBinding(key)
+    end
     LoadKeyBindings(true)
     return true
 end

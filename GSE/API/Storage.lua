@@ -4437,6 +4437,8 @@ end
         gsebutton:WrapScript(gsebutton, "OnClick", clickexecution)
     end
     GSE.UpdateIcon(_G[name], false)
+    -- Key slots bound before this button existed can be pointed at it now.
+    if GSE.PointKeySlotsFor then GSE.PointKeySlotsFor(name) end
 end
 
 --- Build GSE3 Executable Buttons

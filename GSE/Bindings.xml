@@ -1,0 +1,29 @@
+<Bindings>
+	<!-- Key slots: each is a click on a fixed button GSE creates at load
+	     (GSE/API/Events.lua), which forwards to the sequence given that key.
+	     As many entries as KEY_SLOT_COUNT there. -->
+	<Binding name="CLICK GSEKeySlot1:LeftButton" header="GSEKEYSLOTS" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot2:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot3:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot4:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot5:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot6:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot7:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot8:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot9:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot10:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot11:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot12:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot13:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot14:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot15:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot16:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot17:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot18:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot19:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot20:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot21:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot22:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot23:LeftButton" category="GSE"/>
+	<Binding name="CLICK GSEKeySlot24:LeftButton" category="GSE"/>
+</Bindings>

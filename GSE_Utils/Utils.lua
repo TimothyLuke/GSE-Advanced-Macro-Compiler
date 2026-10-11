@@ -2281,6 +2281,7 @@ function GSE:GSSlash(input)
             -- Into the binds in force for that spec: the shared profile's, or
             -- this character's own (Profiles.lua).
             GSE.SpecKeyBinds(spec, true)[physicalkey] = sequence
+            if GSE.ClaimSequenceKey then GSE.ClaimSequenceKey(physicalkey) end
             GSE.ReloadKeyBindings()
         else
            GSE.Print("Invalid Bind - /gse bind spec sequence key")
