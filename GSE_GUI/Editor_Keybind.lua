@@ -433,6 +433,9 @@ end
 -- KB_ICON_SIZE reads as a gap between the icon and the control beside it.
 local KB_ICON_SIZE = 18
 local KB_COL_ADD, KB_COL_KEY, KB_COL_SEQ, KB_COL_REMOVE = KB_ICON_SIZE + 4, 180, 260, KB_ICON_SIZE + 4
+-- Backup key: a second key for the same sequence, as WoW's own Key Bindings
+-- give every binding.
+local KB_COL_KEY2 = 125
 local KB_ROW_HEIGHT = 24
 -- Rows a panel will add up to.  Saved data above the cap still loads; it just
 -- cannot grow further from here.
@@ -502,7 +505,7 @@ local function heroBadge(element, size, active)
     art.ring:Show()
     return badge
 end
-local KB_ROW_WIDTH = KB_COL_ADD + KB_COL_KEY + KB_COL_SEQ + KB_COL_REMOVE + 18
+local KB_ROW_WIDTH = KB_COL_ADD + KB_COL_KEY + KB_COL_KEY2 + KB_COL_SEQ + KB_COL_REMOVE + 24
 
 -- The Dropdown draws ONE of two things: Blizzard's UIDropDownMenuTemplate
 -- (widget.nativeDropdown -- the path Retail takes, NativeUI SetDropdownStyle)
@@ -525,9 +528,36 @@ local function dropdownFieldEdge(dropdown)
     return nil, 0
 end
 
+-- Key slots: taking a key that belongs to something else is asked first.
+StaticPopupDialogs["GSE_TAKE_KEYS"] = {
+    text = "%s\n\n" .. L["Bind to the GSE sequence instead?"],
+    button1 = OKAY,
+    button2 = CANCEL,
+    OnAccept = function(_, data) if type(data) == "function" then data() end end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+-- The open Keybindings panel's redraw (showKeybindPanel), run when WoW's
+-- bindings change so a key another action takes is marked at once.
+local activeKeybindRedraw
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("UPDATE_BINDINGS")
+    watcher:SetScript("OnEvent", function()
+        if activeKeybindRedraw and GSE.UsesKeySlots and GSE.UsesKeySlots() then pcall(activeKeybindRedraw) end
+    end)
+end
+
 local showKeybindPanel
 showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
+    -- Whether this panel shows the binds in force now: only those hold keys.
+    local function inForce()
+        return specialization == GSE.CurrentSpecKey()
+            and (not loadout or tostring(loadout) == (GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()))
+    end
 
     local rows = {}
     local saveButton, rowContainer, redraw
@@ -566,13 +596,39 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
             if k ~= "LoadOuts" then table.insert(keys, k) end
         end
         table.sort(keys)
+        -- Two keys on one sequence share a row: the key and its backup. They
+        -- are stored as two binds, as before; a third starts another row.
+        -- Key slots: the pair in the order WoW's bindings hold them (first
+        -- key, second key), which is not always the order of their names.
+        local open = {}
         for _, k in ipairs(keys) do
-            table.insert(rows, {key = k, seq = scope[k]})
+            local seq = scope[k]
+            if open[seq] and not open[seq].key2 then
+                local row = open[seq]
+                local placeKey = GSE.KeySlotPosition and GSE.KeySlotPosition(row.key)
+                local placeBackup = GSE.KeySlotPosition and GSE.KeySlotPosition(k)
+                if placeKey and placeBackup and placeBackup < placeKey then
+                    row.key, row.key2 = k, row.key
+                else
+                    row.key2 = k
+                end
+            else
+                open[seq] = {key = k, seq = seq}
+                table.insert(rows, open[seq])
+            end
         end
     end
 
     local function markDirty()
         if saveButton then saveButton:SetDisabled(false) end
+    end
+
+    -- A row's keys: the key and its backup, whichever are set.
+    local function rowKeys(r)
+        local keys = {}
+        if not GSE.isEmpty(r.key) then keys[#keys + 1] = r.key end
+        if not GSE.isEmpty(r.key2) then keys[#keys + 1] = r.key2 end
+        return keys
     end
 
     -- Every sequence this character can bind.  Disabled ones are flagged rather
@@ -592,16 +648,37 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         return names, order
     end
 
-    local function save()
+    local save
+    save = function(confirmed)
         -- Two rows on one key would silently discard one of them.
         local seen = {}
         for _, r in ipairs(rows) do
-            if not GSE.isEmpty(r.key) then
-                if seen[r.key] then
-                    GSE.Print(string.format(L["%s is bound more than once.  Change or remove one before saving."], r.key))
+            -- A backup key on its own is the row's key.
+            if GSE.isEmpty(r.key) and not GSE.isEmpty(r.key2) then r.key, r.key2 = r.key2, nil end
+            for _, key in ipairs(rowKeys(r)) do
+                if seen[key] then
+                    GSE.Print(string.format(L["%s is bound more than once.  Change or remove one before saving."], key))
                     return
                 end
-                seen[r.key] = true
+                seen[key] = true
+            end
+        end
+
+        -- Key slots: a key that belongs to something else is taken only on a
+        -- yes. (The Save button calls this with its widget, not true.)
+        if confirmed ~= true and inForce() and GSE.KeyHolder then
+            local taken = {}
+            for _, r in ipairs(rows) do
+                for _, key in ipairs(rowKeys(r)) do
+                    local holder = not GSE.isEmpty(r.seq) and GSE.KeyHolder(key)
+                    if holder then
+                        table.insert(taken, string.format(L["%s is currently bound to %s"], key, holder))
+                    end
+                end
+            end
+            if #taken > 0 then
+                StaticPopup_Show("GSE_TAKE_KEYS", table.concat(taken, "\n"), nil, function() save(true) end)
+                return
             end
         end
 
@@ -614,18 +691,31 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         for _, r in ipairs(rows) do
             local hasKey, hasSeq = not GSE.isEmpty(r.key), not GSE.isEmpty(r.seq)
             if hasKey ~= hasSeq then
-                table.insert(incomplete, {key = r.key, seq = r.seq})
+                table.insert(incomplete, {key = r.key, key2 = r.key2, seq = r.seq})
             end
         end
 
         local scope = keybindScope(specialization, loadout, true)
+        local removed = {}
         for k in pairs(scope) do
-            if k ~= "LoadOuts" then scope[k] = nil end
+            if k ~= "LoadOuts" then
+                removed[k] = true
+                scope[k] = nil
+            end
         end
         for _, r in ipairs(rows) do
             if not GSE.isEmpty(r.key) and not GSE.isEmpty(r.seq) then
-                scope[r.key] = r.seq
+                for _, key in ipairs(rowKeys(r)) do
+                    scope[key] = r.seq
+                    removed[key] = nil
+                    -- Saved here by the player: GSE takes the key (key slots).
+                    if GSE.ClaimSequenceKey then GSE.ClaimSequenceKey(key) end
+                end
             end
+        end
+        -- A key taken off the page is forgotten along with its bind.
+        if GSE.ForgetSequenceKey then
+            for k in pairs(removed) do GSE.ForgetSequenceKey(k) end
         end
         -- An emptied loadout would stay in the tree as a childless node -- but
         -- only drop it when nothing is still being filled in, or a half-set row
@@ -750,6 +840,45 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
                 markDirty()
             end
         )
+        -- Key slots: a key another action took since gets a warning icon and
+        -- greyed text (red is lost on the red button), says who has it, and
+        -- Save is lit -- saving the row takes the key back. Only for the
+        -- binds in force now; another spec's keys are not bound.
+        local function markTaken(widget, key)
+            local holder = inForce() and GSE.KeySlotHolder and GSE.KeySlotHolder(key)
+            if not (holder and widget.button) then return end
+            local keyText = widget.button:GetFontString()
+            if keyText then
+                keyText:SetText("|TInterface\\DialogFrame\\UI-Dialog-Icon-AlertNew:14:14|t " .. key)
+                keyText:SetTextColor(0.8, 0.8, 0.8)
+            end
+            widget.button:HookScript("OnEnter", function()
+                GSE.CreateToolTip(L["Key taken"],
+                    string.format(L["%s is now bound to %s, so this keybind is off. Save to take the key back."], key, holder),
+                    editframe)
+            end)
+            widget.button:HookScript("OnLeave", function() GSE.ClearTooltip(editframe) end)
+            markDirty()
+        end
+        markTaken(keybind, model.key)
+
+        -- Backup key: a second key for the same sequence. Saved as a bind of
+        -- its own, so nothing about how keybinds are stored changes.
+        local backup = UI:Create("ControllerKeybinding")
+        backup:SetWidth(KB_COL_KEY2)
+        if backup.button and backup.frame then
+            backup.button:SetPoint("BOTTOMRIGHT", backup.frame, "BOTTOMRIGHT", 0, 0)
+        end
+        if not GSE.isEmpty(model.key2) then backup:SetKey(model.key2) end
+        backup:SetCallback(
+            "OnKeyChanged",
+            function(_, _, key)
+                model.key2 = key
+                markDirty()
+            end
+        )
+        backup:SetHeight(KB_ROW_HEIGHT)
+        markTaken(backup, model.key2)
 
         local sequence = UI:Create("Dropdown")
         sequence:SetWidth(KB_COL_SEQ)
@@ -808,6 +937,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
 
         row:AddChild(addSlot)
         row:AddChild(keybind)
+        row:AddChild(backup)
         row:AddChild(sequence)
         row:AddChild(remove)
         row:SetHeight(KB_ROW_HEIGHT)
@@ -956,7 +1086,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     addHeading:SetWidth(KB_COL_ADD)
     addHeading:SetText("")
     local keyHeading = UI:Create("Heading")
-    keyHeading:SetWidth(KB_COL_KEY)
+    keyHeading:SetWidth(KB_COL_KEY + 6 + KB_COL_KEY2)
     keyHeading:SetJustifyH("CENTER")
     keyHeading:SetJustifyV("MIDDLE")
     keyHeading:SetText(iconText(Statics.Icons.Keybindings, KB_HEADING_COLOUR .. L["Keybind"] .. Statics.StringReset))
@@ -1032,6 +1162,11 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     rightContainer:AddChild(bottomGutter)
 
     redraw()
+    -- Redrawn when WoW's bindings change, until this panel is let go.
+    activeKeybindRedraw = redraw
+    rowContainer:SetCallback("OnRelease", function()
+        if activeKeybindRedraw == redraw then activeKeybindRedraw = nil end
+    end)
 end
 
 

@@ -1633,6 +1633,21 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
     end
 end
 
+-- Key slots only (GSE.UsesKeySlots): on by default, a sequence's key stays
+-- with GSE whatever else binds it (GSE.KeysLocked in GSE/API/Events.lua).
+local function AddKeyLockOption(optionsCategory)
+    if not (GSE.UsesKeySlots and GSE.UsesKeySlots()) then return end
+    local function GetValue()
+        return GSEOptions.lockSequenceKeys ~= false
+    end
+    local function SetValue(val)
+        GSEOptions.lockSequenceKeys = val == true
+        if GSE.ReloadKeyBindings and not InCombatLockdown() then GSE.ReloadKeyBindings() end
+    end
+    local setting = Settings.RegisterProxySetting(optionsCategory, "lockSequenceKeys", Settings.VarType.Boolean, L["Lock Keys to GSE"], true, GetValue, SetValue)
+    Settings.CreateCheckbox(optionsCategory, setting, L["Keys bound to sequences stay with GSE even if another addon or WoW's Key Bindings binds them to something else. Turn this off to let a key go to whatever takes it."])
+end
+
 local function AddOutOfCombatQueueOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -3037,6 +3052,7 @@ function GSE:CreateConfigPanels()
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
+        AddKeyLockOption(generalOptions)
         if GSE.OnBuildClickTimingOptions then GSE.OnBuildClickTimingOptions(generalOptions) end
 
         do
