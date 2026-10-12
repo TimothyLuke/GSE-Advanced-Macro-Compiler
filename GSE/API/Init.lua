@@ -78,7 +78,7 @@ local majorVersion = GSE.split(gameversion, ".")
 -- (MetaData.TOC, stamped from GetBuildInfo's tocversion, which is unaffected by
 -- this), so Forever stays distinguishable from Midnight everywhere that
 -- matters without GameMode having to encode two different facts in one integer.
--- Anything asking "am I on Forever?" reads the TOC, not this.
+-- Anything asking "am I on Forever?" reads GSE.IsForever below, not this.
 --
 -- Vanilla stopped at 1.12 and Classic Era is 1.15.x, so major 1 at a minor of
 -- 60 or above is Forever and nothing else. Keyed on the version rather than the
@@ -90,7 +90,10 @@ local FOREVER_API_GENERATION = 12
 
 local gameMode = tonumber(majorVersion[1])
 local minorVersion = tonumber(majorVersion[2])
-if gameMode == FOREVER_MAJOR and minorVersion and minorVersion >= FOREVER_MIN_MINOR then
+-- The one "am I on WoW Forever?" check. Everything with Forever specifics
+-- reads this; nothing else works it out again.
+GSE.IsForever = gameMode == FOREVER_MAJOR and minorVersion ~= nil and minorVersion >= FOREVER_MIN_MINOR
+if GSE.IsForever then
     gameMode = FOREVER_API_GENERATION
 end
 

@@ -467,18 +467,41 @@ local function scheduleGSEOverrideIconRepaint()
 end
 -- Small GSE logo overlaid in the bottom-right corner of overridden buttons.
 local watermarkedButtons = {}
+-- Watermarks on frames that stand in for an override button (the editor's
+-- Config icon), so the option shows and hides them too.
+local otherWatermarks = setmetatable({}, {__mode = "k"})
+local WATERMARK_SIZE, WATERMARK_INSET = 14, 2
+
+-- Size and place a watermark for a button drawn at scale times a bar button.
+function GSE.PlaceGSEWatermark(wm, frame, scale)
+    scale = scale or 1
+    wm:SetSize(WATERMARK_SIZE * scale, WATERMARK_SIZE * scale)
+    wm:ClearAllPoints()
+    wm:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -WATERMARK_INSET * scale, WATERMARK_INSET * scale)
+end
+
+local function createGSEWatermark(frame)
+    local wm = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+    wm:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png")
+    wm:SetAlpha(0.85)
+    GSE.PlaceGSEWatermark(wm, frame)
+    if GSEOptions.showActionBarWatermark == false then wm:Hide() end
+    return wm
+end
+
+-- The override button's watermark on a frame that is not one, as it would
+-- show on the bar.
+function GSE.CreateGSEWatermark(frame)
+    local wm = createGSEWatermark(frame)
+    otherWatermarks[wm] = true
+    return wm
+end
 
 local function addGSEWatermark(Button)
     if watermarkedButtons[Button] then return end
     local btn = _G[Button]
     if not btn then return end
-    local wm = btn:CreateTexture(nil, "OVERLAY", nil, 7)
-    wm:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png")
-    wm:SetSize(14, 14)
-    wm:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 2)
-    wm:SetAlpha(0.85)
-    if GSEOptions.showActionBarWatermark == false then wm:Hide() end
-    watermarkedButtons[Button] = wm
+    watermarkedButtons[Button] = createGSEWatermark(btn)
 end
 
 local function removeGSEWatermark(Button)
@@ -497,6 +520,9 @@ end
 
 function GSE.SetActionBarWatermarkEnabled(enabled)
     for _, wm in pairs(watermarkedButtons) do
+        if enabled then wm:Show() else wm:Hide() end
+    end
+    for wm in pairs(otherWatermarks) do
         if enabled then wm:Show() else wm:Hide() end
     end
 end
@@ -1273,7 +1299,7 @@ function LoadKeyBindings(payload)
         end
     end
     -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
-    if not GSE.KeybindingsEnabled() then return end
+    if GSE.IsForever then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.
@@ -1337,6 +1363,7 @@ end
 
 function GSE.ReloadOverrides(force)
     LoadOverrides(force)
+    GSE:SendMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED)
 end
 
 --- Put sequence id on action-bar button buttonName.
@@ -1530,14 +1557,25 @@ function GSE.BeginSequenceDrag(sequenceId)
         return false
     end
     ensureDragFrames()
-    -- Every action button shown now; the drag tests these for the mouse.
-    local candidates = {}
-    pcall(collectOverrideTargets, UIParent, candidates)
-    drag = { sequenceId = sequenceId, candidates = candidates }
+    local thisDrag = { sequenceId = sequenceId, candidates = {} }
+    drag = thisDrag
+    -- The icon first, at the cursor, so it shows the moment the drag starts.
     dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    dragIcon:ClearAllPoints()
+    dragIcon:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
     pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
     dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
     dragIcon:Show()
+    -- Every action button shown now; the drag tests these for the mouse. It
+    -- runs on the next frame so the icon shows first.
+    C_Timer.After(0, function()
+        if drag ~= thisDrag then return end
+        local candidates = {}
+        pcall(collectOverrideTargets, UIParent, candidates)
+        thisDrag.candidates = candidates
+    end)
     return true
 end
 

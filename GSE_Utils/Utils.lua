@@ -2275,7 +2275,7 @@ function GSE:GSSlash(input)
         local spec = tostring(params[2])
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
-        if not GSE.KeybindingsEnabled() then
+        if GSE.IsForever then
             GSE.Print(L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."])
         elseif spec and sequence and physicalkey then
             -- Into the binds in force for that spec: the shared profile's, or

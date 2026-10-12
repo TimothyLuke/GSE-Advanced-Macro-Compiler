@@ -3704,6 +3704,10 @@ local function createDropdown()
         return math.max(40, width - 14)
     end
 
+    -- How far the native dropdown frame starts left of the box it draws
+    -- (it is placed at the widget's left, -16; see the nativeDropdown points).
+    local NATIVE_DROPDOWN_LEFT_INSET = 16
+
     local function nativeDropdownMenuAnchor()
         if not widget.nativeDropdown then return nil end
         return widget.nativeDropdown.Button or _G[widget.nativeDropdown:GetName() .. "Button"] or widget.nativeDropdown
@@ -3712,14 +3716,17 @@ local function createDropdown()
     local function anchorNativeDropdownMenu()
         if not widget.nativeDropdown then return end
         local anchor = nativeDropdownMenuAnchor()
+        -- Under the box, left edges level: the native dropdown sits
+        -- NATIVE_DROPDOWN_LEFT_INSET left of the box it draws.
         if UIDropDownMenu_SetAnchor then
-            UIDropDownMenu_SetAnchor(widget.nativeDropdown, 0, -STYLE.padXXS, "TOPRIGHT", anchor, "BOTTOMRIGHT")
+            UIDropDownMenu_SetAnchor(widget.nativeDropdown, NATIVE_DROPDOWN_LEFT_INSET, -STYLE.padXXS,
+                "TOPLEFT", widget.nativeDropdown, "BOTTOMLEFT")
         else
-            widget.nativeDropdown.xOffset = 0
+            widget.nativeDropdown.xOffset = NATIVE_DROPDOWN_LEFT_INSET
             widget.nativeDropdown.yOffset = -STYLE.padXXS
-            widget.nativeDropdown.point = "TOPRIGHT"
-            widget.nativeDropdown.relativeTo = anchor
-            widget.nativeDropdown.relativePoint = "BOTTOMRIGHT"
+            widget.nativeDropdown.point = "TOPLEFT"
+            widget.nativeDropdown.relativeTo = widget.nativeDropdown
+            widget.nativeDropdown.relativePoint = "BOTTOMLEFT"
         end
     end
 
@@ -4034,8 +4041,13 @@ local function createDropdown()
         local contentHeight = math.max(1, #order * rowHeight)
         local viewportHeight = math.max(1, visibleCount * rowHeight)
 
+        -- Under the box with its left edge on the box's: the list grows
+        -- right, past a narrow box, rather than back over the label.
+        local leftOffset = 0
+        local boxLeft, anchorLeft = frame:GetLeft(), anchor:GetLeft()
+        if boxLeft and anchorLeft then leftOffset = boxLeft - anchorLeft end
         listFrame:ClearAllPoints()
-        listFrame:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -STYLE.padXXS)
+        listFrame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", leftOffset, -STYLE.padXXS)
         listFrame:SetWidth(width)
         listFrame:SetHeight(math.max(1, viewportHeight + (listInset * 2)))
         listFrame:SetFrameLevel(math.max(20, button:GetFrameLevel() + 20))

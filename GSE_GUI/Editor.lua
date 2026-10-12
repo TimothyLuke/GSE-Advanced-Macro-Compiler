@@ -2179,8 +2179,7 @@ local function getAllConditionalBranchSpells(line)
 
     local candidates = {}
     for _, clause in ipairs(GSE.split(etc, ";")) do
-        local _, _, body = GSE.GetConditionalsFromString(clause)
-        body = trimIconCandidate(body or "")
+        local body = GSE.GetMacroClauseTarget(clause)
         if body ~= "" and not tonumber(body) then
             local ok, info = pcall(GSE.GetSpellInfo, body)
             if ok and type(info) == "table" and info.iconID then

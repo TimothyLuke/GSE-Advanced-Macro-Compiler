@@ -14,15 +14,15 @@ local function liftDerive(env)
     local src = fh:read("*a")
     fh:close()
     src = (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
-    local block = src:match("(local CLASS_TREE_SPECIDS.-\n    return found\nend)")
+    local block = src:match("(local CLASS_TREE_SPECIDS.-\n    return found, classOf, iconOf\nend)")
     assert(block, "CLASS_TREE_SPECIDS / deriveClassTreeSpecs not found in Statics.lua")
     local compile = loadstring or load
     local chunk = assert(compile(
         "local GetSpecializationInfoForClassID, GetNumSpecializationsForClassID,"
-        .. " C_ClassTalents, C_Traits, determineClassName = ...\n"
+        .. " C_ClassTalents, C_Traits, determineClassName, C_SpecializationInfo = ...\n"
         .. block .. "\nreturn deriveClassTreeSpecs, CLASS_TREE_SPECIDS"))
     return chunk(env.GetSpecializationInfoForClassID, env.GetNumSpecializationsForClassID,
-                 env.C_ClassTalents, env.C_Traits, env.determineClassName)
+                 env.C_ClassTalents, env.C_Traits, env.determineClassName, env.C_SpecializationInfo)
 end
 
 -- A client with one spec per class and `groupNames` trees on it.
@@ -35,7 +35,7 @@ local function client(specCount, groupNames, classSpec)
             GetGroupDisplayInfoByTreeID = function()
                 local out = {}
                 for i, name in ipairs(groupNames) do
-                    out[i] = { treeID = 1100, orderIndex = i - 1, groupID = 11000 + i, displayName = name }
+                    out[i] = { treeID = 1100, orderIndex = i - 1, groupID = 11000 + i, displayName = name, icon = 135900 + i }
                 end
                 return out
             end,
@@ -58,6 +58,23 @@ describe("class tree specs", function()
     it("registers the class-level spec too", function()
         local derive = liftDerive(client(1, {"Holy", "Protection", "Retribution"}))
         assert.equals("Paladin", derive()[1486])
+    end)
+
+    -- Its class too: no table of ours knows the client's class-level ids.
+    it("reports the class of each class-level spec", function()
+        local env = client(1, {"A", "B", "C"})
+        env.GetSpecializationInfoForClassID = function(classID) return 1480 + classID, "Class" .. classID end
+        local _, classOf = liftDerive(env)()
+        assert.equals(2, classOf[1482])
+        assert.equals(8, classOf[1488])
+    end)
+
+    -- And each tree's icon (Forever's Holy reports 135920): the client has no
+    -- spec record for a retail id to read one from.
+    it("reports each tree's icon by the retail id", function()
+        local _, _, iconOf = liftDerive(client(1, {"Holy", "Protection", "Retribution"}))()
+        assert.equals(135901, iconOf[65])
+        assert.equals(135903, iconOf[70])
     end)
 
     -- The client's own name wins, so the era-correct label appears by itself:
@@ -90,6 +107,17 @@ describe("class tree specs", function()
         assert.is_nil(derive())
     end)
 
+    -- Forever 1.60.1.70338: the spec count moved into C_SpecializationInfo and
+    -- the global went, which registered nothing for any class.
+    it("reads the spec count from C_SpecializationInfo when the global is gone", function()
+        local env = client(1, {"Holy", "Protection", "Retribution"})
+        env.C_SpecializationInfo = { GetNumSpecializationsForClassID = env.GetNumSpecializationsForClassID }
+        env.GetNumSpecializationsForClassID = nil
+        local found = liftDerive(env)()
+        assert.equals("Paladin", found and found[1486])
+        assert.equals("Protection", found[66])
+    end)
+
     it("survives a client missing the APIs entirely", function()
         local derive = liftDerive({})
         assert.is_nil(derive())
@@ -106,5 +134,26 @@ describe("class tree specs", function()
         -- Guardian (104) split out of Feral later and has no tree here.
         assert.equals(103, tbl[11][2])
         assert.is_nil((function() for _, v in ipairs(tbl[11]) do if v == 104 then return true end end end)())
+    end)
+end)
+
+-- A retail spec id on a client that does not know it (WoW Forever): its class
+-- comes from GSE.SpecIDClassList, or a Protection Paladin sequence is filed as
+-- Global the moment Protection is picked.
+describe("GSE.GetClassIDforSpec on a client without retail specs", function()
+    it("finds the class from the spec table", function()
+        require("../spec/mockGSE")
+        require("../GSE/API/Statics")
+        require("../GSE/API/CharacterFunctions")
+        local savedMode, savedInfo = GSE.GameMode, _G.GetSpecializationInfoByID
+        GSE.GameMode = 12
+        _G.GetSpecializationInfoByID = function() return nil end
+        local ok, err = pcall(function()
+            assert.equals(2, GSE.GetClassIDforSpec(66))
+            assert.equals(4, GSE.GetClassIDforSpec(260))
+            assert.equals(0, GSE.GetClassIDforSpec(999999))
+        end)
+        GSE.GameMode, _G.GetSpecializationInfoByID = savedMode, savedInfo
+        if not ok then error(err, 0) end
     end)
 end)

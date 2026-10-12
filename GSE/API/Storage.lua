@@ -1556,8 +1556,8 @@ function GSE.HelplinkAllowed(link)
     if GSE.isEmpty(link) then return true end
     return not string.find(string.lower(tostring(link)), GSE.HelplinkBlockedHost, 1, true)
 end
---- Replace a disallowed MetaData.Helplink with the default.  Returns true if
---- it wrote.
+--- Replace a disallowed MetaData.Helplink with the default, on a sequence,
+--- variable or macro.  Returns true if it wrote.
 function GSE.SanitizeHelplink(sequence)
     if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return false end
     if GSE.HelplinkAllowed(sequence.MetaData.Helplink) then return false end
@@ -2658,6 +2658,26 @@ local contextVersionPriority = {
     { metaKey = "Timewalking", flag = "inTimeWalking", valueKey = "Timewalking" },
     { metaKey = "Party",       flag = "inParty",       valueKey = "Party"       },
 }
+
+-- WoW Forever has no Delves or Scenarios, Arenas, Heroic, Mythic or Mythic+
+-- dungeons, or Timewalking. There those contexts are not GSE's at all: taken
+-- out of the list, they get no row in the editor, never pick a version, and a
+-- value set elsewhere is dropped (GSE.DropUnusedContextVersions).
+local notOnForever = {
+    Scenario = true, Arena = true, Heroic = true, Mythic = true, MythicPlus = true, Timewalking = true,
+}
+if GSE.IsForever then
+    for i = #contextVersionPriority, 1, -1 do
+        if notOnForever[contextVersionPriority[i].valueKey] then table.remove(contextVersionPriority, i) end
+    end
+end
+
+--- Remove from MetaData the version settings for contexts this client does
+--- not have (WoW Forever's, above), so they are not saved back.
+function GSE.DropUnusedContextVersions(meta)
+    if not GSE.IsForever or type(meta) ~= "table" then return end
+    for key in pairs(notOnForever) do meta[key] = nil end
+end
 
 --- Every MetaData key that holds a VERSION NUMBER, derived from
 -- contextVersionPriority above rather than repeated. PVP appears twice in
@@ -4491,6 +4511,7 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.CompanionCancelPendingDelete("variable", name)
     end
     GSE.UpgradeVariable(variable, name)
+    GSE.SanitizeHelplink(variable)
     GSE.ComputeVariableDependencies(variable)
     local storedVariable = GSE.Store("variable") and GSE.Store("variable")[name]
     if GSE.IsProtectedAtRest(storedVariable, variable) then
@@ -4631,6 +4652,7 @@ function GSE.UpdateMacro(node, category, skipStore)
             node.LastUpdated = GSE.GetTimestamp()
             -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
             node.GSEVersion = GSE.VersionNumber
+            GSE.SanitizeHelplink(node)
             if not node.Managed then
                 for _, version in pairs(node.Versions) do
                     if type(version) == "table" and type(version.text) == "string" then
