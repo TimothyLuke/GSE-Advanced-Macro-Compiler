@@ -1366,36 +1366,32 @@ function GSE.ReloadOverrides(force)
     GSE:SendMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED)
 end
 
---- Put sequence id on action-bar button buttonName.
-function GSE.CreateActionBarOverride(buttonName, sequenceId)
+--- Put sequence id on action-bar button buttonName. layer "loadout" keeps it
+--- to the active talent loadout, "spec" makes it the spec's for every loadout
+--- (GSE.SetOverrideData); nil changes the button where its override already
+--- comes from, so the change is the one that shows. Returns the layer written.
+function GSE.CreateActionBarOverride(buttonName, sequenceId, layer)
     if InCombatLockdown() then return end
-    if GSE.isEmpty(GSE_C["ActionBarBinds"]) then
-        GSE_C["ActionBarBinds"] = {}
-    end
-    local bind = {
-        Bind = buttonName,
-        Sequence = sequenceId
-    }
-    GSE.SpecOverrides(GetSpec(), true)[buttonName] = bind
+    layer = layer or (GSE.OverrideLayerFor(buttonName) == "loadout" and "loadout" or "spec")
+    local written = GSE.SetOverrideData(buttonName, sequenceId, layer)
+    GSE.ReloadOverrides()
+    return written
+end
+
+--- Clear the override the button shows now -- the active talent loadout's or
+--- the spec's -- and leave every other layer as it was.
+function GSE.RemoveActionBarOverride(buttonName)
+    if InCombatLockdown() then return end
+    GSE.ClearOverrideData(buttonName)
     GSE.ReloadOverrides()
 end
 
-function GSE.RemoveActionBarOverride(buttonName)
-    if InCombatLockdown() then return end
-    local spec = GetSpec()
-    local overrides = GSE.SpecOverrides(spec, false)
-    if overrides then overrides[buttonName] = nil end
-    if not GSE.isEmpty(GSE_C["ActionBarBinds"]) then
-        local loadouts = GSE_C["ActionBarBinds"]["LoadOuts"]
-        if loadouts and loadouts[spec] then
-            for _, loadout in pairs(loadouts[spec]) do
-                if type(loadout) == "table" then
-                    loadout[buttonName] = nil
-                end
-            end
-        end
-    end
-    GSE.ReloadOverrides()
+--- The name of the active talent loadout, for saying where a change went.
+function GSE.ActiveBindingLoadoutName()
+    local loadout = GSE.ActiveBindingLoadout()
+    if not loadout then return nil end
+    local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(tonumber(loadout))
+    return (info and info.name) or loadout
 end
 
 -- ---------------------------------------------------------------------------
@@ -1600,7 +1596,13 @@ function GSE.FinishSequenceDrag()
             return
         end
     end
-    GSE.CreateActionBarOverride(target:GetName(), sequenceId)
+    -- A drop replaces what the button shows. Where that is the active talent
+    -- loadout's override, the drop changes that loadout's -- say so, since the
+    -- spec's own override for the button is left as it was.
+    if GSE.CreateActionBarOverride(target:GetName(), sequenceId) == "loadout" then
+        GSE.Print(string.format(L["Changed for talent loadout %s only."], GSE.ActiveBindingLoadoutName() or ""),
+            L["Button Bindings"])
+    end
 end
 
 --- Watch the spec + loadout the game reports until it catches up with what the

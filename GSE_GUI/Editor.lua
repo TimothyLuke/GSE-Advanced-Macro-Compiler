@@ -8448,9 +8448,13 @@ local function collectionImported(message)
     end
 end
 
-GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, remoteSeqences)
-GSE:RegisterMessage(Statics.Messages.VARIABLE_UPDATED, remoteVariables)
-GSE:RegisterMessage(Statics.Messages.COLLECTION_IMPORTED, collectionImported)
+-- A listener of its own: AceEvent keeps ONE handler per message per object,
+-- so several modules registering the same message on GSE silently replaced
+-- each other -- only the last to load ran.
+local editorMessages = LibStub("AceEvent-3.0"):Embed({})
+editorMessages:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, remoteSeqences)
+editorMessages:RegisterMessage(Statics.Messages.VARIABLE_UPDATED, remoteVariables)
+editorMessages:RegisterMessage(Statics.Messages.COLLECTION_IMPORTED, collectionImported)
 
 --- Create a brand-new sequence with the given name and navigate to it.
 -- Called by the GSE_NEW_SEQUENCE_NAME StaticPopup OnAccept / Enter handler.
@@ -8621,12 +8625,9 @@ end
 function GSE.ShowKeyBindings()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
-    local treeStatus = editor.treeContainer.status or editor.treeContainer.localstatus
-    if treeStatus and treeStatus.groups then
-        treeStatus.groups["KEYBINDINGS"] = true
-        treeStatus.groups["KEYBINDINGS\001AO"] = true
-        treeStatus.groups["KEYBINDINGS\001KB"] = true
-    end
+    -- Down to the class node, wherever the tree's grouping puts Bindings.
+    GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("AO"))
+    GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("KB"))
     SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()

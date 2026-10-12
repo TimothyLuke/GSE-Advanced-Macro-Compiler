@@ -863,8 +863,9 @@ local function attachSequenceDragIcon(editframe, hostRow)
         caption:Hide()
         sequenceDragIcon.caption = caption
         -- Putting the sequence on a button, or taking it off, changes what the
-        -- icon mirrors.
-        GSE:RegisterMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED, function()
+        -- icon mirrors. A listener of its own: AceEvent keeps one handler per
+        -- message per object.
+        LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED, function()
             C_Timer.After(0, function()
                 if sequenceDragIcon:IsShown() and sequenceDragIcon.lastSize then
                     setDragIconSize(sequenceDragIcon.lastSize)

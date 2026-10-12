@@ -1867,9 +1867,7 @@ end
 
 -- The keys the binds are kept by, as the binder itself works them out
 -- (Profiles.lua, CharacterFunctions.lua). This used to have its own copies,
--- and the loadout one lacked the spec-group fallback, so on a dual-spec
--- client without saved loadouts the display looked in a table the binder
--- never uses.
+-- which drifted from the binder's.
 local function GetCurrentSpecKey()
     return GSE.CurrentSpecKey()
 end
@@ -1887,8 +1885,7 @@ local function AllSpecKeys()
     for k in pairs((GSE_C and type(GSE_C.KeyBindings) == "table" and GSE_C.KeyBindings) or {}) do keys[tostring(k)] = true end
     local ab = GSE_C and type(GSE_C.ActionBarBinds) == "table" and GSE_C.ActionBarBinds
     for k in pairs((ab and type(ab.Specialisations) == "table" and ab.Specialisations) or {}) do keys[tostring(k)] = true end
-    local n = (GSE.GameMode and GSE.GameMode >= 7 and GetNumSpecializations and GetNumSpecializations()) or 1
-    for i = 1, n do keys[tostring(i)] = true end
+    for _, spec in ipairs(GSE.BindingSpecs()) do keys[spec.key] = true end
     return keys
 end
 
@@ -3594,9 +3591,13 @@ GSE.ResetSuccessfulCastFramePosition = ResetSuccessfulCastFramePosition
 GSE.ResetAssistedSuccessFramePosition = ResetAssistedSuccessFramePosition
 GSE.SequenceIconFrameUpdateFromButton = UpdateSequenceIconFromButton
 
-GSE:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
-GSE:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
-GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
+-- A listener of its own: AceEvent keeps ONE handler per message per object,
+-- so several modules registering the same message on GSE silently replaced
+-- each other -- only the last to load ran.
+local trackerMessages = LibStub("AceEvent-3.0"):Embed({})
+trackerMessages:RegisterMessage(Statics.Messages.GSE_SEQUENCE_ICON_UPDATE, showSequenceIcon)
+trackerMessages:RegisterMessage(Statics.Messages.GSE_MODS_VISIBLE, showModKeys)
+trackerMessages:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, function(event, id)
     -- Announced by id, which names its button.
     local sequence = GSE.StoredSequenceId(id)
     if sequence and EnsureSequenceIconFrameOptions().Enabled and IsValidSequence(sequence) then

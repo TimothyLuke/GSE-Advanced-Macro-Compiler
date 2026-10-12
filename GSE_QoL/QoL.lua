@@ -229,7 +229,10 @@ local function onSequenceSaved(_, id)
         GSE.StoreSequenceBody(classid, id, seq)
     end
 end
-GSE:RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
+-- A listener of its own: AceEvent keeps ONE handler per message per object,
+-- so several modules registering the same message on GSE silently replaced
+-- each other -- only the last to load ran.
+LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(Statics.Messages.SEQUENCE_UPDATED, onSequenceSaved)
 
 -- MS Click Timing options, added to GSE's General options page (Options.lua calls
 -- this hook when present). Used for PAUSE block calculations.

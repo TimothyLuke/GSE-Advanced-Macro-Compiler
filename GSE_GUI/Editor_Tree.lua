@@ -1177,10 +1177,20 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     -- session, land on the current spec's Button Bindings.
     if GSE.IsForever and (#unique == 1 or unique[2] == "KB") then
         if editframe.treeContainer and editframe.treeContainer.SelectByValue then
-            local target = "KEYBINDINGS\001AO"
-            if GetSpecializationInfo then target = target .. "\001" .. GSE.CurrentSpecKey() end
             editframe.forceTreeSelection = true
-            editframe.treeContainer:SelectByValue(target)
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
+        end
+        return
+    end
+
+    -- An area or its class node has no page of its own: open the spec the
+    -- player is in.  The tree is area > class > spec > loadout.  A path from
+    -- before the class level (a last-open node saved by an older build) has
+    -- no class there, and lands here too.
+    if #unique == 2 or #unique == 3 or (#unique > 3 and unique[3] ~= tostring(GSE.GetCurrentClassID())) then
+        if editframe.treeContainer and editframe.treeContainer.SelectByValue then
+            editframe.forceTreeSelection = true
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath(unique[2], GSE.CurrentSpecKey()))
         end
         return
     end
@@ -1205,19 +1215,12 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     ShowSectionFooter(editframe)
 
     -- The tree stops at spec, and at the spec's talent loadouts.  Paths are
-    -- KEYBINDINGS \001 <KB|AO> [\001 <spec>] [\001 <loadout>] -- the spec
-    -- segment only exists where buildKeybindMenu inserted a spec node, which
-    -- is the same GetSpecializationInfo test it uses.  Everything below a
-    -- scope is a row on the panel now, so there is nothing deeper to parse.
+    -- KEYBINDINGS \001 <KB|AO> \001 <class> \001 <spec> [\001 <loadout>]
+    -- (GSE.GUI.BindingsPath): every client has a node per spec
+    -- (GSE.BindingSpecs).  Everything below a scope is a row on the panel, so
+    -- there is nothing deeper to parse.
     local kbtype = unique[2]
-    local specialization, loadout
-    if GetSpecializationInfo then
-        specialization = unique[3]
-        loadout = unique[4]
-    else
-        specialization = "1"
-        loadout = unique[3]
-    end
+    local specialization, loadout = unique[4], unique[5]
 
     local function makeRightContainer(withDivider)
         -- Build a scrollable wrapper inside the right pane. The scroll engages
@@ -1763,7 +1766,12 @@ local function copyNode(n)
     return c
 end
 
-local function buildGroupedTree(grouping, classtree)
+-- `bindings`: the Bindings node (buildKeybindMenu), for the class grouping,
+-- which puts it in the player's class's group.  It is this character's
+-- class's, so inside that group it drops its own class level: each area
+-- node's value carries the class instead (AO\001<class>), which keeps every
+-- path the same as the by-type tree's once the group is dropped.
+local function buildGroupedTree(grouping, classtree, bindings)
     -- Every element, with its by-type path as its node value.
     local seqs, vars, macs = {}, {}, {}
     local seqByKey, varByName, macByName = {}, {}, {}
@@ -1827,6 +1835,22 @@ local function buildGroupedTree(grouping, classtree)
         -- Sequences, then variables, then macros, each by name.
         for _, list in ipairs({ seqs, vars, macs }) do
             for _, e in ipairs(list) do addTo(groupFor(e.classid), e) end
+        end
+        if bindings then
+            local cid = GSE.GetCurrentClassID()
+            local group = groupFor(cid)
+            for _, area in ipairs(bindings.children or {}) do
+                local byType = "KEYBINDINGS\001" .. area.value
+                local classNode = area.children and area.children[1]
+                area.value = area.value .. "\001" .. tostring(cid)
+                area.children = classNode and classNode.children or {}
+                local grouped = group.value .. "\001KEYBINDINGS\001" .. area.value
+                -- The area and its class node are one node here.
+                pathOf[byType] = grouped
+                pathOf[byType .. "\001" .. tostring(cid)] = grouped
+            end
+            pathOf["KEYBINDINGS"] = group.value .. "\001KEYBINDINGS"
+            table.insert(group.children, bindings)
         end
         table.sort(groups, function(a, b)
             if a.value == GROUP_PREFIX .. "class:0" then return false end
@@ -2043,11 +2067,14 @@ local function ManageTree(editframe)
     local grouping = treeGrouping()
     editframe.treeGroupedPaths = nil
     if grouping ~= "type" then
-        local groups, pathOf = buildGroupedTree(grouping, classtree)
+        -- By class, Bindings sits in the player's class's group; by
+        -- collection it has none to go in, and stays where By Type has it.
+        local bindings = editframe.buildKeybindMenu()
+        local groups, pathOf = buildGroupedTree(grouping, classtree, grouping == "class" and bindings or nil)
         table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
             icon = Statics.ActionsIcons.Add })
         for _, g in ipairs(groups) do table.insert(tree, g) end
-        table.insert(tree, editframe.buildKeybindMenu())
+        if grouping ~= "class" then table.insert(tree, bindings) end
         editframe.treeGroupedPaths = pathOf
     else
         local subtree = {

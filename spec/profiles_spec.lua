@@ -24,6 +24,7 @@ describe("Profiles", function()
     _G.UnitClass = function() return "Paladin", "PALADIN", 2 end
     _G.UnitGUID = nil
     _G.GetSpecialization = function() return currentSpec end
+    _G.GetNumSpecializations = function() return #SPECS end
     _G.C_SpecializationInfo = {
       GetSpecialization = function() return currentSpec end,
       GetSpecializationInfo = function(i) return SPECS[i] end,
@@ -82,8 +83,10 @@ describe("Profiles", function()
       assert.is_nil(GSEStore.profile[2][70].KeyBindings["CTRL-9"], "never again")
     end)
 
-    it("is per class before WoD, with the class for a spec", function()
-      GSE.GameMode = 5
+    -- Decided by what the client can do (Profiles.lua), not its version.
+    it("is per class on a client without specialisations, with the class for a spec", function()
+      _G.GetNumSpecializations = nil
+      _G.C_SpecializationInfo = nil
       loginAs({ ["1"] = { ["CTRL-1"] = "seqA" } })
       GSE.MigrateToProfiles()
       assert.are.same({ ["CTRL-1"] = "seqA" }, GSEStore.profile[2][2].KeyBindings)
@@ -146,5 +149,177 @@ describe("Profiles", function()
     GSE.UpdateProfileSequenceRefs()
     assert.are.equal("pidA00000000000000000000", GSEStore.profile[2][70].KeyBindings["CTRL-1"])
     assert.are.equal("pidA00000000000000000000", GSEStore.profile[2][70].ActionBarBinds.B1.Sequence)
+  end)
+  -- What the binds are split by, from what the client can do, never its
+  -- version: dual spec gives Primary and Secondary (which the player knows the
+  -- meaning of), else Retail's specialisations, else one.
+  describe("specs the binds are kept by", function()
+    local function dualSpec(specs, active, groups)
+      _G.GetNumSpecializations = function() return specs end
+      C_SpecializationInfo.SetActiveSpecGroup = function() end
+      C_SpecializationInfo.GetNumSpecGroups = function() return groups or 2 end
+      C_SpecializationInfo.GetActiveSpecGroup = function() return active end
+      C_SpecializationInfo.GetSpecializationInfo = function() return 1486 end
+    end
+
+    it("Retail: the specialisation index", function()
+      -- Retail still answers the spec-group getters; it has no setter.
+      C_SpecializationInfo.GetNumSpecGroups = function() return 1 end
+      C_SpecializationInfo.GetActiveSpecGroup = function() return 1 end
+      assert.are.equal("3", GSE.CurrentSpecKey())
+      local specs = GSE.BindingSpecs()
+      assert.are.equal(3, #specs)
+      assert.are.equal(70, GSE.SpecIDForKey("3"))
+    end)
+
+    it("Forever: the active spec group, as Primary and Secondary", function()
+      dualSpec(1, 2)
+      assert.are.equal("2", GSE.CurrentSpecKey())
+      local specs = GSE.BindingSpecs()
+      assert.are.equal(2, #specs)
+      assert.are.equal("1", specs[1].key)
+      assert.are.equal("Primary", specs[1].label)
+      assert.are.equal("Secondary", specs[2].label)
+      -- Primary keeps the profile the class always had; Secondary its own.
+      assert.are.equal(1486, GSE.SpecIDForKey("1"))
+      assert.are.equal("1486:2", GSE.SpecIDForKey("2"))
+    end)
+
+    it("Cata to WoD (MoP): spec groups too, though it has three specialisations", function()
+      dualSpec(3, 1)
+      assert.are.equal("1", GSE.CurrentSpecKey())
+      assert.are.equal(2, #GSE.BindingSpecs())
+      assert.are.equal(2, GSE.SpecIDForKey("1"), "the class, as before WoD")
+      assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+    end)
+
+    it("TBC / Wrath / Era with dual spec: talent groups, no specialisations", function()
+      _G.GetNumSpecializations = nil
+      _G.C_SpecializationInfo = nil
+      _G.SetActiveTalentGroup = function() end
+      _G.GetNumTalentGroups = function() return 2 end
+      _G.GetActiveTalentGroup = function() return 2 end
+      local ok, err = pcall(function()
+        assert.are.equal("2", GSE.CurrentSpecKey())
+        assert.are.equal(2, #GSE.BindingSpecs())
+        assert.are.equal(2, GSE.SpecIDForKey("1"), "the class, as it always was")
+        assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+      end)
+      _G.SetActiveTalentGroup, _G.GetNumTalentGroups, _G.GetActiveTalentGroup = nil, nil, nil
+      if not ok then error(err, 0) end
+    end)
+
+    it("dual spec not learned yet: Primary alone, on the key it keeps after", function()
+      dualSpec(1, 1, 1)
+      assert.are.equal("1", GSE.CurrentSpecKey())
+      local specs = GSE.BindingSpecs()
+      assert.are.equal(1, #specs)
+      assert.are.equal("Primary", specs[1].label)
+      assert.are.equal(1486, GSE.SpecIDForKey("1"))
+    end)
+
+    it("MoP with three specialisations and one group: still Primary, not the specialisation", function()
+      dualSpec(3, 1, 1)
+      assert.are.equal("1", GSE.CurrentSpecKey(), "not \"3\" -- learning dual spec must not move the binds")
+      assert.are.equal(1, #GSE.BindingSpecs())
+      assert.are.equal(2, GSE.SpecIDForKey("1"))
+    end)
+
+    it("a client with one spec group and no specialisations: one", function()
+      _G.GetNumSpecializations = nil
+      _G.C_SpecializationInfo = nil
+      assert.are.equal("1", GSE.CurrentSpecKey())
+      assert.are.equal(1, #GSE.BindingSpecs())
+      assert.are.equal(2, GSE.SpecIDForKey("1"))
+    end)
+
+    it("Primary and Secondary keep separate binds; Secondary starts empty", function()
+      loginAs({ ["1"] = { ["CTRL-1"] = "seqA" } }, {})
+      dualSpec(1, 1)
+      GSE.MigrateToProfiles()
+      assert.are.same({ ["CTRL-1"] = "seqA" }, GSE.SpecKeyBinds("1"))
+      assert.is_nil(next(GSE.SpecKeyBinds("2", true)), "Secondary has none until set")
+      GSE.SpecKeyBinds("2", true)["CTRL-2"] = "seqB"
+      assert.is_nil(GSE.SpecKeyBinds("1")["CTRL-2"], "Secondary's binds are its own")
+    end)
+  end)
+
+  -- Where a right-click or a drop on an action button writes, and what Clear
+  -- Override takes off: the spec's override holds for every talent loadout,
+  -- the active loadout's sits on top.
+  describe("action-bar override layers", function()
+    -- Retail: talent loadouts, and no spec-group setter.
+    local function withLoadout(key, fn)
+      local saved = GSE.GetBindingLoadoutKey
+      GSE.GetBindingLoadoutKey = function() return key end
+      _G.C_ClassTalents = { GetLastSelectedSavedConfigID = function() end }
+      local ok, err = pcall(fn)
+      GSE.GetBindingLoadoutKey = saved
+      _G.C_ClassTalents = nil
+      if not ok then error(err, 0) end
+    end
+
+    it("a dual-spec client has no loadout layer, whatever C_ClassTalents it carries", function()
+      C_SpecializationInfo.SetActiveSpecGroup = function() end
+      withLoadout("111", function()
+        assert.is_false(GSE.HasTalentLoadouts())
+        assert.is_nil(GSE.ActiveBindingLoadout())
+        assert.are.equal("spec", GSE.SetOverrideData("ActionButton1", "seqA", "loadout"))
+      end)
+    end)
+    local function onButton(seq) return { Bind = "ActionButton1", Sequence = seq } end
+
+    it("no saved loadout (\"nil\", every client but Retail): the spec's", function()
+      withLoadout("nil", function()
+        assert.is_nil(GSE.ActiveBindingLoadout())
+        assert.are.equal("spec", GSE.SetOverrideData("ActionButton1", "seqA", "loadout"))
+        assert.are.same(onButton("seqA"), GSE.SpecOverrides("3").ActionButton1)
+        assert.are.equal("spec", GSE.OverrideLayerFor("ActionButton1"))
+      end)
+    end)
+
+    it("this loadout only leaves the spec's alone and wins over it", function()
+      withLoadout("111", function()
+        GSE.SetOverrideData("ActionButton1", "seqA", "spec")
+        assert.are.equal("loadout", GSE.SetOverrideData("ActionButton1", "seqL", "loadout"))
+        assert.are.same(onButton("seqA"), GSE.SpecOverrides("3").ActionButton1)
+        assert.are.same(onButton("seqL"), GSE.SpecLoadoutOverrides("3", "111").ActionButton1)
+        assert.are.equal("loadout", GSE.OverrideLayerFor("ActionButton1"))
+      end)
+    end)
+
+    it("all loadouts drops the active loadout's own, so the change shows", function()
+      withLoadout("111", function()
+        GSE.SetOverrideData("ActionButton1", "seqL", "loadout")
+        GSE.SetOverrideData("ActionButton1", "seqB", "spec")
+        assert.is_nil(GSE.SpecLoadoutOverrides("3", "111").ActionButton1)
+        assert.are.same(onButton("seqB"), GSE.SpecOverrides("3").ActionButton1)
+        assert.are.equal("spec", GSE.OverrideLayerFor("ActionButton1"))
+      end)
+    end)
+
+    it("clear takes off the layer shown and no other", function()
+      withLoadout("111", function()
+        GSE.SetOverrideData("ActionButton1", "seqA", "spec")
+        GSE.SetOverrideData("ActionButton1", "seqL", "loadout")
+        GSE.SpecLoadoutOverrides("3", "222", true).ActionButton1 = onButton("seqM")
+        assert.are.equal("loadout", GSE.ClearOverrideData("ActionButton1"))
+        assert.are.same(onButton("seqA"), GSE.SpecOverrides("3").ActionButton1, "the spec's shows again")
+        assert.are.same(onButton("seqM"), GSE.SpecLoadoutOverrides("3", "222").ActionButton1, "another loadout's stays")
+        assert.are.equal("spec", GSE.ClearOverrideData("ActionButton1"))
+        assert.is_nil(GSE.SpecOverrides("3").ActionButton1)
+        assert.are.same(onButton("seqM"), GSE.SpecLoadoutOverrides("3", "222").ActionButton1, "still there")
+        assert.is_nil(GSE.ClearOverrideData("ActionButton1"), "nothing left to clear")
+      end)
+    end)
+
+    it("clear takes a button's state entries with it", function()
+      withLoadout("nil", function()
+        GSE.SpecOverrides("3", true)["ActionButton1-2"] = { Bind = "ActionButton1", State = "2", Sequence = "seqS" }
+        assert.are.equal("spec", GSE.OverrideLayerFor("ActionButton1"))
+        GSE.ClearOverrideData("ActionButton1")
+        assert.is_nil(GSE.SpecOverrides("3")["ActionButton1-2"])
+      end)
+    end)
   end)
 end)
