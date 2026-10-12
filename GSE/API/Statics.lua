@@ -703,6 +703,9 @@ Statics.Messages.GSE_MODS_VISIBLE = "GSE_MODS_VISIBLE"
 Statics.Messages.SEQUENCE_UPDATED = "GSE_SEQUENCE_UPDATED"
 Statics.Messages.VARIABLE_UPDATED = "GSE_VARIABLE_UPDATED"
 Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
+-- The action bar overrides were reloaded: one added, removed, or a spec or
+-- loadout change. Sent by GSE.ReloadOverrides.
+Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED = "GSE_ACTIONBAR_OVERRIDES_UPDATED"
 
 -- Lookup set: keys in this set are internal messages -> use RegisterMessage/UnregisterMessage
 -- All other keys in VariableEventList are WoW events → use RegisterEvent/UnregisterEvent
@@ -712,6 +715,7 @@ Statics.InternalMessages = {
     ["GSE_COLLECTION_IMPORTED"]  = true,
     ["GSE_SEQUENCE_ICON_UPDATE"] = true,
     ["GSE_MODS_VISIBLE"]         = true,
+    ["GSE_ACTIONBAR_OVERRIDES_UPDATED"] = true,
 }
 
 -- Full event list for variable event callbacks.
@@ -724,6 +728,7 @@ Statics.VariableEventList = {
     ["GSE_COLLECTION_IMPORTED"]           = "[GSE] GSE_COLLECTION_IMPORTED",
     ["GSE_SEQUENCE_ICON_UPDATE"]          = "[GSE] GSE_SEQUENCE_ICON_UPDATE",
     ["GSE_MODS_VISIBLE"]                  = "[GSE] GSE_MODS_VISIBLE",
+    ["GSE_ACTIONBAR_OVERRIDES_UPDATED"]   = "[GSE] GSE_ACTIONBAR_OVERRIDES_UPDATED",
     -- ActionBar
     ["ACTION_RANGE_CHECK_UPDATE"]         = "ACTION_RANGE_CHECK_UPDATE",
     ["ACTIONBAR_PAGE_CHANGED"]            = "ACTIONBAR_PAGE_CHANGED",

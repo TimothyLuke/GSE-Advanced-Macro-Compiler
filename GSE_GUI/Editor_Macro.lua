@@ -328,10 +328,11 @@ local function showMacro(editframe, node, container, selected)
     if element then container:AddChild(manageGSE) end
     container:AddChild(headerGroup)
 
+    local scopeDropdown
     if element then
         -- Scope: which class or spec loads it. It still runs by its WoW name.
         if GSE.GUI.DrawElementScope then
-            GSE.GUI.DrawElementScope(editframe, container, element,
+            scopeDropdown = GSE.GUI.DrawElementScope(editframe, container, element,
                 GSE.SuggestElementScope and GSE.SuggestElementScope("macro", node.name),
                 function() commit(); redraw() end)
         end
@@ -490,7 +491,7 @@ local function showMacro(editframe, node, container, selected)
         configHeading:SetText(L["Configuration"])
         configHeading:SetFullWidth(true)
         container:AddChild(configHeading)
-        GSE.GUI.DrawElementVersionConfig(editframe, container, element, commit)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, element, commit, scopeDropdown)
     end
 
     -- "Used by Sequences" panel at the bottom of every macro page — lists the

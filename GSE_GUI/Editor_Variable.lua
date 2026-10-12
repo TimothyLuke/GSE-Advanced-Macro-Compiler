@@ -228,8 +228,9 @@ local function showVariable(editframe, name, container, selected)
 
     container:AddChild(createInlineFieldRow(L["Name"], keyEditBox))
     container:AddChild(createInlineFieldRow(L["Author"], authoreditbox))
+    local scopeDropdown
     if GSE.GUI.DrawElementScope then
-        GSE.GUI.DrawElementScope(editframe, container, variable,
+        scopeDropdown = GSE.GUI.DrawElementScope(editframe, container, variable,
             currentKey and GSE.SuggestElementScope and GSE.SuggestElementScope("variable", currentKey), redraw)
     end
     if currentKey and GSE.GUI.DrawElementCollections then
@@ -502,7 +503,7 @@ local function showVariable(editframe, name, container, selected)
         configHeading:SetText(L["Configuration"])
         configHeading:SetFullWidth(true)
         container:AddChild(configHeading)
-        GSE.GUI.DrawElementVersionConfig(editframe, container, variable)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, variable, nil, scopeDropdown)
     end
 
     local buttonRow = UI:Create("SimpleGroup")

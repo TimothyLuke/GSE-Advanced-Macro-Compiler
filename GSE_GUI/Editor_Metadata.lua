@@ -11,10 +11,8 @@ if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
 local MIN_FIELD_WIDTH = 160
 local CONFIG_CONTENT_LEFT_PADDING = GSE.GUI.CONTENT_PADDING and (GSE.GUI.CONTENT_PADDING + 10) or 30
-local FIELD_WIDTH = 220
 local MAX_FIELD_WIDTH = 190
 local DROPDOWN_VISUAL_WIDTH_OFFSET = 15
-local ROW_HEIGHT = 48
 local INLINE_ROW_HEIGHT = 30
 local INLINE_CONTROL_Y_OFFSET = 2
 local METADATA_LABEL_WIDTH = 130
@@ -44,8 +42,6 @@ local DEPENDENCY_HEADER_HEIGHT = 15
 -- titles. The scroll content already starts inset below the frame top, so the
 -- padding needed here is less than the band's full 19.
 local DEPENDENCY_DATA_TOP_PADDING = 12
-local METADATA_BOTTOM_PADDING = 12
-local METADATA_LAYOUT_GAP_ALLOWANCE = 24
 -- The header block (Author / Help Link / Notes): label beside a fixed box.
 local HEADER_ROW_HEIGHT = 26
 local HEADER_LABEL_WIDTH = 70
@@ -121,16 +117,6 @@ end
 local function disableTextWrap(widget)
     local fontString = widget and (widget.text or widget.label)
     if fontString and fontString.SetWordWrap then fontString:SetWordWrap(false) end
-end
-
-local function setEditBoxLabelGap(widget, gap)
-    if not (widget and widget.label and widget.editBox and widget.frame) then return end
-    local labelHeight = widget.label:GetStringHeight()
-    if not labelHeight or labelHeight <= 0 then labelHeight = 12 end
-    local g = gap or (UI.NativeStyle and UI.NativeStyle.labelBoxGap) or 2
-    widget.editBox:ClearAllPoints()
-    widget.editBox:SetPoint("TOPLEFT", widget.frame, "TOPLEFT", 4, -(labelHeight + g))
-    widget.editBox:SetPoint("RIGHT", widget.frame, "RIGHT", -4, 0)
 end
 
 local function addDependencyLine(container, text)
@@ -375,22 +361,27 @@ local function setSpecChoices(dropdown, specID)
     dropdown:SetValue(specChoiceValue(list, specID))
 end
 
--- Widest of the metadata row labels in the Label widget's font (GameFontNormal),
--- so a narrow page can shrink the label column without wrapping a label.
+-- The widest of texts drawn in fontObject, rounded up. One probe; each call
+-- sets the font it measures in.
 local labelProbe
-local function longestLabelWidth()
-    labelProbe = labelProbe or UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    labelProbe:SetFont(GameFontNormal:GetFont())
+local function widestText(fontObject, texts)
+    labelProbe = labelProbe or UIParent:CreateFontString(nil, "ARTWORK")
+    labelProbe:SetFont(fontObject:GetFont())
     local widest = 0
-    local function measure(text)
+    for _, text in ipairs(texts) do
         labelProbe:SetText(text)
         widest = math.max(widest, labelProbe:GetStringWidth() or 0)
     end
-    measure(T("Specialization/Class ID"))
-    measure(T("Default Version"))
-    for _, cfg in ipairs(pveVersionConfigs) do measure(cfg.label) end
-    for _, cfg in ipairs(pvpVersionConfigs) do measure(cfg.label) end
-    return math.ceil(widest) + 6
+    return math.ceil(widest)
+end
+
+-- Widest of the metadata row labels in the Label widget's font (GameFontNormal),
+-- so a narrow page can shrink the label column without wrapping a label.
+local function longestLabelWidth()
+    local texts = {T("Specialization/Class ID"), T("Default Version")}
+    for _, cfg in ipairs(pveVersionConfigs) do texts[#texts + 1] = cfg.label end
+    for _, cfg in ipairs(pvpVersionConfigs) do texts[#texts + 1] = cfg.label end
+    return widestText(GameFontNormal, texts) + 6
 end
 
 local function dependencyData(editframe)
@@ -871,8 +862,9 @@ local function attachSequenceDragIcon(editframe, hostRow)
         caption:SetText(L["A sequence shows the icon of its first step."])
         caption:Hide()
         sequenceDragIcon.caption = caption
-        -- Assigning the sequence to a button changes what the icon mirrors.
-        hooksecurefunc(GSE, "CreateActionBarOverride", function()
+        -- Putting the sequence on a button, or taking it off, changes what the
+        -- icon mirrors.
+        GSE:RegisterMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED, function()
             C_Timer.After(0, function()
                 if sequenceDragIcon:IsShown() and sequenceDragIcon.lastSize then
                     setDragIconSize(sequenceDragIcon.lastSize)
@@ -1026,16 +1018,21 @@ local function createDisableSequenceCheckbox(editframe)
     return disableSequence
 end
 
+-- An edit box for a headerFieldRow: compact, its label beside it rather than
+-- above, and the row's height -- not the 48 an EditBox keeps for a label above
+-- it, as the row centres on its tallest child and 48 pushed the line 13 low.
+local function compactEditBox(width)
+    local box = UI:Create("EditBox")
+    box:SetLabel("")
+    if box.SetCompactNoLabel then box:SetCompactNoLabel(true) end
+    box:SetWidth(width)
+    box:SetHeight(HEADER_ROW_HEIGHT)
+    box:DisableButton(true)
+    return box
+end
+
 local function addSequenceNameEditor(editframe, container, width)
-    local nameeditbox = UI:Create("EditBox")
-    -- Compact: the label sits beside the box (headerFieldRow), not above.
-    nameeditbox:SetLabel("")
-    if nameeditbox.SetCompactNoLabel then nameeditbox:SetCompactNoLabel(true) end
-    nameeditbox:SetWidth(width)
-    -- Row height, not the 48 an EditBox keeps for a label above it: the
-    -- row centres on its tallest child, so 48 pushed the line 13 low.
-    nameeditbox:SetHeight(HEADER_ROW_HEIGHT)
-    nameeditbox:DisableButton(true)
+    local nameeditbox = compactEditBox(width)
     nameeditbox:SetText(editframe.SequenceName or editframe.OrigSequenceName or "")
     nameeditbox:SetCallback("OnTextChanged", function()
         local sequenceName = nameeditbox:GetText() or ""
@@ -1060,21 +1057,7 @@ local function addSequenceNameEditor(editframe, container, width)
 end
 
 local function addAuthorEditor(editframe, container, width)
-    local authoreditbox = UI:Create("EditBox")
-    if width then
-        -- Compact: the label sits beside the box (headerFieldRow), not above.
-        authoreditbox:SetLabel("")
-        if authoreditbox.SetCompactNoLabel then authoreditbox:SetCompactNoLabel(true) end
-        authoreditbox:SetWidth(width)
-        -- Row height, not the 48 an EditBox keeps for a label above it: the
-        -- row centres on its tallest child, so 48 pushed the line 13 low.
-        authoreditbox:SetHeight(HEADER_ROW_HEIGHT)
-    else
-        authoreditbox:SetLabel(T("Author"))
-        setEditBoxLabelGap(authoreditbox, 2)
-        authoreditbox:SetWidth(math.min(320, math.max(220, math.floor(metadataContentWidth(editframe, container) / 2))))
-    end
-    authoreditbox:DisableButton(true)
+    local authoreditbox = compactEditBox(width)
     authoreditbox:SetCallback(
         "OnEnter",
         function()
@@ -1108,14 +1091,7 @@ local helplinkAllowed = GSE.HelplinkAllowed
 -- (a sequence's, variable's or macro's MetaData). onCommit, when given, runs
 -- after each accepted change.
 local function addHelpLinkEditor(editframe, container, width, meta, tip, onCommit)
-    local helplinkeditbox = UI:Create("EditBox")
-    helplinkeditbox:SetLabel("")
-    if helplinkeditbox.SetCompactNoLabel then helplinkeditbox:SetCompactNoLabel(true) end
-    helplinkeditbox:SetWidth(width)
-    -- Row height, not the 48 an EditBox keeps for a label above it: the row
-    -- centres on its tallest child, so 48 pushed the line 13 low.
-    helplinkeditbox:SetHeight(HEADER_ROW_HEIGHT)
-    helplinkeditbox:DisableButton(true)
+    local helplinkeditbox = compactEditBox(width)
     helplinkeditbox:SetCallback(
         "OnEnter",
         function()
@@ -1636,14 +1612,8 @@ end
 
 -- Widest header label in its font (GameFontNormalSmall), so no label wraps.
 local function headerLabelWidth()
-    labelProbe = labelProbe or UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    labelProbe:SetFont(GameFontNormalSmall:GetFont())
-    local widest = HEADER_LABEL_WIDTH
-    for _, key in ipairs({"Sequence Name", "Author", "Help Link"}) do
-        labelProbe:SetText(T(key))
-        widest = math.max(widest, math.ceil(labelProbe:GetStringWidth() or 0) + 4)
-    end
-    return widest
+    local texts = {T("Sequence Name"), T("Author"), T("Help Link")}
+    return math.max(HEADER_LABEL_WIDTH, widestText(GameFontNormalSmall, texts) + 4)
 end
 
 -- One "Label  [field]" line of the header block: a small label right-aligned
@@ -1761,7 +1731,8 @@ end
 
 --- The scope picker: Global, a class, or a spec. `suggestion`, when given, is
 --- { specID, reason } -- a scope the element's users all share -- offered for the
---- author to take with one click; nothing is ever moved without them.
+--- author to take with one click; nothing is ever moved without them. Returns
+--- the dropdown, for DrawElementVersionConfig to size with its columns.
 function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onChange)
     element.MetaData = element.MetaData or {}
     local dd = UI:Create("Dropdown")
@@ -1781,12 +1752,6 @@ function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onC
     -- Centred, with the label and dropdown widths of the Default Version row
     -- below it, so the two line up as on the sequence Configuration page.
     local scopeRow = inlineFieldRow(T("Specialization/Class ID"), dd, longestLabelWidth())
-    -- Sized with the version dropdowns by DrawElementVersionConfig; forgotten
-    -- when released, as the pooled widget then belongs to someone else.
-    editframe.elementScopeDropdown = dd
-    dd:SetCallback("OnRelease", function()
-        if editframe.elementScopeDropdown == dd then editframe.elementScopeDropdown = nil end
-    end)
     if scopeRow.SetFlowHAlign then scopeRow:SetFlowHAlign("CENTER") end
     container:AddChild(scopeRow)
 
@@ -1810,6 +1775,7 @@ function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onC
         row:AddChild(use)
         container:AddChild(row)
     end
+    return dd
 end
 
 --- "From collections: A, B" -- the collections an element came through
@@ -1916,7 +1882,9 @@ end
 --- Which version runs where: Default, then the PvE and PvP context overrides.
 --- A context set to the Default version is cleared, as the sequence editor does.
 --- `onChange()`, when given, runs after any of them changes.
-function GSE.GUI.DrawElementVersionConfig(editframe, container, element, onChange)
+--- scopeDropdown, optional: DrawElementScope's dropdown, sized with the
+--- version dropdowns so the centred rows line up.
+function GSE.GUI.DrawElementVersionConfig(editframe, container, element, onChange, scopeDropdown)
     element.MetaData = element.MetaData or {}
     local meta = element.MetaData
     -- Settings for contexts this client lacks have no row; they go on Save.
@@ -1974,7 +1942,7 @@ function GSE.GUI.DrawElementVersionConfig(editframe, container, element, onChang
     addVersionColumns(container, columns[1], columns[2], minWidth, function(width)
         local ddWidth = columnDropdownWidth(width, labelWidth)
         if defaultDropdown then defaultDropdown:SetWidth(ddWidth) end
-        if editframe.elementScopeDropdown then editframe.elementScopeDropdown:SetWidth(ddWidth) end
+        if scopeDropdown then scopeDropdown:SetWidth(ddWidth) end
     end)()
 end
 

@@ -1363,6 +1363,7 @@ end
 
 function GSE.ReloadOverrides(force)
     LoadOverrides(force)
+    GSE:SendMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED)
 end
 
 --- Put sequence id on action-bar button buttonName.
