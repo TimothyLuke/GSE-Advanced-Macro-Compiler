@@ -1347,25 +1347,6 @@ local function getManualActionIcon(action)
     end
 end
 
-local function stripLeadingIconConditionals(value)
-    value = trimIconCandidate(value)
-    while string.sub(value, 1, 1) == "[" do
-        local closing = string.find(value, "]", 1, true)
-        if not closing then break end
-        value = trimIconCandidate(string.sub(value, closing + 1))
-    end
-    return value
-end
-
-local function normaliseIconCandidate(value)
-    value = stripLeadingIconConditionals(value)
-    value = trimIconCandidate(value:gsub("^reset=%S+%s*", ""))
-    while string.sub(value, 1, 1) == "!" do
-        value = trimIconCandidate(string.sub(value, 2))
-    end
-    return value
-end
-
 local function getItemIconInfo(candidate)
     local icon = select(10, C_Item.GetItemInfo(candidate))
     if icon then
@@ -1419,7 +1400,7 @@ local function getSpellNameFallbackIconInfo(candidate, skipForms)
 end
 
 local function getSpellOrItemIconInfo(candidate, preferItem, skipForms)
-    candidate = normaliseIconCandidate(candidate)
+    candidate = GSE.GetMacroClauseTarget(candidate)
     if candidate == "" then return nil end
     if preferItem and tonumber(candidate) and tonumber(candidate) <= 19 then
         return getEquipmentSlotIconInfo(candidate)
@@ -1462,7 +1443,7 @@ local function getFallbackCandidateIconInfo(candidate, preferItem, skipForms)
     local knownIconInfo
     for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
         knownIconInfo = knownIconInfo or getKnownConditionalIconInfo(semicolonCandidate, skipForms)
-        semicolonCandidate = normaliseIconCandidate(semicolonCandidate)
+        semicolonCandidate = GSE.GetMacroClauseTarget(semicolonCandidate)
         for _, commaCandidate in ipairs(GSE.split(semicolonCandidate, ",")) do
             local iconInfo = getSpellOrItemIconInfo(commaCandidate, preferItem, skipForms)
             if iconInfo then return iconInfo end
@@ -1526,7 +1507,7 @@ local function getMacroLineFallbackIconInfo(line, skipForms)
     end
 
     local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(parsedEtc, true)
-    local candidate = resolved and trimIconCandidate(resolved) or stripLeadingIconConditionals(parsedEtc)
+    local candidate = resolved and trimIconCandidate(resolved) or GSE.GetMacroClauseTarget(parsedEtc)
 
     return getFallbackCandidateIconInfo(candidate, preferItem, skipForms)
 end
@@ -1545,7 +1526,7 @@ local function getMacroLineResolvedIconCandidate(line)
     end
 
     local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(parsedEtc, true)
-    return resolved and trimIconCandidate(resolved) or stripLeadingIconConditionals(parsedEtc)
+    return resolved and trimIconCandidate(resolved) or GSE.GetMacroClauseTarget(parsedEtc)
 end
 
 local function isMacroLineFormOrStance(line)
@@ -1775,13 +1756,12 @@ local function getMacroIconDebugCandidate(macro)
             if cmd == "castsequence" then
                 for _, semicolonCandidate in ipairs(GSE.split(etc, ";")) do
                     for _, sequenceCandidate in ipairs(GSE.SplitCastSequence(semicolonCandidate)) do
-                        local _, _, sequenceEtc = GSE.GetConditionalsFromString(sequenceCandidate)
-                        local candidate = normaliseIconCandidate(sequenceEtc)
+                        local candidate = GSE.GetMacroClauseTarget(sequenceCandidate)
                         if candidate ~= "" then return cmd .. "=" .. candidate end
                     end
                 end
             elseif Statics.CastCmds[cmd] and cmd ~= "stopmacro" and cmd ~= "cancelaura" and cmd ~= "cancelform" then
-                local candidate = normaliseIconCandidate(etc)
+                local candidate = GSE.GetMacroClauseTarget(etc)
                 if candidate ~= "" then return cmd .. "=" .. candidate end
             end
         end
@@ -8430,13 +8410,6 @@ function GSE.ShowSequences()
         end
     end
 
-    -- Restore last non-sequence area (Variables, Macros, Keybindings) if that was last open
-    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-    local lastArea = seOpts and seOpts.lastArea
-    if lastArea and lastArea ~= "Sequences" and editframe.RestoreLastNode then
-        C_Timer.After(0.1, function() editframe.RestoreLastNode() end)
-    end
-
     SetSequenceEditorOpenPreference(true, "sequences")
     editframe:Show()
     -- Split, because "the open is slow" has three candidates and they behave
@@ -8647,6 +8620,14 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
 end
 
+-- Open an area on the node it was last left on (GSE.GUI.GetLastAreaNode), or
+-- on the area itself when there is none or it is gone -- as ShowSequences
+-- reopens the last sequence.
+local function SelectLastAreaNode(editor, area)
+    local path = GSE.GUI.GetLastAreaNode and GSE.GUI.GetLastAreaNode(editor, area) or area
+    GSE.GUI.SelectEditorTreePath(editor, path)
+end
+
 function GSE.ShowKeyBindings()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
@@ -8656,7 +8637,7 @@ function GSE.ShowKeyBindings()
         treeStatus.groups["KEYBINDINGS\001AO"] = true
         treeStatus.groups["KEYBINDINGS\001KB"] = true
     end
-    editor.treeContainer:SelectByValue("KEYBINDINGS")
+    SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()
 end
@@ -8664,7 +8645,7 @@ end
 function GSE.ShowVariables()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
-    editor.treeContainer:SelectByValue("VARIABLES")
+    SelectLastAreaNode(editor, "VARIABLES")
     SetSequenceEditorOpenPreference(true, "variables")
     editor:Show()
 end
@@ -8672,7 +8653,7 @@ end
 function GSE.ShowMacros()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
-    editor.treeContainer:SelectByValue("Macro")
+    SelectLastAreaNode(editor, "Macro")
     SetSequenceEditorOpenPreference(true, "macros")
     editor:Show()
 end

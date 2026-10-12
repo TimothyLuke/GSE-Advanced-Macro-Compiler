@@ -147,7 +147,15 @@ local function getTreeTextWidth(fontString)
         treeTextRuler = UIParent:CreateFontString(nil, "ARTWORK")
         treeTextRuler:Hide()
     end
-    treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
+    -- The row's actual font, not its font object: the tree text is set with
+    -- SetFont, so measuring in the object's (or GameFontHighlight's) size read
+    -- wider than drawn and the tree sized itself wider than its rows.
+    local face, size, flags = fontString:GetFont()
+    if face then
+        treeTextRuler:SetFont(face, size, flags or "")
+    else
+        treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
+    end
     treeTextRuler:SetText(fontString:GetText() or "")
     return treeTextRuler:GetStringWidth()
 end
@@ -2804,6 +2812,15 @@ local function createEditBox()
         end
     end
 
+    -- Pooled: compact mode hides the label and centres the box by anchors, which
+    -- the field sweep cannot undo, so a box released from a compact use came
+    -- back labelless and centred for the next caller. Put the label layout back.
+    widget.__gseResetState = function()
+        widget.compactNoLabel = nil
+        widget.labelBoxPadding = nil
+        positionEditBox()
+    end
+
     if GSE.Skin and GSE.Skin.EditBox then GSE.Skin.EditBox(editBox) end
     return widget
 end
@@ -2980,8 +2997,16 @@ local function createCheckBox()
     end
 
     check:SetScript("OnClick", function(self) widget:Fire("OnValueChanged", self:GetChecked()) end)
-    check:SetScript("OnEnter", function(self) setElvUITextButtonHover(self, true); setElvUICheckBoxHover(self, true); widget:Fire("OnEnter") end)
-    check:SetScript("OnLeave", function(self) setElvUITextButtonHover(self, false); setElvUICheckBoxHover(self, false); widget:Fire("OnLeave") end)
+    -- The label's grow-on-hover is the ElvUI skin's text-button effect; gated on
+    -- that skin as setElvUICheckBoxHover is, so default-skin labels hold still.
+    check:SetScript("OnEnter", function(self)
+        if shouldUseElvUISkin() then setElvUITextButtonHover(self, true) end
+        setElvUICheckBoxHover(self, true); widget:Fire("OnEnter")
+    end)
+    check:SetScript("OnLeave", function(self)
+        if shouldUseElvUISkin() then setElvUITextButtonHover(self, false) end
+        setElvUICheckBoxHover(self, false); widget:Fire("OnLeave")
+    end)
     applyElvUICheckBoxSkin(check, text)
     applyNormalAccentCheckBoxText(check, text)
     -- Under an external skin provider both apply* helpers above bail out,
@@ -3672,7 +3697,11 @@ local function createDropdown()
 
     local function nativeDropdownWidth()
         local width = widget.width or safeWidth(frame, 200)
-        return math.max(40, width - 40)
+        -- Blizzard's art carries transparent ends; anchored 16 left of the frame
+        -- and this much narrower, its visible right edge lands on the frame's
+        -- right edge (width - 40 left it ~26 short, as GSE drew it after
+        -- AceGUI was removed in #1914).
+        return math.max(40, width - 14)
     end
 
     local function nativeDropdownMenuAnchor()
@@ -4191,8 +4220,13 @@ local function createDropdown()
         end
 
         overlay:ClearAllPoints()
-        overlay:SetPoint("TOPLEFT", widget.nativeDropdown, "TOPLEFT", 0, 0)
-        overlay:SetPoint("BOTTOMRIGHT", widget.nativeDropdown, "BOTTOMRIGHT", 0, 0)
+        -- Blizzard's frame runs past the widget on both sides (its transparent
+        -- ends); the click area stays within the widget's own width so it
+        -- never takes a click meant for the control beside it.
+        overlay:SetPoint("TOP", widget.nativeDropdown, "TOP", 0, 0)
+        overlay:SetPoint("BOTTOM", widget.nativeDropdown, "BOTTOM", 0, 0)
+        overlay:SetPoint("LEFT", frame, "LEFT", 0, 0)
+        overlay:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
         if overlay.SetFrameLevel and widget.nativeDropdown.GetFrameLevel then
             overlay:SetFrameLevel((widget.nativeDropdown:GetFrameLevel() or frame:GetFrameLevel()) + 30)
         end
@@ -4518,9 +4552,13 @@ local function createControllerKeybinding()
     -- ON at rest, OFF only for the duration of a capture.  pcall because the
     -- call is combat-locked on current clients.
     local function propagateKeys(enabled)
-        if button.SetPropagateKeyboardInput then
-            pcall(button.SetPropagateKeyboardInput, button, enabled)
-        end
+        -- Only when it changes, and never in combat: the call is protected
+        -- there, and pcall stops the error but not WoW's ADDON_ACTION_BLOCKED
+        -- report -- closing the editor in combat (every key field resets on
+        -- release) blamed GSE_GUI. At rest propagation is already on.
+        if not button.SetPropagateKeyboardInput or InCombatLockdown() then return end
+        if button.GetPropagateKeyboardInput and button:GetPropagateKeyboardInput() == enabled then return end
+        pcall(button.SetPropagateKeyboardInput, button, enabled)
     end
     propagateKeys(true)
 
