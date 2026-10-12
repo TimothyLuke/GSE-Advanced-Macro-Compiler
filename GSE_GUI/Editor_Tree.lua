@@ -584,8 +584,8 @@ end
 
 -- Drop everything the editor remembers about where the user last was: the
 -- sequence path used by GSE.ShowSequences, the per-class paths behind it, and
--- the area/key/classid trio RestoreLastNode uses for the Variables, Macros and
--- Keybindings tabs. They all live in the same saved-variable table and are
+-- the last node of the Variables, Macros and Bindings areas
+-- (GSE.GUI.GetLastAreaNode). They all live in the same saved-variable table and are
 -- written as you click around, so forgetting means clearing every one of them
 -- -- leaving the per-class table behind would reopen on the next login exactly
 -- what the option asked to forget. Called from PLAYER_LOGOUT when
@@ -596,6 +596,8 @@ function GSE.GUI.ForgetLastSequenceEditorNode()
     if not opts then return end
     opts.lastSequencePath = nil
     opts.lastSequencePathByClass = nil
+    opts.lastNodeByArea = nil
+    -- Retired: the area/key/classid trio the old RestoreLastNode read.
     opts.lastArea = nil
     opts.lastKey = nil
     opts.lastClassId = nil
@@ -605,6 +607,53 @@ function GSE.GUI.SelectEditorTreePath(editor, path)
     if not (editor and editor.treeContainer and path) then return end
     editor.forceTreeSelection = true
     editor.treeContainer:SelectByValue(path)
+end
+
+-- The open mode each non-sequence area reopens through: GSE.ShowVariables,
+-- GSE.ShowMacros, GSE.ShowKeyBindings. Each area remembers its own last node,
+-- as Sequences do (SaveLastSequenceEditorPath), and its Show* selects it, so
+-- every area comes back on the page it was left on, in the tree as well as
+-- the pane.
+local AREA_OPEN_MODE = {VARIABLES = "variables", Macro = "macros", KEYBINDINGS = "keybindings"}
+-- Pages that create something are not a place to come back to, as New
+-- Sequence is not.
+local AREA_NEW_NODE = {VARIABLES = "NEWVARIABLES"}
+
+local function SaveLastAreaNode(unique)
+    local area = unique[1]
+    local opts = GetSequenceEditorOptions()
+    if not (opts and AREA_OPEN_MODE[area]) then return end
+    opts.openMode = AREA_OPEN_MODE[area]
+    if unique[2] and unique[2] == AREA_NEW_NODE[area] then return end
+    opts.lastNodeByArea = opts.lastNodeByArea or {}
+    opts.lastNodeByArea[area] = table.concat(unique, "\001")
+end
+
+-- Whether `path` is a node of the tree as built: the stored node is gone once
+-- its variable or macro is deleted, its talent loadout removed, or Keybindings
+-- are switched off.
+local function treeHasPath(nodes, path, prefix)
+    for _, node in ipairs(nodes or {}) do
+        local value = prefix and (prefix .. "\001" .. tostring(node.value)) or tostring(node.value)
+        if value == path then return true end
+        if node.children and path:sub(1, #value + 1) == value .. "\001"
+            and treeHasPath(node.children, path, value) then
+            return true
+        end
+    end
+    return false
+end
+
+--- The node `area` was last left on, if this editor's tree still has it.
+function GSE.GUI.GetLastAreaNode(editor, area)
+    local opts = GetSequenceEditorOptions()
+    local path = opts and opts.lastNodeByArea and opts.lastNodeByArea[area]
+    if not path then return nil end
+    local tree = editor and editor.treeContainer
+    local treePath = tree and tree.gseTreePath and tree.gseTreePath(path) or path
+    if tree and treeHasPath(tree.tree, treePath) then return path end
+    opts.lastNodeByArea[area] = nil
+    return nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -2040,7 +2089,8 @@ local function ManageTree(editframe)
     -- element sits under a group, so translate the longest known prefix.
     if not treeContainer.gseGroupedSelect then
         local raw = treeContainer.SelectByValue
-        treeContainer.SelectByValue = function(self, path, ...)
+        -- By-type path to the path the built tree has it under.
+        treeContainer.gseTreePath = function(path)
             local map = editframe.treeGroupedPaths
             -- A path from another grouping (the selection kept across a
             -- switch) drops its group and is found again from its by-type part.
@@ -2061,7 +2111,10 @@ local function ManageTree(editframe)
                     end
                 end
             end
-            return raw(self, path, ...)
+            return path
+        end
+        treeContainer.SelectByValue = function(self, path, ...)
+            return raw(self, treeContainer.gseTreePath(path), ...)
         end
         treeContainer.gseGroupedSelect = true
     end
@@ -2280,21 +2333,13 @@ local function ManageTree(editframe)
                     })
                 end
             else
-                -- Save last visited node for restore on reload (exclude Keybindings)
-                if area ~= "KEYBINDINGS" and area ~= "NewSequence" and area ~= "Import" then
-                    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-                    if seOpts then
-                        seOpts.lastArea    = area
-                        seOpts.lastKey     = key
-                        seOpts.lastClassId = classid
-                        -- Reopen through ShowSequences, which restores this node
-                        -- (RestoreLastNode). openMode otherwise stays whatever
-                        -- first opened the editor, so a reload went back there.
-                        seOpts.openMode    = "sequences"
-                    end
-                elseif area == "KEYBINDINGS" then
-                    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-                    if seOpts then seOpts.openMode = "keybindings" end
+                -- Reopen in the area last used, on the node last used in it.
+                -- openMode otherwise stays whatever first opened the editor.
+                if area == "Sequences" then
+                    local seOpts = GetSequenceEditorOptions()
+                    if seOpts then seOpts.openMode = "sequences" end
+                else
+                    SaveLastAreaNode(unique)
                 end
 
                 -- Left-click dispatch table
@@ -2347,31 +2392,6 @@ function GSE.GUI.SetupTree(editframe)
             Statics.DebugModules["Editor"]
         )
         --@end-debug@
-    end
-
-    -- Restore last visited node after the tree finishes building
-    editframe.RestoreLastNode = function()
-        local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-        if not seOpts then return end
-        local area    = seOpts.lastArea
-        local key     = seOpts.lastKey
-        local classid = seOpts.lastClassId
-        if not area then return end
-
-        local container = editframe.treeContent or editframe.rightPanel
-        if not container then return end
-
-        if area == "Sequences" and key and classid then
-            local unique = {classid, key}
-            local path = {classid}
-            onClick_Sequences(editframe, container, nil, unique, path, key, classid, key)
-        elseif area == "VARIABLES" and key then
-            onClick_VARIABLES(editframe, container, nil, nil, key)
-        elseif area == "Macro" and key then
-            onClick_Macro(editframe, container, nil, nil, key)
-        elseif area == "KEYBINDINGS" then
-            onClick_KEYBINDINGS(editframe, container, nil, nil)
-        end
     end
 end
 

@@ -8401,13 +8401,6 @@ function GSE.ShowSequences()
         end
     end
 
-    -- Restore last non-sequence area (Variables, Macros, Keybindings) if that was last open
-    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-    local lastArea = seOpts and seOpts.lastArea
-    if lastArea and lastArea ~= "Sequences" and editframe.RestoreLastNode then
-        C_Timer.After(0.1, function() editframe.RestoreLastNode() end)
-    end
-
     SetSequenceEditorOpenPreference(true, "sequences")
     editframe:Show()
     -- Split, because "the open is slow" has three candidates and they behave
@@ -8618,6 +8611,14 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
 end
 
+-- Open an area on the node it was last left on (GSE.GUI.GetLastAreaNode), or
+-- on the area itself when there is none or it is gone -- as ShowSequences
+-- reopens the last sequence.
+local function SelectLastAreaNode(editor, area)
+    local path = GSE.GUI.GetLastAreaNode and GSE.GUI.GetLastAreaNode(editor, area) or area
+    GSE.GUI.SelectEditorTreePath(editor, path)
+end
+
 function GSE.ShowKeyBindings()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
@@ -8627,19 +8628,15 @@ function GSE.ShowKeyBindings()
         treeStatus.groups["KEYBINDINGS\001AO"] = true
         treeStatus.groups["KEYBINDINGS\001KB"] = true
     end
+    SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()
-    -- Select on the next frame, once the window is shown and laid out. The
-    -- binding panels size and pin their rows from the container's real size;
-    -- drawn into a just-created, still-hidden editor (the reopen after a
-    -- /reload) they wrapped and stacked until the page was clicked again.
-    C_Timer.After(0, function() editor.treeContainer:SelectByValue("KEYBINDINGS") end)
 end
 
 function GSE.ShowVariables()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
-    editor.treeContainer:SelectByValue("VARIABLES")
+    SelectLastAreaNode(editor, "VARIABLES")
     SetSequenceEditorOpenPreference(true, "variables")
     editor:Show()
 end
@@ -8647,7 +8644,7 @@ end
 function GSE.ShowMacros()
     local editor = GSE.CreateEditor()
     editor.ManageTree()
-    editor.treeContainer:SelectByValue("Macro")
+    SelectLastAreaNode(editor, "Macro")
     SetSequenceEditorOpenPreference(true, "macros")
     editor:Show()
 end
