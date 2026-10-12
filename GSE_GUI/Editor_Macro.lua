@@ -12,11 +12,6 @@ if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 local DecodeMacroEditorText = GSE.DecodeMacroEditorText
 local StoreMacroEditorText = GSE.StoreMacroEditorText
 
--- Read-only rendered notes stand in for a 3-line editable box. Taller than the
--- box because rendered notes are prose: NativeUI's SetNumLines(3) is 76px, which
--- shows barely two wrapped lines once the panel's own padding is taken out.
-local INLINE_NOTES_PANEL_HEIGHT = 120
-
 local function SetEditBoxLabelGap(widget, gap)
     if not (widget and widget.label and widget.editBox and widget.frame) then return end
     local labelHeight = widget.label:GetStringHeight()
@@ -103,7 +98,8 @@ local function buildMacroMenu()
             local node = {
                 text = mname,
                 value = macid,
-                icon = micon
+                icon = micon,
+                children = GSE.GUI.ElementPageNodes()
             }
             if macid <= maxAccountMacros then
                 table.insert(tree.children[1].children, node)
@@ -343,38 +339,6 @@ local function showMacro(editframe, node, container, selected)
             GSE.GUI.DrawElementCollections(container, "macro", node.name)
         end
 
-        -- Help written on gse.tools arrives as markdown in MetaData.Notes, with
-        -- the server's WoW-escape rendering alongside in MetaData.Help. Show the
-        -- rendering read-only: raw markdown is unreadable in-game, and an in-game
-        -- edit is discarded anyway -- the server re-derives Help from Notes,
-        -- which is only editable on the website.
-        if not GSE.isEmpty(element.MetaData.Help) and GSE.GUI.CreateReadOnlyNotesPanel then
-            GSE.GUI.CreateReadOnlyNotesPanel(
-                container,
-                L["Help Information"],
-                element.MetaData.Help,
-                {height = INLINE_NOTES_PANEL_HEIGHT, editframe = editframe}
-            )
-        else
-            local commentsEditBox = UI:Create("MultiLineEditBox")
-            commentsEditBox:SetLabel(L["Help Information"])
-            ConfigureMacroFieldLabel(commentsEditBox)
-            SetMultiLineLabelGap(commentsEditBox, 2)
-            SetMultiLineContentPadding(commentsEditBox, 2)
-            commentsEditBox:SetNumLines(3)
-            commentsEditBox:SetFullWidth(true)
-            commentsEditBox:DisableButton(true)
-            commentsEditBox:SetText(element.MetaData.Notes or "")
-            commentsEditBox:SetCallback("OnTextChanged", function(self, event, text)
-                element.MetaData.Notes = text
-            end)
-            commentsEditBox:SetCallback("OnEditFocusLost", function()
-                element.MetaData.Notes = commentsEditBox:GetText()
-                commit()
-            end)
-            container:AddChild(commentsEditBox)
-        end
-
         -- Which version this page edits.
         if GSE.GUI.DrawElementVersionBar then
             GSE.GUI.DrawElementVersionBar(editframe, container, element, selected, redraw, commit)
@@ -569,10 +533,46 @@ local function showMacro(editframe, node, container, selected)
     )
 end
 
+-- The macro's Notes - Help page: its Help Link, and Help Information
+-- (MetaData.Notes, read-only once GSE.Tools has rendered Help). Each change is
+-- written back as it is made, as on its Configuration page. A sealed macro, or
+-- one GSE does not keep, has no notes to edit. height: the room the page has.
+local function showMacroNotes(editframe, node, container, height)
+    if GSE.GUI.AddSectionHeader then
+        GSE.GUI.AddSectionHeader(container, L["Macros"] or "Macros", GSE.Static.Icons.Macros)
+    end
+    local source = GSE.Store("macro")
+    if node.value > GSE.GetMaxAccountMacros() then
+        source = source[GSE.CharacterMacroBucketKey()] or {}
+    end
+    local element = source[node.name]
+    if not (GSE.IsStoredMacroNode(element) and type(element.GSEProtected) ~= "string") then
+        local note = UI:Create("Label")
+        note:SetText(L["Tick Manage Macro with GSE on its Configuration page to give this macro notes."])
+        note:SetFullWidth(true)
+        container:AddChild(note)
+        return
+    end
+    GSE.UpgradeMacro(element, node.name)
+    editframe.activeMacroName = node.name
+    local meta = element.MetaData
+    GSE.GUI.DrawNotesPage(editframe, container, {
+        meta = meta,
+        key = "Notes",
+        readOnly = not GSE.isEmpty(meta.Help) and meta.Help or nil,
+        linkTip = L["Website or forum URL where a player can get more information or ask questions about this macro."],
+        onCommit = function() GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = element}) end,
+        height = height,
+    })
+end
+
 -- ---------------------------------------------------------------------------
 -- Public installer
 -- ---------------------------------------------------------------------------
 function GSE.GUI.SetupMacro(editframe)
+    editframe.showMacroNotes = function(node, container, height)
+        showMacroNotes(editframe, node, container, height)
+    end
     editframe.showMacro = function(node, container)
         -- Opened from the tree: start on the version that runs now.
         local stored = GSE.Store("macro")

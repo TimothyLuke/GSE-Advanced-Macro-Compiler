@@ -308,6 +308,73 @@ for _, entry in ipairs(GSE.GetContextVersionDisplay()) do
     table.insert(entry.section == "PVP" and pvpVersionConfigs or pveVersionConfigs, cfg)
 end
 
+-- The Specialization/Class ID choices, laid out as the tree shows classes:
+-- Global, then each class with its icon in its colour and its own specs under
+-- it, classes and specs alphabetical. Keyed by id, not name: Holy is both a
+-- Paladin and a Priest spec, and a name key kept only one of them. A
+-- one-spec-per-class client's class-level spec (WoW Forever's 1486) is its
+-- class's row, so it is left out; specChoiceValue maps it there. onlyClass,
+-- when given, limits it to that class and its specs (0: Global alone). Returns
+-- the list, its order, and the closed box's text (no indent).
+local SPEC_ICON_SIZE = 16
+local SPEC_INDENT = "    "
+local function specChoices(onlyClass)
+    GSE.GetSpecNames() -- builds Statics.SpecIDList
+    local list, order, button = {}, {}, {}
+    local function add(id, icon, text, colour, indent)
+        local shown = colour and WrapTextInColorCode(text, colour) or text
+        if icon then shown = "|T" .. icon .. ":" .. SPEC_ICON_SIZE .. ":" .. SPEC_ICON_SIZE .. "|t " .. shown end
+        list[id], button[id] = (indent and SPEC_INDENT or "") .. shown, shown
+        order[#order + 1] = id
+    end
+    local classes, specsOf = {}, {}
+    for id, name in pairs(Statics.SpecIDList) do
+        if id > 0 and id <= 13 then
+            classes[#classes + 1] = {id = id, name = name}
+        elseif id > 13 then
+            local classID = GSE.GetClassIDforSpec(id)
+            if classID > 0 and name ~= Statics.SpecIDList[classID] then
+                specsOf[classID] = specsOf[classID] or {}
+                table.insert(specsOf[classID], {id = id, name = name})
+            end
+        end
+    end
+    local byName = function(a, b) return GSE.AlphabeticalTableSortAlgorithm(a.name, b.name) end
+    table.sort(classes, byName)
+    if onlyClass == nil or onlyClass == 0 then add(0, nil, Statics.SpecIDList[0]) end
+    for _, class in ipairs(classes) do
+        if onlyClass == nil or onlyClass == class.id then
+            local _, classFile = GetClassInfo(class.id)
+            local colour = classFile and C_ClassColor and C_ClassColor.GetClassColor(classFile)
+            colour = colour and colour:GenerateHexColor()
+            local classIcon = GSE.GetClassIcon(class.id)
+            add(class.id, classIcon, class.name, colour)
+            table.sort(specsOf[class.id] or {}, byName)
+            for _, spec in ipairs(specsOf[class.id] or {}) do
+                add(spec.id, GSE.GetSpecIcon(spec.id) or classIcon, spec.name, colour, true)
+            end
+        end
+    end
+    return list, order, button
+end
+GSE.GUI.SpecChoices = specChoices
+
+-- The list entry a stored SpecID shows as: itself, or (a class-level spec, or
+-- an id this client does not list) its class.
+local function specChoiceValue(list, specID)
+    specID = tonumber(specID) or 0
+    if list[specID] then return specID end
+    return GSE.GetClassIDforSpec(specID)
+end
+
+-- Fill a Specialization/Class ID dropdown and select specID on it.
+local function setSpecChoices(dropdown, specID)
+    local list, order, button = specChoices()
+    dropdown:SetList(list, order)
+    if dropdown.SetButtonTextMap then dropdown:SetButtonTextMap(button) end
+    dropdown:SetValue(specChoiceValue(list, specID))
+end
+
 -- Widest of the metadata row labels in the Label widget's font (GameFontNormal),
 -- so a narrow page can shrink the label column without wrapping a label.
 local labelProbe
@@ -556,11 +623,9 @@ end
 -- and taken back off when the row is released, so it never rides along on a
 -- recycled widget.
 local DRAG_ICON_SIZE = 28
--- "DRAG ME!" badge on the big icon: text padding, and how far its bottom
--- hangs below the icon's bottom edge.
+-- "DRAG ME!" badge under the big icon: text padding.
 local DRAG_BADGE_PAD_X = 7
 local DRAG_BADGE_PAD_Y = 4
-local DRAG_BADGE_DROP = 1
 local sequenceDragIcon
 local sequenceDragArea
 
@@ -703,7 +768,8 @@ local function applyMirrorLook(b, size)
     if not (bw and bh and bh > 0) then return false end
     local scale = size / bh
     icon:SetSize(bw * scale, size)
-    icon.texture:SetTexture(b.icon:GetTexture())
+    -- The bar button's crop, not its picture: that changes as the sequence
+    -- steps, and this icon always shows the first step's.
     icon.texture:SetTexCoord(b.icon:GetTexCoord())
     if icon.mask and b.IconMask then
         -- A mask only takes its shape: no colour, blend or coords to copy.
@@ -731,19 +797,16 @@ local function applyMirrorLook(b, size)
         placeLike(icon.glow, highlight, b, scale)
     end
     mirrorHotKey(b, scale)
-    return true
+    return scale
 end
 
--- Live updates from the mirrored button: GSE sets its icon as the sequence
--- steps, and WoW sets its key label when the binding changes. Hooked once per
--- button; only the button currently mirrored is followed.
+-- Live updates from the mirrored button: WoW sets its key label when the
+-- binding changes. Hooked once per button; only the button currently mirrored
+-- is followed.
 local hookedBarButtons = {}
 local function followBarButton(b)
     if hookedBarButtons[b] then return end
     hookedBarButtons[b] = true
-    hooksecurefunc(b.icon, "SetTexture", function(_, texture)
-        if sequenceDragIcon.mirrorOf == b then sequenceDragIcon.texture:SetTexture(texture) end
-    end)
     local hk = barHotKey(b)
     if hk then
         hooksecurefunc(hk, "SetText", function()
@@ -756,56 +819,17 @@ local function setDragIconSize(size)
     local icon = sequenceDragIcon
     icon.lastSize = size
     local b = icon.sequenceId and barButtonFor(icon.sequenceId)
-    if b and applyMirrorLook(b, size) then
+    local scale = b and applyMirrorLook(b, size)
+    if scale then
         icon.mirrorOf = b
         followBarButton(b)
     else
         icon.mirrorOf = nil
         applyDefaultLook(size)
+        scale = size / BUTTON_ART_SIZE
     end
-end
-
--- Every icon the sequence's blocks offer, in every version, in order, as
--- {name, iconID} -- each block's Select Icon choices (GSE.GetActionIconCandidates).
-local iconProbe
-local function sequenceIconChoices(sequence)
-    local choices, seen = {}, {}
-    -- One picture arrives as a file ID, a numeric string or a texture path;
-    -- compare by the file ID the texture resolves to.
-    iconProbe = iconProbe or UIParent:CreateTexture()
-    local function add(info)
-        local icon = type(info) == "table" and info.iconID
-        if not icon or GSE.IsFallbackIcon(icon) then return end
-        icon = tonumber(icon) or icon
-        iconProbe:SetTexture(icon)
-        local key = (iconProbe.GetTextureFileID and iconProbe:GetTextureFileID()) or icon
-        if not seen[key] then
-            seen[key] = true
-            choices[#choices + 1] = {name = info.name or "", iconID = icon}
-        end
-    end
-    local function walk(actions)
-        if type(actions) ~= "table" then return end
-        for _, action in ipairs(actions) do
-            if type(action) == "table" then
-                if action.type == "spell" or action.type == "macro" then
-                    for _, info in ipairs(GSE.GetActionIconCandidates(action)) do add(info) end
-                end
-                walk(action)
-            end
-        end
-    end
-    for _, version in ipairs(type(sequence) == "table" and sequence.Versions or {}) do
-        if type(version) == "table" then walk(version.Actions) end
-    end
-    return choices
-end
-
--- The icon the drag icon shows: the player's base icon, else the first block's.
-local function dragIconTexture(editframe)
-    local id = editframe.SequenceID
-    return GSE.GetSequenceBaseIcon(id) or GSE.GetSequenceFirstBlockIcon(editframe.Sequence)
-        or GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark
+    -- The GSE watermark, as on an override button.
+    GSE.PlaceGSEWatermark(icon.watermark, icon, scale)
 end
 
 local function attachSequenceDragIcon(editframe, hostRow)
@@ -825,7 +849,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
             _G.NumberFontNormalSmallGray and "NumberFontNormalSmallGray" or "GameFontNormalSmall")
         sequenceDragIcon.hotKey:SetDrawLayer("OVERLAY", 7)
         sequenceDragIcon.hotKey:Hide()
-        -- "DRAG ME!" badge across the bottom edge of the big Config icon
+        -- "DRAG ME!" badge under the big Config icon
         -- (centreSequenceDragIcon shows it). A child frame so it draws over the
         -- icon's frame art; it takes no mouse, so dragging still grabs the icon.
         -- A thin red line through behind the text, 12 past it each side.
@@ -841,8 +865,13 @@ local function attachSequenceDragIcon(editframe, hostRow)
         badge.text:SetText(L["DRAG ME!"])
         badge:Hide()
         sequenceDragIcon.dragLabel = badge
-        -- Assigning the sequence to a button (drag, or the right-click picker)
-        -- changes what the icon mirrors.
+        sequenceDragIcon.watermark = GSE.CreateGSEWatermark(sequenceDragIcon)
+        -- Under the icon: why it shows this picture.
+        local caption = sequenceDragIcon:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        caption:SetText(L["A sequence shows the icon of its first step."])
+        caption:Hide()
+        sequenceDragIcon.caption = caption
+        -- Assigning the sequence to a button changes what the icon mirrors.
         hooksecurefunc(GSE, "CreateActionBarOverride", function()
             C_Timer.After(0, function()
                 if sequenceDragIcon:IsShown() and sequenceDragIcon.lastSize then
@@ -850,35 +879,9 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 end
             end)
         end)
-        -- Right-click: pick the sequence's base icon from the icons it uses.
-        sequenceDragIcon:RegisterForClicks("RightButtonUp")
-        sequenceDragIcon:SetScript("OnClick", function(self, button)
-            local frame = self.editframe
-            local id = frame and frame.SequenceID
-            if button ~= "RightButton" or not id then return end
-            local function pick(icon)
-                GSE.SetSequenceBaseIcon(id, icon)
-                self.texture:SetTexture(dragIconTexture(frame))
-                if self.lastSize then setDragIconSize(self.lastSize) end
-            end
-            -- The editor's own icon menu, as on a block's icon (titled "Select Base Icon"),
-            -- each spell's icon and name.
-            GSE.OpenContextMenu(self, function(_, root)
-                root:CreateTitle(L["Select Base Icon"])
-                for _, v in ipairs(sequenceIconChoices(frame.Sequence)) do
-                    root:CreateButton("|T" .. v.iconID .. ":0|t " .. v.name, function() pick(v.iconID) end)
-                end
-                -- Any icon at all, through GSE QoL's picker, as on a block's menu.
-                if GSE.ShowIconPicker then
-                    root:CreateDivider()
-                    root:CreateButton(L["Choose any icon..."], function() GSE.ShowIconPicker(pick) end)
-                end
-            end)
-        end)
         sequenceDragIcon:RegisterForDrag("LeftButton")
         sequenceDragIcon:SetScript("OnDragStart", function(self)
-            -- The dragged image is whatever this icon shows right now.
-            if self.sequenceId then GSE.BeginSequenceDrag(self.sequenceId, self.texture:GetTexture()) end
+            if self.sequenceId then GSE.BeginSequenceDrag(self.sequenceId) end
         end)
         sequenceDragIcon:SetScript("OnDragStop", function()
             GSE.FinishSequenceDrag()
@@ -893,8 +896,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
             end
             GSE.CreateToolTip(L["Put on an Action Button"], (self.sequenceId
                 and L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."]
-                or L["Only a saved sequence for this character's class can be put on an action button."])
-                .. "\n\n" .. L["Right Click to choose No Combat Base Icon"],
+                or L["Only a saved sequence for this character's class can be put on an action button."]),
                 self.editframe)
         end)
         sequenceDragIcon:SetScript("OnLeave", function(self)
@@ -911,14 +913,13 @@ local function attachSequenceDragIcon(editframe, hostRow)
     local live = id and _G[id] and GSE.SequencesExec and GSE.SequencesExec[id] and true or false
     sequenceDragIcon.sequenceId = live and id or nil
     sequenceDragIcon.editframe = editframe
-    -- The first block's icon from the editor's own copy (it carries the icons
-    -- the editor filled in; the stored copy may not), else the start icon.
-    sequenceDragIcon.texture:SetTexture(dragIconTexture(editframe))
+    sequenceDragIcon.texture:SetTexture(live and GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark)
     sequenceDragIcon.texture:SetDesaturated(not live)
     sequenceDragIcon:SetParent(hostRow.frame)
     sequenceDragIcon:SetFrameLevel(hostRow.frame:GetFrameLevel() + 5)
     setDragIconSize(DRAG_ICON_SIZE)
     sequenceDragIcon.dragLabel:Hide()
+    sequenceDragIcon.caption:Hide()
     sequenceDragIcon:ClearAllPoints()
     sequenceDragIcon:SetPoint("TOPRIGHT", hostRow.frame, "TOPRIGHT", -FORM_SIDE_PADDING, 0)
     sequenceDragIcon:Show()
@@ -935,35 +936,50 @@ end
 -- it follows the layout and window resizes.
 local DRAG_ICON_BIG = 128
 local DRAG_ICON_MARGIN = 16
+-- Under the icon, clear of the watermark in its corner: the badge, then the
+-- caption. Gaps between the three.
+local DRAG_BELOW_GAP = 2
+-- The area's OnSizeChanged is set once, so what a page changes (whether the
+-- badge and caption show) is read off the icon, not captured here.
+local function fitIcon(w, h)
+    if not (w and h and w > 0 and h > 0) then return end
+    local room = sequenceDragIcon.belowRoom or 0
+    local size = math.floor(math.min(DRAG_ICON_BIG, w - DRAG_ICON_MARGIN, h - DRAG_ICON_MARGIN - room))
+    setDragIconSize(math.max(DRAG_ICON_SIZE, size))
+end
 local function centreSequenceDragIcon(slot)
     if not (sequenceDragIcon and slot) then return end
-    local function fitIcon(w, h)
-        if not (w and h and w > 0 and h > 0) then return end
-        local size = math.floor(math.min(DRAG_ICON_BIG, w - DRAG_ICON_MARGIN, h - DRAG_ICON_MARGIN))
-        setDragIconSize(math.max(DRAG_ICON_SIZE, size))
-    end
     if not sequenceDragArea then
         sequenceDragArea = CreateFrame("Frame")
         sequenceDragArea:SetScript("OnSizeChanged", function(_, w, h) fitIcon(w, h) end)
     end
-    sequenceDragArea:SetParent(slot.frame:GetParent())
-    sequenceDragArea:ClearAllPoints()
-    sequenceDragArea:SetAllPoints(slot.frame)
-    sequenceDragIcon:ClearAllPoints()
-    sequenceDragIcon:SetPoint("CENTER", sequenceDragArea, "CENTER")
-    -- OnSizeChanged does not fire when the area comes out the same size as last
-    -- time, and attachSequenceDragIcon has just set the icon back to its small
-    -- size.
-    fitIcon(sequenceDragArea:GetSize())
-    -- The badge straddles the icon's bottom edge, centred, sized to its text.
-    -- Only when the icon can actually be dragged.
+    -- Badge and caption only when the icon can be dragged: otherwise it is
+    -- the GSE logo, not a first step.
+    local live = sequenceDragIcon.sequenceId ~= nil
+    -- The badge centred under the icon, sized to its text; the caption under it.
     local badge = sequenceDragIcon.dragLabel
     badge.text:SetFont(GameFontNormalSmall:GetFont())
     badge:SetSize(math.ceil(badge.text:GetStringWidth()) + DRAG_BADGE_PAD_X * 2,
         math.ceil(badge.text:GetStringHeight()) + DRAG_BADGE_PAD_Y * 2)
     badge:ClearAllPoints()
-    badge:SetPoint("BOTTOM", sequenceDragIcon, "BOTTOM", 0, -DRAG_BADGE_DROP)
-    badge:SetShown(sequenceDragIcon.sequenceId ~= nil)
+    badge:SetPoint("TOP", sequenceDragIcon, "BOTTOM", 0, -DRAG_BELOW_GAP)
+    badge:SetShown(live)
+    local caption = sequenceDragIcon.caption
+    caption:ClearAllPoints()
+    caption:SetPoint("TOP", badge, "BOTTOM", 0, -DRAG_BELOW_GAP)
+    caption:SetShown(live)
+    sequenceDragIcon.belowRoom = live
+        and (DRAG_BELOW_GAP * 2 + badge:GetHeight() + math.ceil(caption:GetStringHeight())) or 0
+    sequenceDragArea:SetParent(slot.frame:GetParent())
+    sequenceDragArea:ClearAllPoints()
+    sequenceDragArea:SetAllPoints(slot.frame)
+    sequenceDragIcon:ClearAllPoints()
+    -- Icon, badge and caption centred together in the slot.
+    sequenceDragIcon:SetPoint("CENTER", sequenceDragArea, "CENTER", 0, sequenceDragIcon.belowRoom / 2)
+    -- OnSizeChanged does not fire when the area comes out the same size as last
+    -- time, and attachSequenceDragIcon has just set the icon back to its small
+    -- size.
+    fitIcon(sequenceDragArea:GetSize())
 end
 
 -- "Disable Sequence", centred at the bottom of the Config page. A real child
@@ -1088,30 +1104,22 @@ end
 local HELPLINK_DEFAULT = GSE.HelplinkDefault
 local helplinkAllowed = GSE.HelplinkAllowed
 
-local function addHelpLinkEditor(editframe, container, width)
+-- The Help Link box, compact beside its headerFieldRow label, bound to meta
+-- (a sequence's, variable's or macro's MetaData). onCommit, when given, runs
+-- after each accepted change.
+local function addHelpLinkEditor(editframe, container, width, meta, tip, onCommit)
     local helplinkeditbox = UI:Create("EditBox")
-    if width then
-        -- Compact: the label sits beside the box (headerFieldRow), not above.
-        helplinkeditbox:SetLabel("")
-        if helplinkeditbox.SetCompactNoLabel then helplinkeditbox:SetCompactNoLabel(true) end
-        helplinkeditbox:SetWidth(width)
-        -- Row height, not the 48 an EditBox keeps for a label above it: the
-        -- row centres on its tallest child, so 48 pushed the line 13 low.
-        helplinkeditbox:SetHeight(HEADER_ROW_HEIGHT)
-    else
-        helplinkeditbox:SetLabel(T("Help Link"))
-        setEditBoxLabelGap(helplinkeditbox, 2)
-        helplinkeditbox:SetWidth(math.min(320, math.max(220, math.floor(metadataContentWidth(editframe, container) / 2))))
-    end
+    helplinkeditbox:SetLabel("")
+    if helplinkeditbox.SetCompactNoLabel then helplinkeditbox:SetCompactNoLabel(true) end
+    helplinkeditbox:SetWidth(width)
+    -- Row height, not the 48 an EditBox keeps for a label above it: the row
+    -- centres on its tallest child, so 48 pushed the line 13 low.
+    helplinkeditbox:SetHeight(HEADER_ROW_HEIGHT)
     helplinkeditbox:DisableButton(true)
     helplinkeditbox:SetCallback(
         "OnEnter",
         function()
-            GSE.CreateToolTip(
-                T("Help Link"),
-                T("Website or forum URL where a player can get more information or ask questions about this sequence."),
-                editframe
-            )
+            GSE.CreateToolTip(T("Help Link"), tip, editframe)
         end
     )
     helplinkeditbox:SetCallback(
@@ -1121,23 +1129,27 @@ local function addHelpLinkEditor(editframe, container, width)
         end
     )
 
-    if GSE.isEmpty(editframe.Sequence.MetaData.Helplink) or not helplinkAllowed(editframe.Sequence.MetaData.Helplink) then
-        editframe.Sequence.MetaData.Helplink = HELPLINK_DEFAULT
+    -- An empty link is allowed and stays empty: writing the default into it
+    -- just by drawing the box changed what was stored, which for a variable or
+    -- macro is a new revision to upload. Only a blocked link is replaced.
+    if not GSE.isEmpty(meta.Helplink) and not helplinkAllowed(meta.Helplink) then
+        meta.Helplink = HELPLINK_DEFAULT
     end
-    helplinkeditbox:SetText(editframe.Sequence.MetaData.Helplink)
+    helplinkeditbox:SetText(meta.Helplink or "")
     helplinkeditbox:SetCallback(
         "OnTextChanged",
         function(obj, event, key)
             if not helplinkAllowed(key) then
                 -- SetText re-fires this callback with the default, which
                 -- passes, so there is no loop.
-                editframe.Sequence.MetaData.Helplink = HELPLINK_DEFAULT
+                meta.Helplink = HELPLINK_DEFAULT
                 helplinkeditbox:SetText(HELPLINK_DEFAULT)
                 return
             end
-            editframe.Sequence.MetaData.Helplink = key
+            meta.Helplink = key
         end
     )
+    if onCommit then helplinkeditbox:SetCallback("OnEditFocusLost", onCommit) end
     container:AddChild(helplinkeditbox)
 end
 
@@ -1374,6 +1386,8 @@ local function addRenderedNotesPanel(container, label, text, options)
 end
 
 local function drawMetadataTab(editframe, container)
+    -- Settings for contexts this client lacks have no row; they go on Save.
+    GSE.DropUnusedContextVersions(editframe.Sequence.MetaData)
     -- Default frame size = 700 w x 500 h
     local fieldWidth = formFieldWidth(editframe, container)
     local dropdownWidth = fieldWidth + DROPDOWN_VISUAL_WIDTH_OFFSET
@@ -1407,18 +1421,12 @@ local function drawMetadataTab(editframe, container)
     speciddropdown:SetLabel(T("Specialization/Class ID"))
     speciddropdown:SetWidth(dropdownWidth)
     if speciddropdown.SetDropdownStyle then speciddropdown:SetDropdownStyle(true) end
-    speciddropdown:SetList(GSE.GetSpecNames())
     speciddropdown:SetCallback(
         "OnValueChanged",
         function(obj, event, key)
-            local sid = Statics.SpecIDHashList[key]
+            local sid = tonumber(key) or 0
             editframe.Sequence.MetaData.SpecID = sid
-
-            if tonumber(sid) > 12 then
-                editframe.ClassID = GSE.GetClassIDforSpec(tonumber(sid))
-            else
-                editframe.ClassID = tonumber(sid)
-            end
+            editframe.ClassID = GSE.GetClassIDforSpec(sid)
         end
     )
     speciddropdown:SetCallback(
@@ -1437,7 +1445,7 @@ local function drawMetadataTab(editframe, container)
             GSE.ClearTooltip(editframe)
         end
     )
-    speciddropdown:SetValue(Statics.SpecIDList[editframe.Sequence.MetaData.SpecID])
+    setSpecChoices(speciddropdown, editframe.Sequence.MetaData.SpecID)
 
 
     -- Specialization and Default Version: centred on the page, one above the other.
@@ -1589,17 +1597,19 @@ local function websiteNotesText(sequence)
     return meta.Notes
 end
 
--- Help Information, as on the macro and variable pages: the GSE.Tools notes
--- read-only when the sequence has them, else MetaData.Help to type into.
-local HELP_BOX_LINES = 3
-local HELP_PANEL_HEIGHT = 120
-local function addHelpInformationBox(editframe, container)
-    local rendered = websiteNotesText(editframe.Sequence)
-    if rendered then
-        GSE.GUI.CreateReadOnlyNotesPanel(container, T("Help Information"), rendered,
-            {height = HELP_PANEL_HEIGHT, editframe = editframe})
+-- Help Information: the GSE.Tools notes read-only when opts.readOnly carries
+-- them, else opts.meta[opts.key] to type into. height is the room for the box
+-- and its label: the editable box is lines * 16 + 28 with its label, the
+-- read-only panel's label and gap take HELP_PANEL_LABEL_HEIGHT above its box.
+local HELP_PANEL_LABEL_HEIGHT = 22
+local HELP_MIN_LINES = 6
+local function addHelpInformationBox(editframe, container, height, opts)
+    if opts.readOnly then
+        GSE.GUI.CreateReadOnlyNotesPanel(container, T("Help Information"), opts.readOnly,
+            {height = math.max(HELP_MIN_LINES * 16 + 28, height) - HELP_PANEL_LABEL_HEIGHT, editframe = editframe})
         return
     end
+    local meta, key = opts.meta, opts.key
     local helpeditbox = UI:Create("MultiLineEditBox")
     helpeditbox:SetLabel(T("Help Information"))
     -- Explicit SetFont: a recycled widget's font was restored with SetFont,
@@ -1607,19 +1617,20 @@ local function addHelpInformationBox(editframe, container)
     if helpeditbox.label and helpeditbox.label.SetFont then
         helpeditbox.label:SetFont(GameFontNormalSmall:GetFont())
     end
-    helpeditbox:SetNumLines(HELP_BOX_LINES)
+    helpeditbox:SetNumLines(math.max(HELP_MIN_LINES, math.floor((height - 28) / 16)))
     helpeditbox:SetFullWidth(true)
     helpeditbox:DisableButton(true)
-    helpeditbox:SetText(editframe.Sequence.MetaData.Help or "")
+    helpeditbox:SetText(meta[key] or "")
     helpeditbox:SetCallback("OnTextChanged", function(_, _, text)
-        editframe.Sequence.MetaData.Help = text
+        meta[key] = text
     end)
-    helpeditbox:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(T("Help Information"),
-            T("Notes and help on how this sequence works.  What things to remember.  This information is shown in the sequence browser."),
-            editframe)
-    end)
-    helpeditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    if opts.onCommit then helpeditbox:SetCallback("OnEditFocusLost", opts.onCommit) end
+    if opts.helpTip then
+        helpeditbox:SetCallback("OnEnter", function()
+            GSE.CreateToolTip(T("Help Information"), opts.helpTip, editframe)
+        end)
+        helpeditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    end
     container:AddChild(helpeditbox)
 end
 
@@ -1664,8 +1675,9 @@ local function headerFieldRow(container, labelText, labelWidth)
     return row
 end
 
--- One page (it replaces the Config and Notes tabs): Sequence Name, Author and
--- Help Link at the top, the Help Information box, then the settings.
+-- The Configuration page: Sequence Name and Author at the top, then the
+-- settings. Help Link and Help Information have their own page and tree node
+-- (GUIDrawNotesEditor).
 GUIDrawMetadataEditor = function(editframe, container)
     if container.SetListPadding then container:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, 5, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING) end
 
@@ -1678,16 +1690,49 @@ GUIDrawMetadataEditor = function(editframe, container)
     local nameRow = headerFieldRow(header, T("Sequence Name"), labelWidth)
     addSequenceNameEditor(editframe, nameRow, HEADER_FIELD_WIDTH)
     addAuthorEditor(editframe, headerFieldRow(header, T("Author"), labelWidth), HEADER_FIELD_WIDTH)
-    addHelpLinkEditor(editframe, headerFieldRow(header, T("Help Link"), labelWidth), HEADER_FIELD_WIDTH)
     container:AddChild(header)
     -- The drag icon's frame is owned here and released with this block.
     attachSequenceDragIcon(editframe, header)
 
-    addMetadataSpacer(container, 8)
-    addHelpInformationBox(editframe, container)
-
     addMetadataSpacer(container, 16)
     drawMetadataTab(editframe, container)
+end
+
+-- Under the Help Link row: the 8 spacer and the list gaps, plus a little so
+-- the box never quite reaches the scroll edge.
+local NOTES_PAGE_CHROME = 8 + 3 * 2 + 8
+
+--- The Notes - Help page of a sequence, variable or macro: the Help Link, then
+--- Help Information filling the rest of the pane, so long notes read as a page
+--- rather than four lines at a time. opts:
+---   meta      the element's MetaData (Helplink and the notes live here)
+---   key       the MetaData field the editable box writes ("Help" or "Notes")
+---   readOnly  the GSE.Tools notes to show read-only instead, or nil
+---   linkTip   the Help Link tooltip; helpTip the Help Information one
+---   onCommit  run after an edit, for an element written back as it changes
+---   height    the room this page has, from its first row down
+function GSE.GUI.DrawNotesPage(editframe, container, opts)
+    addHelpLinkEditor(editframe, headerFieldRow(container, T("Help Link"), headerLabelWidth()),
+        HEADER_FIELD_WIDTH, opts.meta, opts.linkTip, opts.onCommit)
+    addMetadataSpacer(container, 8)
+    local height = (opts.height or 0) - HEADER_ROW_HEIGHT - NOTES_PAGE_CHROME
+    if height <= 0 then height = NOTES_RENDERED_HEIGHT + HELP_PANEL_LABEL_HEIGHT end
+    addHelpInformationBox(editframe, container, height, opts)
+end
+
+-- A sequence's Notes - Help page: it edits Help, read-only when GSE.Tools
+-- notes arrived (websiteNotesText).
+local function GUIDrawNotesEditor(editframe, container)
+    if container.SetListPadding then container:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, 5, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING) end
+    local pane = editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0
+    GSE.GUI.DrawNotesPage(editframe, container, {
+        meta = editframe.Sequence.MetaData,
+        key = "Help",
+        readOnly = websiteNotesText(editframe.Sequence),
+        linkTip = T("Website or forum URL where a player can get more information or ask questions about this sequence."),
+        helpTip = T("Notes and help on how this sequence works.  What things to remember.  This information is shown in the sequence browser."),
+        height = pane - 5 - CONFIG_CONTENT_LEFT_PADDING,
+    })
 end
 
 -- ---------------------------------------------------------------------------
@@ -1722,10 +1767,9 @@ function GSE.GUI.DrawElementScope(editframe, container, element, suggestion, onC
     local dd = UI:Create("Dropdown")
     dd:SetWidth(ELEMENT_DEFAULT_DROPDOWN_WIDTH)
     if dd.SetDropdownStyle then dd:SetDropdownStyle(true) end
-    dd:SetList(GSE.GetSpecNames())
-    dd:SetValue(Statics.SpecIDList[tonumber(element.MetaData.SpecID) or 0])
+    setSpecChoices(dd, element.MetaData.SpecID)
     dd:SetCallback("OnValueChanged", function(_, _, key)
-        element.MetaData.SpecID = Statics.SpecIDHashList[key]
+        element.MetaData.SpecID = tonumber(key) or 0
         if onChange then onChange() end
     end)
     dd:SetCallback("OnEnter", function()
@@ -1875,6 +1919,8 @@ end
 function GSE.GUI.DrawElementVersionConfig(editframe, container, element, onChange)
     element.MetaData = element.MetaData or {}
     local meta = element.MetaData
+    -- Settings for contexts this client lacks have no row; they go on Save.
+    GSE.DropUnusedContextVersions(meta)
     local list, order = elementVersionList(element)
 
     -- Laid out as the sequence Configuration page: Default Version centred,
@@ -1935,6 +1981,9 @@ end
 function GSE.GUI.SetupMetadata(editframe)
     editframe.GUIDrawMetadataEditor = function(container)
         GUIDrawMetadataEditor(editframe, container)
+    end
+    editframe.GUIDrawNotesEditor = function(container)
+        GUIDrawNotesEditor(editframe, container)
     end
 end
 

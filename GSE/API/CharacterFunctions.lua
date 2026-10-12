@@ -63,7 +63,7 @@ function GSE.GetClassIDforSpec(specid)
         local _, _, _, _, _, class = GetSpecializationInfoByID(specid)
         if specid <= 13 then
             classid = specid
-        else
+        elseif class then
             for i = 1, 13, 1 do
                 local classInfo = C_CreatureInfo.GetClassInfo(i)
                 local st = classInfo and classInfo.classFile
@@ -72,8 +72,25 @@ function GSE.GetClassIDforSpec(specid)
                 end
             end
         end
+        -- WoW Forever knows no retail spec id (66 is Protection Paladin there
+        -- only through the talent-tree mapping in Statics.lua), so the client
+        -- answers nothing and the sequence would be filed as Global.
+        if classid == 0 then classid = GSE.SpecIDClassList[specid] or 0 end
     end
     return classid
+end
+
+--- A spec's icon: the client's own, else its talent tree's (WoW Forever has
+--- trees but no spec record for a retail id), or nil.
+function GSE.GetSpecIcon(specID)
+    specID = tonumber(specID)
+    if not specID or specID <= 13 then return nil end
+    if GetSpecializationInfoByID then
+        local id, _, _, icon = GetSpecializationInfoByID(specID)
+        if id and icon then return icon end
+    end
+    local _ = Statics.SpecIDList[0] -- the trees are read when the list is built
+    return Statics.SpecIDIconList[specID]
 end
 
 function GSE.GetClassIcon(classid)

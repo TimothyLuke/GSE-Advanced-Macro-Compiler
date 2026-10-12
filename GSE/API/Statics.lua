@@ -237,16 +237,24 @@ local CLASS_TREE_SPECIDS = {
 -- GetCurrentSpecID returns on such a client is a real entry meaning "any build
 -- of this class" rather than an unknown number.
 local function deriveClassTreeSpecs()
-    if not (GetSpecializationInfoForClassID and C_ClassTalents
+    -- Forever 1.60.1.70338 dropped the global GetNumSpecializationsForClassID
+    -- for C_SpecializationInfo's, and with the global required nothing was
+    -- registered for any class. Namespaced first, as the rest of GSE reads the
+    -- spec API. GetSpecializationInfoForClassID keeps its global first: that
+    -- is the multi-return shape read below.
+    local specInfo = C_SpecializationInfo
+    local getNumSpecs = (specInfo and specInfo.GetNumSpecializationsForClassID) or GetNumSpecializationsForClassID
+    local getClassSpec = GetSpecializationInfoForClassID or (specInfo and specInfo.GetSpecializationInfoForClassID)
+    if not (getClassSpec and C_ClassTalents
         and C_ClassTalents.GetTraitTreeForSpec and C_Traits
-        and C_Traits.GetGroupDisplayInfoByTreeID and GetNumSpecializationsForClassID) then
+        and C_Traits.GetGroupDisplayInfoByTreeID and getNumSpecs) then
         return nil
     end
-    local found = nil
+    local found, classOf, iconOf = nil, nil, nil
     for classID, specIDs in pairs(CLASS_TREE_SPECIDS) do
-        local okCount, specCount = pcall(GetNumSpecializationsForClassID, classID)
+        local okCount, specCount = pcall(getNumSpecs, classID)
         if okCount and specCount == 1 then
-            local okSpec, classSpecID, classSpecName = pcall(GetSpecializationInfoForClassID, classID, 1)
+            local okSpec, classSpecID, classSpecName = pcall(getClassSpec, classID, 1)
             if okSpec and classSpecID then
                 local okTree, treeID = pcall(C_ClassTalents.GetTraitTreeForSpec, classSpecID)
                 local groups
@@ -255,9 +263,11 @@ local function deriveClassTreeSpecs()
                     groups = okGroups and result or nil
                 end
                 if type(groups) == "table" and #groups == #specIDs then
-                    found = found or {}
+                    found, classOf, iconOf = found or {}, classOf or {}, iconOf or {}
                     -- The class-level spec, so GetCurrentSpecID resolves.
                     found[classSpecID] = classSpecName or determineClassName(classID)
+                    -- Its class: the client's id is in no table of ours.
+                    classOf[classSpecID] = classID
                     for _, group in ipairs(groups) do
                         -- orderIndex is 0-based and locale-independent, unlike
                         -- displayName, and stable where groupID need not be.
@@ -265,13 +275,16 @@ local function deriveClassTreeSpecs()
                         local mapped = specIDs[slot]
                         if mapped and group.displayName then
                             found[mapped] = group.displayName
+                            -- The tree's own icon: the client has no spec
+                            -- record for a retail id to read one from.
+                            iconOf[mapped] = group.icon
                         end
                     end
                 end
             end
         end
     end
-    return found
+    return found, classOf, iconOf
 end
 
 -- Spec/class name tables built lazily on first access.
@@ -370,11 +383,19 @@ local function buildSpecList()
     -- A client that exposes its talent trees as groups fills in the ids the
     -- hardcoded list above could not resolve. Runs last so the client's own
     -- names win over anything guessed above.
-    local treeSpecs = deriveClassTreeSpecs()
+    local treeSpecs, treeClasses, treeIcons = deriveClassTreeSpecs()
     if treeSpecs then
         for specID, name in pairs(treeSpecs) do
             Statics.SpecIDList[specID] = name
         end
+    end
+    -- The retail ids the trees map onto are in GSE.SpecIDClassList already;
+    -- the class-level ones (1486 -> Paladin) are added here.
+    for specID, classID in pairs(treeClasses or {}) do
+        GSE.SpecIDClassList[specID] = classID
+    end
+    for specID, icon in pairs(treeIcons or {}) do
+        Statics.SpecIDIconList[specID] = icon
     end
 
     -- Build the reverse lookup once all names are known.
@@ -388,6 +409,9 @@ end
 -- After that, keys are present in the tables and __index is not called again.
 local lazyMeta = {__index = function(_, _) buildSpecList() end}
 Statics.SpecIDList     = setmetatable({}, lazyMeta)
+-- Spec icons a client gives only through its talent trees (WoW Forever), by
+-- the retail id; GSE.GetSpecIcon reads them.
+Statics.SpecIDIconList = {}
 Statics.SpecIDHashList = setmetatable({}, lazyMeta)
 
 Statics.SequenceDebug = "SEQUENCEDEBUG"

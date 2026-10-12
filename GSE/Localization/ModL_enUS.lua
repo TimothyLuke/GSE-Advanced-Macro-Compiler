@@ -15,8 +15,11 @@ L["Only a saved sequence for this character's class can be put on an action butt
 L["That action button already holds something. Clear it first, then drop the sequence on it."] = true
 L["Put on an Action Button"] = true
 L["DRAG ME!"] = true
-L["Select Base Icon"] = true
-L["Right Click to choose No Combat Base Icon"] = true
+L["Notes - Help"] = true
+L["Website or forum URL where a player can get more information or ask questions about this variable."] = true
+L["Website or forum URL where a player can get more information or ask questions about this macro."] = true
+L["Tick Manage Macro with GSE on its Configuration page to give this macro notes."] = true
+L["A sequence shows the icon of its first step."] = true
 L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
 L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
