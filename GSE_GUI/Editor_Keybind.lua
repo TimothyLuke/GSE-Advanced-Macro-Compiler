@@ -1327,7 +1327,7 @@ end
 -- ---------------------------------------------------------------------------
 -- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
-local AO_COL_BUTTON, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 170, 90, 110, 220
+local AO_COL_BUTTON, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 170, 110, 110, 220
 local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEYS + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
 
 -- Every action button this client can override, name -> name.  One scan per
@@ -1890,13 +1890,14 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local function refreshKeys()
             local text = buttonKeysText(model.bind)
             if text and text:find("|A:", 1, true) then
-                -- Controller glyphs: sized to the row, and never cut -- a cut
+                -- Controller glyphs: sized to the row (their atlases carry
+                -- padding, so smaller reads as specks), and never cut -- a cut
                 -- through the |A..|a markup prints it as text.
-                text = sizeGlyphs(text, 16)
-            elseif text then
-                text = fitText(keys.text, text, AO_COL_KEYS - 4)
+                keys:SetText(sizeGlyphs(text, 22))
+            else
+                if text then text = fitText(keys.text, text, AO_COL_KEYS - 4) end
+                keys:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
             end
-            keys:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
             keys:SetHeight(KB_ROW_HEIGHT)
         end
 
