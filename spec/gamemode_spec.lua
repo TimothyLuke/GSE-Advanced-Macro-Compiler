@@ -94,6 +94,27 @@ describe("GSE.GameMode derivation", function()
     end)
 end)
 
+-- GSE.IsForever is the one "am I on WoW Forever?" check, set by the same block.
+describe("GSE.IsForever", function()
+    local function isForeverFor(versionString)
+        local parts = {}
+        for piece in string.gmatch(versionString, "[^.]+") do
+            parts[#parts + 1] = piece
+        end
+        local GSE = {}
+        derivationChunk()(parts, GSE)
+        return GSE.IsForever
+    end
+
+    it("is true on Forever only", function()
+        assert.is_true(isForeverFor("1.60.1"))
+        assert.is_true(isForeverFor("1.60.5"))
+        assert.is_false(isForeverFor("1.15.9"))   -- Classic Era
+        assert.is_false(isForeverFor("12.1.0"))   -- Midnight
+        assert.is_false(isForeverFor("5.5.4"))    -- MoP Classic
+    end)
+end)
+
 -- GSE.TOCFlavour answers "are these two TOCs the same flavour" for a stamped
 -- sequence TOC, which is a different question from GameMode's API gating.
 describe("GSE.TOCFlavour", function()

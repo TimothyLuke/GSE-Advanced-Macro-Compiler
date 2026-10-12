@@ -9,10 +9,8 @@ local L = GSE.L
 
 if GSE.isEmpty(GSE.GUI) then GSE.GUI = {} end
 
--- Read-only rendered notes stand in for a 3-line editable box. Taller than the
--- box because rendered notes are prose: NativeUI's SetNumLines(3) is 76px, which
--- shows barely two wrapped lines once the panel's own padding is taken out.
-local INLINE_NOTES_PANEL_HEIGHT = 120
+-- The Save button under the Notes - Help page's box, with its gap.
+local NOTES_SAVE_ROW_HEIGHT = 34
 
 -- The Implementation Link is what the author pastes into a macro block, so it
 -- has to be valid Lua for ANY name they gave the variable. Built by blind
@@ -61,7 +59,8 @@ local function buildVariablesMenu()
     for k, _ in GSE.pairsByKeys(GSE.Store("variable") or {}, GSE.AlphabeticalTableSortAlgorithm) do
         local node = {
             value = k,
-            text = "|CFFFFFFFF" .. k .. Statics.StringReset
+            text = "|CFFFFFFFF" .. k .. Statics.StringReset,
+            children = GSE.GUI.ElementPageNodes()
         }
         table.insert(tree.children, node)
     end
@@ -77,10 +76,10 @@ end
 -- Versions what runs. The element being edited is kept on the editframe as a
 -- draft, so choosing another version redraws the page without losing edits.
 -- ---------------------------------------------------------------------------
-local function showVariable(editframe, name, container, selected)
-    editframe.SequenceName = name
-    local implementation = UI:Create("EditBox")
-    local currentKey = name ~= "NEWVARIABLES" and name or nil
+-- The variable being edited, kept on the editframe as a draft so its
+-- Configuration and Notes - Help pages, and a version switch, share edits.
+-- storedKey is the name it is stored under (nil for a new one).
+local function variableDraft(editframe, name)
     local draft = editframe.variableDraft
     if not (draft and draft.name == name) then
         local variable = {
@@ -101,9 +100,60 @@ end]]}},
                 GSE.Print(err, Statics.DebugModules["Editor"])
             end
         end
-        draft = {name = name, variable = GSE.UpgradeVariable(variable, currentKey), selected = 1}
+        local storedKey = name ~= "NEWVARIABLES" and name or nil
+        draft = {name = name, storedKey = storedKey, variable = GSE.UpgradeVariable(variable, storedKey), selected = 1}
         editframe.variableDraft = draft
     end
+    return draft
+end
+
+-- Save the draft under saveName: every version has to compile, not only the
+-- one on screen. A rename deletes the old name. Returns true when queued.
+local function saveVariable(editframe, draft, saveName)
+    local variable = draft.variable
+    for index, v in ipairs(variable.Versions) do
+        local ok, err = GSE.CheckVariable(v.funct or "")
+        if not ok then
+            GSE.Print(
+                L["There is an error in the sequence that needs to be corrected before it can be saved."],
+                Statics.DebugModules["Editor"]
+            )
+            GSE.Print(string.format("%s %d: %s", L["Version"], index, tostring(err)), Statics.DebugModules["Editor"])
+            return false
+        end
+    end
+    if GSE.isEmpty(saveName) then
+        GSE.Print("The variable name cannot be empty.", Statics.DebugModules["Editor"])
+        return false
+    end
+    editframe:SetStatusText(L["Save pending for "] .. saveName)
+    variable.LastUpdated = GSE.GetTimestamp()
+    -- The build that saved it, as the sequence editor stamps
+    -- MetaData.GSEVersion.
+    variable.GSEVersion = GSE.VersionNumber
+    variable.MetaData.Name = saveName
+    GSE.EnqueueOOC({
+        ["action"] = "updatevariable",
+        ["variable"] = GSE.CloneSequence(variable),
+        ["name"] = saveName
+    })
+    local oldKey = draft.storedKey
+    if not GSE.isEmpty(oldKey) and oldKey ~= saveName and GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[oldKey]) then
+        GSE.EnqueueOOC({
+            ["action"] = "deletevariable",
+            ["variablename"] = oldKey
+        })
+    end
+    draft.storedKey = saveName
+    draft.name = saveName
+    return true
+end
+
+local function showVariable(editframe, name, container, selected)
+    editframe.SequenceName = name
+    local implementation = UI:Create("EditBox")
+    local currentKey = name ~= "NEWVARIABLES" and name or nil
+    local draft = variableDraft(editframe, name)
     local variable = draft.variable
     selected = tonumber(selected) or draft.selected or 1
     if not variable.Versions[selected] then selected = 1 end
@@ -178,45 +228,13 @@ end]]}},
 
     container:AddChild(createInlineFieldRow(L["Name"], keyEditBox))
     container:AddChild(createInlineFieldRow(L["Author"], authoreditbox))
+    local scopeDropdown
     if GSE.GUI.DrawElementScope then
-        GSE.GUI.DrawElementScope(editframe, container, variable,
+        scopeDropdown = GSE.GUI.DrawElementScope(editframe, container, variable,
             currentKey and GSE.SuggestElementScope and GSE.SuggestElementScope("variable", currentKey), redraw)
     end
     if currentKey and GSE.GUI.DrawElementCollections then
         GSE.GUI.DrawElementCollections(container, "variable", currentKey)
-    end
-
-    -- Help written on gse.tools arrives as markdown in MetaData.Notes with the
-    -- server's WoW-escape rendering alongside in MetaData.Help. Show the
-    -- rendering read-only: the raw markdown is unreadable in-game, and the
-    -- server re-derives Help from Notes, which is edited on the website.
-    if not GSE.isEmpty(variable.MetaData.Help) and GSE.GUI.CreateReadOnlyNotesPanel then
-        GSE.GUI.CreateReadOnlyNotesPanel(
-            container,
-            L["Help Information"],
-            variable.MetaData.Help,
-            {height = INLINE_NOTES_PANEL_HEIGHT, editframe = editframe}
-        )
-    else
-        local commentsEditBox = UI:Create("MultiLineEditBox")
-        commentsEditBox:SetLabel(L["Help Information"])
-        commentsEditBox:SetNumLines(3)
-        commentsEditBox:SetFullWidth(true)
-        commentsEditBox:DisableButton(true)
-        commentsEditBox:SetText(variable.MetaData.Notes or "")
-        commentsEditBox:SetCallback(
-            "OnTextChanged",
-            function(self, event, text)
-                variable.MetaData.Notes = text
-            end
-        )
-        commentsEditBox:SetCallback(
-            "OnEditFocusLost",
-            function()
-                variable.MetaData.Notes = commentsEditBox:GetText()
-            end
-        )
-        container:AddChild(commentsEditBox)
     end
 
     -- Which version this page edits.
@@ -246,7 +264,8 @@ end]]}},
 
     local eventToggle = UI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
-    eventToggle:SetWidth(150)
+    -- 130: the dropdown and Trigger Events box start 20 further left than at 150.
+    eventToggle:SetWidth(130)
     eventToggle:SetValue(isEventEnabled)
     eventToggle:SetCallback(
         "OnEnter",
@@ -264,7 +283,11 @@ end]]}},
     local eventEditBox = UI:Create("EditBox")
     eventEditBox:SetLabel(L["Trigger Events"])
     eventEditBox:SetWidth(210)
-    eventEditBox:SetHeight(30)
+    -- Box 7 below its label (not 2) so it sits level with the Add from List
+    -- dropdown's box, whose Blizzard art centres ~6 lower under the same-height
+    -- label (measured off an in-game screenshot). Height = label 15 + 7 + box 22.
+    if eventEditBox.SetLabelBoxPadding then eventEditBox:SetLabelBoxPadding(7) end
+    eventEditBox:SetHeight(44)
     if eventEditBox.SetFlowFillRemaining then eventEditBox:SetFlowFillRemaining(true) end
     eventEditBox:DisableButton(true)
     eventEditBox:SetDisabled(not isEventEnabled)
@@ -313,7 +336,9 @@ end]]}},
     local eventDropdown = UI:Create("Dropdown")
     eventDropdown:SetLabel(L["Add from List"])
     eventDropdown:SetWidth(300)
-    eventDropdown:SetHeight(30)
+    -- 48, the widget's own height with a label: its Blizzard art draws 16 to 48
+    -- down, so at 30 it hung out of the bottom of its frame.
+    eventDropdown:SetHeight(48)
     if eventDropdown.SetMaxVisibleItems then eventDropdown:SetMaxVisibleItems(20) end
     local eventOrder = {}
     for key, _ in pairs(Statics.VariableEventList or {}) do
@@ -367,11 +392,19 @@ end]]}},
     eventCallbackGroup:SetFullWidth(true)
     if eventCallbackGroup.SetFlowPadding then eventCallbackGroup:SetFlowPadding(0, 8, 8, 8) end
     if eventCallbackGroup.SetFlowGap    then eventCallbackGroup:SetFlowGap(4) end
-    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("MIDDLE") end
+    -- Tops aligned, so the Add from List and Trigger Events labels share a line.
+    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("TOP") end
     eventCallbackGroup:AddChild(eventToggle)
-    -- The dropdown/editbox carry labels above their boxes (~14px), pushing those
-    -- boxes down. Nudge the checkbox down so its box lines up with them on one row.
-    if eventToggle.SetFlowOffset then eventToggle:SetFlowOffset(0, -8) end
+    -- Centred vertically in the row: the tallest item is the Trigger Events
+    -- box at 44, the check square 24, so (44 - 24) / 2 = 10 down, plus 5
+    -- tuned in game.
+    -- Box + label centred across the 130 the row gives the toggle (its frame
+    -- is only the check square, so the label's width is measured).
+    local toggleWidth = (eventToggle.checkbg and eventToggle.checkbg:GetWidth() or 24)
+        + (eventToggle.text and eventToggle.text:GetStringWidth() or 0)
+    if eventToggle.SetFlowOffset then
+        eventToggle:SetFlowOffset(math.max(0, math.floor((130 - toggleWidth) / 2)), -15)
+    end
     eventCallbackGroup:AddChild(eventDropdown)
     eventCallbackGroup:AddChild(eventEditBox)
     container:AddChild(eventCallbackGroup)
@@ -481,17 +514,26 @@ end]]}},
 
     -- Which version runs where: Default and the context overrides.
     if GSE.GUI.DrawElementVersionConfig then
+        -- 4 of space above the Configuration heading.
+        local configGap = UI:Create("Spacer")
+        configGap:SetHeight(4)
+        container:AddChild(configGap)
         local configHeading = UI:Create("Heading")
         configHeading:SetText(L["Configuration"])
         configHeading:SetFullWidth(true)
+        if configHeading.SetJustifyH then configHeading:SetJustifyH("CENTER") end
         container:AddChild(configHeading)
-        GSE.GUI.DrawElementVersionConfig(editframe, container, variable)
+        local configHeadingGap = UI:Create("Spacer")
+        configHeadingGap:SetHeight(8)
+        container:AddChild(configHeadingGap)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, variable, nil, scopeDropdown)
     end
 
     local buttonRow = UI:Create("SimpleGroup")
     buttonRow:SetLayout("Flow")
-    buttonRow:SetWidth(400)
-    if buttonRow.SetFlowOffset then buttonRow:SetFlowOffset(-4, 0) end
+    -- Full width with the buttons centred on the page.
+    buttonRow:SetFullWidth(true)
+    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
     if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
     if buttonRow.SetFlowGap then buttonRow:SetFlowGap(10) end
 
@@ -532,53 +574,8 @@ end]]}},
     savebutton:SetCallback(
         "OnClick",
         function()
-            -- Every version has to compile, not only the one on screen.
             version.funct = IndentationLib.decode(valueEditBox:GetText())
-            local checkvariable, error = true, nil
-            for index, v in ipairs(variable.Versions) do
-                local ok, err = GSE.CheckVariable(v.funct or "")
-                if not ok then
-                    checkvariable = false
-                    error = string.format("%s %d: %s", L["Version"], index, tostring(err))
-                    break
-                end
-            end
-            if checkvariable then
-                local saveName = keyEditBox:GetText()
-                if GSE.isEmpty(saveName) then
-                    GSE.Print("The variable name cannot be empty.", Statics.DebugModules["Editor"])
-                    return
-                end
-                editframe:SetStatusText(L["Save pending for "] .. keyEditBox:GetText())
-                variable.LastUpdated = GSE.GetTimestamp()
-                -- The build that saved it, as the sequence editor stamps
-                -- MetaData.GSEVersion.
-                variable.GSEVersion = GSE.VersionNumber
-                local updated = GSE.DecodeTimeStamp(variable.LastUpdated)
-                variable.MetaData.Name = saveName
-                local oocaction = {
-                    ["action"] = "updatevariable",
-                    ["variable"] = GSE.CloneSequence(variable),
-                    ["name"] = saveName
-                }
-                GSE.EnqueueOOC(oocaction)
-                if not GSE.isEmpty(currentKey) and currentKey ~= saveName and GSE.Store("variable") and not GSE.isEmpty(GSE.Store("variable")[currentKey]) then
-                    GSE.EnqueueOOC(
-                        {
-                            ["action"] = "deletevariable",
-                            ["variablename"] = currentKey
-                        }
-                    )
-                end
-                currentKey = saveName
-                draft.name = saveName
-            else
-                GSE.Print(
-                    L["There is an error in the sequence that needs to be corrected before it can be saved."],
-                    Statics.DebugModules["Editor"]
-                )
-                GSE.Print(error, Statics.DebugModules["Editor"])
-            end
+            saveVariable(editframe, draft, keyEditBox:GetText())
         end
     )
     savebutton:SetCallback(
@@ -617,15 +614,56 @@ end]]}},
     end
 end
 
+-- The variable's Notes - Help page: its Help Link, and Help Information
+-- (MetaData.Notes, read-only once GSE.Tools has rendered Help), with a Save
+-- as on its Configuration page. height: the room the page has.
+local function showVariableNotes(editframe, name, container, height)
+    editframe.SequenceName = name
+    local draft = variableDraft(editframe, name)
+    local meta = draft.variable.MetaData
+    GSE.GUI.DrawNotesPage(editframe, container, {
+        meta = meta,
+        key = "Notes",
+        readOnly = not GSE.isEmpty(meta.Help) and meta.Help or nil,
+        linkTip = L["Website or forum URL where a player can get more information or ask questions about this variable."],
+        height = height - NOTES_SAVE_ROW_HEIGHT,
+    })
+    local savebutton = UI:Create("Button")
+    savebutton:SetText(L["Save"])
+    savebutton:SetWidth(150)
+    savebutton:SetCallback("OnClick", function()
+        -- The version on the Configuration page holds its editor's
+        -- coloured text until it is saved there.
+        local version = draft.variable.Versions[draft.selected]
+        if version and version.funct then version.funct = IndentationLib.decode(version.funct) end
+        saveVariable(editframe, draft, draft.name)
+    end)
+    savebutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Save"], L["Save the changes made to this variable."], editframe)
+    end)
+    savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    -- Centred, as the Configuration page's Save / Delete Variable row is.
+    local buttonRow = UI:Create("SimpleGroup")
+    buttonRow:SetLayout("Flow")
+    buttonRow:SetFullWidth(true)
+    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
+    if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
+    buttonRow:AddChild(savebutton)
+    container:AddChild(buttonRow)
+end
+
 -- ---------------------------------------------------------------------------
 -- Public installer — call once per editframe
 -- ---------------------------------------------------------------------------
 function GSE.GUI.SetupVariable(editframe)
+    -- Opened from the tree. A variable's Configuration and Notes - Help pages
+    -- share one draft, so moving between them keeps unsaved edits; another
+    -- variable is read afresh.
     editframe.showVariable = function(name, container)
-        -- Opened from the tree: read it afresh. Only a version switch within
-        -- the page (redraw) carries the draft over.
-        editframe.variableDraft = nil
         showVariable(editframe, name, container)
+    end
+    editframe.showVariableNotes = function(name, container, height)
+        showVariableNotes(editframe, name, container, height)
     end
     editframe.buildVariablesMenu = buildVariablesMenu
 end

@@ -104,7 +104,7 @@ function GSE.SetDefaultOptions()
     GSEOptions.showCurrentSpells = true
     -- forgetLastSequenceOnLogout: when true, PLAYER_LOGOUT wipes the editor's
     -- "where was I" state (GSEOptions.frameLocations.sequenceeditor's
-    -- lastSequencePath / lastArea / lastKey / lastClassId) so the next session
+    -- lastSequencePath / lastSequencePathByClass / lastNodeByArea) so the next session
     -- opens the editor fresh instead of reopening the last node. Off keeps the
     -- existing restore behaviour. Within a session the state is still tracked,
     -- so closing and reopening the editor still returns you to where you were.

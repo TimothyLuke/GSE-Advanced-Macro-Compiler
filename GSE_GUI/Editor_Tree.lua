@@ -523,7 +523,7 @@ local function SequenceEditorPathExists(path)
     if not GSE.SequenceEnvelope(id, classid) then return false end
 
     local key = unique[#unique]
-    if key == "config" then return true end
+    if key == "config" or key == "notes" then return true end
     local version = tonumber(key)
     if not version then return false end
 
@@ -584,8 +584,8 @@ end
 
 -- Drop everything the editor remembers about where the user last was: the
 -- sequence path used by GSE.ShowSequences, the per-class paths behind it, and
--- the area/key/classid trio RestoreLastNode uses for the Variables, Macros and
--- Keybindings tabs. They all live in the same saved-variable table and are
+-- the last node of the Variables, Macros and Bindings areas
+-- (GSE.GUI.GetLastAreaNode). They all live in the same saved-variable table and are
 -- written as you click around, so forgetting means clearing every one of them
 -- -- leaving the per-class table behind would reopen on the next login exactly
 -- what the option asked to forget. Called from PLAYER_LOGOUT when
@@ -596,6 +596,8 @@ function GSE.GUI.ForgetLastSequenceEditorNode()
     if not opts then return end
     opts.lastSequencePath = nil
     opts.lastSequencePathByClass = nil
+    opts.lastNodeByArea = nil
+    -- Retired: the area/key/classid trio the old RestoreLastNode read.
     opts.lastArea = nil
     opts.lastKey = nil
     opts.lastClassId = nil
@@ -605,6 +607,53 @@ function GSE.GUI.SelectEditorTreePath(editor, path)
     if not (editor and editor.treeContainer and path) then return end
     editor.forceTreeSelection = true
     editor.treeContainer:SelectByValue(path)
+end
+
+-- The open mode each non-sequence area reopens through: GSE.ShowVariables,
+-- GSE.ShowMacros, GSE.ShowKeyBindings. Each area remembers its own last node,
+-- as Sequences do (SaveLastSequenceEditorPath), and its Show* selects it, so
+-- every area comes back on the page it was left on, in the tree as well as
+-- the pane.
+local AREA_OPEN_MODE = {VARIABLES = "variables", Macro = "macros", KEYBINDINGS = "keybindings"}
+-- Pages that create something are not a place to come back to, as New
+-- Sequence is not.
+local AREA_NEW_NODE = {VARIABLES = "NEWVARIABLES"}
+
+local function SaveLastAreaNode(unique)
+    local area = unique[1]
+    local opts = GetSequenceEditorOptions()
+    if not (opts and AREA_OPEN_MODE[area]) then return end
+    opts.openMode = AREA_OPEN_MODE[area]
+    if unique[2] and unique[2] == AREA_NEW_NODE[area] then return end
+    opts.lastNodeByArea = opts.lastNodeByArea or {}
+    opts.lastNodeByArea[area] = table.concat(unique, "\001")
+end
+
+-- Whether `path` is a node of the tree as built: the stored node is gone once
+-- its variable or macro is deleted, its talent loadout removed, or Keybindings
+-- are switched off.
+local function treeHasPath(nodes, path, prefix)
+    for _, node in ipairs(nodes or {}) do
+        local value = prefix and (prefix .. "\001" .. tostring(node.value)) or tostring(node.value)
+        if value == path then return true end
+        if node.children and path:sub(1, #value + 1) == value .. "\001"
+            and treeHasPath(node.children, path, value) then
+            return true
+        end
+    end
+    return false
+end
+
+--- The node `area` was last left on, if this editor's tree still has it.
+function GSE.GUI.GetLastAreaNode(editor, area)
+    local opts = GetSequenceEditorOptions()
+    local path = opts and opts.lastNodeByArea and opts.lastNodeByArea[area]
+    if not path then return nil end
+    local tree = editor and editor.treeContainer
+    local treePath = tree and tree.gseTreePath and tree.gseTreePath(path) or path
+    if tree and treeHasPath(tree.tree, treePath) then return path end
+    opts.lastNodeByArea[area] = nil
+    return nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -1126,12 +1175,22 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     -- Keybinding switched off (WoW Forever, #2109): no chooser and no keybind
     -- pages -- the Bindings node, and a keybind page restored from a past
     -- session, land on the current spec's Button Bindings.
-    if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
+    if GSE.IsForever and (#unique == 1 or unique[2] == "KB") then
         if editframe.treeContainer and editframe.treeContainer.SelectByValue then
-            local target = "KEYBINDINGS\001AO"
-            if GetSpecializationInfo then target = target .. "\001" .. GSE.CurrentSpecKey() end
             editframe.forceTreeSelection = true
-            editframe.treeContainer:SelectByValue(target)
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
+        end
+        return
+    end
+
+    -- An area or its class node has no page of its own: open the spec the
+    -- player is in.  The tree is area > class > spec > loadout.  A path from
+    -- before the class level (a last-open node saved by an older build) has
+    -- no class there, and lands here too.
+    if #unique == 2 or #unique == 3 or (#unique > 3 and unique[3] ~= tostring(GSE.GetCurrentClassID())) then
+        if editframe.treeContainer and editframe.treeContainer.SelectByValue then
+            editframe.forceTreeSelection = true
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath(unique[2], GSE.CurrentSpecKey()))
         end
         return
     end
@@ -1156,19 +1215,12 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     ShowSectionFooter(editframe)
 
     -- The tree stops at spec, and at the spec's talent loadouts.  Paths are
-    -- KEYBINDINGS \001 <KB|AO> [\001 <spec>] [\001 <loadout>] -- the spec
-    -- segment only exists where buildKeybindMenu inserted a spec node, which
-    -- is the same GetSpecializationInfo test it uses.  Everything below a
-    -- scope is a row on the panel now, so there is nothing deeper to parse.
+    -- KEYBINDINGS \001 <KB|AO> \001 <class> \001 <spec> [\001 <loadout>]
+    -- (GSE.GUI.BindingsPath): every client has a node per spec
+    -- (GSE.BindingSpecs).  Everything below a scope is a row on the panel, so
+    -- there is nothing deeper to parse.
     local kbtype = unique[2]
-    local specialization, loadout
-    if GetSpecializationInfo then
-        specialization = unique[3]
-        loadout = unique[4]
-    else
-        specialization = "1"
-        loadout = unique[3]
-    end
+    local specialization, loadout = unique[4], unique[5]
 
     local function makeRightContainer(withDivider)
         -- Build a scrollable wrapper inside the right pane. The scroll engages
@@ -1210,21 +1262,6 @@ local function CorruptPanelFonts()
     return {header = {file, math.floor(size * 1.5), flags}, text = {file, size, flags}}
 end
 
--- The spec names a sequence stored under class `cid` can take without having
--- to move class: that class's own specs plus its class-wide entry (a class ID
--- doubles as a SpecID), or just Global for class 0. The same names and IDs the
--- editor's Specialization/Class ID dropdown uses.
-local function specNamesForClass(cid)
-    local list = {}
-    for name in pairs(GSE.GetSpecNames()) do
-        local sid = tonumber(Statics.SpecIDHashList[name])
-        if sid then
-            local classOf = sid <= 13 and sid or GSE.GetClassIDforSpec(sid)
-            if classOf == cid then list[name] = name end
-        end
-    end
-    return list
-end
 
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, id)
     if #unique < 3 then return end
@@ -1324,9 +1361,14 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
             specPicker:SetLabel("")
             specPicker:SetWidth(250)
             if specPicker.SetDropdownStyle then specPicker:SetDropdownStyle(true) end
-            specPicker:SetList(specNamesForClass(cid))
+            -- What a sequence stored under class `cid` can take without moving
+            -- class: that class and its specs, or Global for class 0 -- the
+            -- editor's Specialization/Class ID list, cut to the class.
+            local specList, specOrder, specButton = GSE.GUI.SpecChoices(cid)
+            specPicker:SetList(specList, specOrder)
+            if specPicker.SetButtonTextMap then specPicker:SetButtonTextMap(specButton) end
             specPicker:SetCallback("OnValueChanged", function(_, _, key)
-                local sid = Statics.SpecIDHashList[key]
+                local sid = tonumber(key)
                 if not sid then return end
                 seq.MetaData.SpecID = sid
                 seq.LastUpdated = GSE.GetTimestamp()
@@ -1494,7 +1536,8 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
             editframe.treeContainer:SelectByValue(group .. "\001config")
         end)
         return
-    elseif key == "config" then
+    elseif key == "config" or key == "notes" then
+        -- Configuration, or the Notes - Help page: the same pane, set up alike.
         if editframe.staticHeaderContainer then editframe.staticHeaderContainer:ReleaseChildren() end
         if editframe.SetStaticHeaderHeight then editframe:SetStaticHeaderHeight(0) end
         -- Pull content flush to the top of the content pane for config
@@ -1509,15 +1552,20 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         editframe.metadataContentWidth = configContentWidth
         if contentcontainer.SetWidth then contentcontainer:SetWidth(configContentWidth) end
         if contentcontainer.SetListGap then contentcontainer:SetListGap(2) end
-        editframe.GUIDrawMetadataEditor(contentcontainer)
+        if key == "notes" then
+            editframe.GUIDrawNotesEditor(contentcontainer)
+        else
+            editframe.GUIDrawMetadataEditor(contentcontainer)
+        end
         editframe.metadataContentWidth = nil
         -- Apply padding AFTER draw — GUIDrawMetadataEditor resets it internally
         -- Match GUIDrawMetadataEditor's own padding exactly (Editor_Metadata line ~896:
-        -- left=right=30, top=15) so the area stays put and left/right padding are equal
+        -- left=right=30, top=5) so the area stays put and left/right padding are equal
         -- whether drawn here on entry or re-drawn on tab switch.
-        if contentcontainer.SetListPadding then contentcontainer:SetListPadding(CONFIG_CONTENT_LEFT_PADDING + 10, 15, CONFIG_CONTENT_LEFT_PADDING + 10, CONFIG_CONTENT_LEFT_PADDING + 10) end
+        if contentcontainer.SetListPadding then contentcontainer:SetListPadding(CONFIG_CONTENT_LEFT_PADDING + 10, 5, CONFIG_CONTENT_LEFT_PADDING + 10, CONFIG_CONTENT_LEFT_PADDING + 10) end
         if contentcontainer.DoLayout then contentcontainer:DoLayout() end
-        editframe:SetTitle(L["Sequence Editor"] .. ": " .. sequencename .. " (" .. L["Configuration"] .. ")")
+        editframe:SetTitle(L["Sequence Editor"] .. ": " .. sequencename .. " ("
+            .. (key == "notes" and L["Notes - Help"] or L["Configuration"]) .. ")")
         ShowSequenceFooter(editframe)   -- full editor buttons (Save/Delete/Export/...) on the config page
         if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end
     elseif key == "newversion" then
@@ -1589,6 +1637,22 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
     editframe.loaded = true
 end
 
+--- A sequence's, variable's or macro's own pages in the tree: Configuration
+--- and Notes - Help. A fresh table each call: the tree keeps what it is given.
+function GSE.GUI.ElementPageNodes()
+    return {
+        { text = L["Configuration"], value = "config", icon = Statics.ActionsIcons.Settings },
+        { text = L["Notes - Help"], value = "notes", icon = Statics.ActionsIcons.View },
+    }
+end
+
+-- The room a Notes - Help page has in makeScrollableRightPane under its
+-- section divider: the pane less the scroll padding, header and divider.
+local function notesPageHeight(container)
+    local pane = container and container.frame and container.frame:GetHeight() or 0
+    return pane - SECTION_HEADER_TOP - CONFIG_CONTENT_LEFT_PADDING - SECTION_HEADER_HEIGHT - 1
+end
+
 local function onClick_VARIABLES(editframe, container, group, unique, key)
     if #unique <= 1 then return end
     ShowSectionFooter(editframe)
@@ -1596,14 +1660,26 @@ local function onClick_VARIABLES(editframe, container, group, unique, key)
         GSE.GUINewVariablePrompt(editframe)
         return
     end
+    -- The variable itself opens on its Configuration page, as a sequence does.
+    if #unique == 2 then
+        C_Timer.After(0, function() editframe.treeContainer:SelectByValue(group .. "\001config") end)
+        return
+    end
+    local name, page = unique[2], key
+    if page ~= "config" and page ~= "notes" then return end
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
     -- Wrap the variable form in a ScrollFrame so it remains reachable when
     -- the editor is sized small. Padding is set on the inner scroll pane,
     -- so we no longer need it on the outer container.
     local scrollPane = makeScrollableRightPane(container)
     addSectionDivider(scrollPane, L["Variables"] or "Variables", Statics.Icons.Variables)
-    editframe:SetTitle("GSE: " .. (L["Variables"] or "Variables") .. ": " .. (key or ""))
-    editframe.showVariable(key, scrollPane)
+    editframe:SetTitle("GSE: " .. (L["Variables"] or "Variables") .. ": " .. (name or "")
+        .. (page == "notes" and (" (" .. L["Notes - Help"] .. ")") or ""))
+    if page == "notes" then
+        editframe.showVariableNotes(name, scrollPane, notesPageHeight(container))
+    else
+        editframe.showVariable(name, scrollPane)
+    end
     editframe.loaded = true
 end
 
@@ -1629,12 +1705,18 @@ end
 local function onClick_Macro(editframe, container, group, unique, key)
     if #unique < 3 then
         local firstMacroPath = getFirstMacroPath(unique[2])
-        if firstMacroPath then editframe.treeContainer:SelectByValue(firstMacroPath) end
+        if firstMacroPath then editframe.treeContainer:SelectByValue(firstMacroPath .. "\001config") end
         return
     end
-    if #unique ~= 3 then return end
+    -- The macro itself opens on its Configuration page, as a sequence does.
+    if #unique == 3 then
+        C_Timer.After(0, function() editframe.treeContainer:SelectByValue(group .. "\001config") end)
+        return
+    end
+    if #unique ~= 4 or (key ~= "config" and key ~= "notes") then return end
+    local page = key
     ShowSectionFooter(editframe)
-    local macroID = tonumber(key)
+    local macroID = tonumber(unique[3])
     if not macroID then return end
     local mname, micon, matext = GetMacroInfo(macroID)
     if not mname then return end
@@ -1650,8 +1732,13 @@ local function onClick_Macro(editframe, container, group, unique, key)
     -- Scroll wrapper keeps the macro view (header + buttons + edit box) usable
     -- when the editor frame is sized small.
     local scrollPane = makeScrollableRightPane(container)
-    editframe:SetTitle("GSE: " .. (L["Macros"] or "Macros") .. ": " .. (mname or ""))
-    editframe.showMacro(node, scrollPane)
+    editframe:SetTitle("GSE: " .. (L["Macros"] or "Macros") .. ": " .. (mname or "")
+        .. (page == "notes" and (" (" .. L["Notes - Help"] .. ")") or ""))
+    if page == "notes" then
+        editframe.showMacroNotes(node, scrollPane, notesPageHeight(container))
+    else
+        editframe.showMacro(node, scrollPane)
+    end
     editframe.loaded = true
 end
 
@@ -1679,7 +1766,12 @@ local function copyNode(n)
     return c
 end
 
-local function buildGroupedTree(grouping, classtree)
+-- `bindings`: the Bindings node (buildKeybindMenu), for the class grouping,
+-- which puts it in the player's class's group.  It is this character's
+-- class's, so inside that group it drops its own class level: each area
+-- node's value carries the class instead (AO\001<class>), which keeps every
+-- path the same as the by-type tree's once the group is dropped.
+local function buildGroupedTree(grouping, classtree, bindings)
     -- Every element, with its by-type path as its node value.
     local seqs, vars, macs = {}, {}, {}
     local seqByKey, varByName, macByName = {}, {}, {}
@@ -1698,7 +1790,8 @@ local function buildGroupedTree(grouping, classtree)
     end
     for name in pairs(GSE.Store("variable") or {}) do
         local e = { classid = GSE.StoredElementClass("variable", name) or 0, sort = name,
-            node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables } }
+            node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables,
+                     children = GSE.GUI.ElementPageNodes() } }
         vars[#vars + 1] = e
         varByName[name] = e
     end
@@ -1708,7 +1801,8 @@ local function buildGroupedTree(grouping, classtree)
         if mname and not macByName[mname] then
             local e = { classid = GSE.StoredElementClass("macro", mname) or 0, sort = mname,
                 node = { value = "Macro\001" .. (slot <= maxAccount and "A" or "P") .. "\001" .. slot,
-                         text = mname, icon = micon or Statics.Icons.Macros } }
+                         text = mname, icon = micon or Statics.Icons.Macros,
+                         children = GSE.GUI.ElementPageNodes() } }
             macs[#macs + 1] = e
             macByName[mname] = e
         end
@@ -1741,6 +1835,22 @@ local function buildGroupedTree(grouping, classtree)
         -- Sequences, then variables, then macros, each by name.
         for _, list in ipairs({ seqs, vars, macs }) do
             for _, e in ipairs(list) do addTo(groupFor(e.classid), e) end
+        end
+        if bindings then
+            local cid = GSE.GetCurrentClassID()
+            local group = groupFor(cid)
+            for _, area in ipairs(bindings.children or {}) do
+                local byType = "KEYBINDINGS\001" .. area.value
+                local classNode = area.children and area.children[1]
+                area.value = area.value .. "\001" .. tostring(cid)
+                area.children = classNode and classNode.children or {}
+                local grouped = group.value .. "\001KEYBINDINGS\001" .. area.value
+                -- The area and its class node are one node here.
+                pathOf[byType] = grouped
+                pathOf[byType .. "\001" .. tostring(cid)] = grouped
+            end
+            pathOf["KEYBINDINGS"] = group.value .. "\001KEYBINDINGS"
+            table.insert(group.children, bindings)
         end
         table.sort(groups, function(a, b)
             if a.value == GROUP_PREFIX .. "class:0" then return false end
@@ -1863,21 +1973,15 @@ local function ManageTree(editframe)
         local node = {
             value = k,
             text = label,
-            children = {
-                {
-                    text = L["Configuration"],
-                    value = "config",
-                    icon = Statics.ActionsIcons.Settings
-                }
-            }
+            children = GSE.GUI.ElementPageNodes()
         }
 
         -- Cached per specid: an API call per sequence, for a value that only
         -- ever depends on the spec.
         local icon = specIconCache[specid]
         if icon == nil then
-            local id, _, _, sicon = GetSpecializationInfoForSpecID(specid)
-            icon = (id and sicon) or GSE.GetClassIcon(tclassid) or false
+            -- GSE.GetSpecIcon: on WoW Forever, from the talent trees.
+            icon = GSE.GetSpecIcon(specid) or GSE.GetClassIcon(tclassid) or false
             specIconCache[specid] = icon
         end
         node.icon = icon or nil
@@ -1963,11 +2067,14 @@ local function ManageTree(editframe)
     local grouping = treeGrouping()
     editframe.treeGroupedPaths = nil
     if grouping ~= "type" then
-        local groups, pathOf = buildGroupedTree(grouping, classtree)
+        -- By class, Bindings sits in the player's class's group; by
+        -- collection it has none to go in, and stays where By Type has it.
+        local bindings = editframe.buildKeybindMenu()
+        local groups, pathOf = buildGroupedTree(grouping, classtree, grouping == "class" and bindings or nil)
         table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
             icon = Statics.ActionsIcons.Add })
         for _, g in ipairs(groups) do table.insert(tree, g) end
-        table.insert(tree, editframe.buildKeybindMenu())
+        if grouping ~= "class" then table.insert(tree, bindings) end
         editframe.treeGroupedPaths = pathOf
     else
         local subtree = {
@@ -2040,7 +2147,8 @@ local function ManageTree(editframe)
     -- element sits under a group, so translate the longest known prefix.
     if not treeContainer.gseGroupedSelect then
         local raw = treeContainer.SelectByValue
-        treeContainer.SelectByValue = function(self, path, ...)
+        -- By-type path to the path the built tree has it under.
+        treeContainer.gseTreePath = function(path)
             local map = editframe.treeGroupedPaths
             -- A path from another grouping (the selection kept across a
             -- switch) drops its group and is found again from its by-type part.
@@ -2061,7 +2169,10 @@ local function ManageTree(editframe)
                     end
                 end
             end
-            return raw(self, path, ...)
+            return path
+        end
+        treeContainer.SelectByValue = function(self, path, ...)
+            return raw(self, treeContainer.gseTreePath(path), ...)
         end
         treeContainer.gseGroupedSelect = true
     end
@@ -2264,7 +2375,8 @@ local function ManageTree(editframe)
                 if area == "Sequences" then
                     onRightClick_Sequences(editframe, container, group, unique, classid, seqid)
                 elseif area == "VARIABLES" then
-                    onRightClick_VARIABLES(editframe, container, group, unique, key)
+                    -- The variable, whether on it or on one of its pages.
+                    onRightClick_VARIABLES(editframe, container, group, unique, unique[2])
                 end
                 -- area == "Macro": no right-click menu
             elseif mbutton == "LeftButton" and IsShiftKeyDown() then
@@ -2280,14 +2392,13 @@ local function ManageTree(editframe)
                     })
                 end
             else
-                -- Save last visited node for restore on reload (exclude Keybindings)
-                if area ~= "KEYBINDINGS" and area ~= "NewSequence" and area ~= "Import" then
-                    local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-                    if seOpts then
-                        seOpts.lastArea    = area
-                        seOpts.lastKey     = key
-                        seOpts.lastClassId = classid
-                    end
+                -- Reopen in the area last used, on the node last used in it.
+                -- openMode otherwise stays whatever first opened the editor.
+                if area == "Sequences" then
+                    local seOpts = GetSequenceEditorOptions()
+                    if seOpts then seOpts.openMode = "sequences" end
+                else
+                    SaveLastAreaNode(unique)
                 end
 
                 -- Left-click dispatch table
@@ -2340,31 +2451,6 @@ function GSE.GUI.SetupTree(editframe)
             Statics.DebugModules["Editor"]
         )
         --@end-debug@
-    end
-
-    -- Restore last visited node after the tree finishes building
-    editframe.RestoreLastNode = function()
-        local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
-        if not seOpts then return end
-        local area    = seOpts.lastArea
-        local key     = seOpts.lastKey
-        local classid = seOpts.lastClassId
-        if not area then return end
-
-        local container = editframe.treeContent or editframe.rightPanel
-        if not container then return end
-
-        if area == "Sequences" and key and classid then
-            local unique = {classid, key}
-            local path = {classid}
-            onClick_Sequences(editframe, container, nil, unique, path, key, classid, key)
-        elseif area == "VARIABLES" and key then
-            onClick_VARIABLES(editframe, container, nil, nil, key)
-        elseif area == "Macro" and key then
-            onClick_Macro(editframe, container, nil, nil, key)
-        elseif area == "KEYBINDINGS" then
-            onClick_KEYBINDINGS(editframe, container, nil, nil)
-        end
     end
 end
 
