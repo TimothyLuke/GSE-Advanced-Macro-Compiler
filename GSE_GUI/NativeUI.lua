@@ -147,7 +147,15 @@ local function getTreeTextWidth(fontString)
         treeTextRuler = UIParent:CreateFontString(nil, "ARTWORK")
         treeTextRuler:Hide()
     end
-    treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
+    -- The row's actual font, not its font object: the tree text is set with
+    -- SetFont, so measuring in the object's (or GameFontHighlight's) size read
+    -- wider than drawn and the tree sized itself wider than its rows.
+    local face, size, flags = fontString:GetFont()
+    if face then
+        treeTextRuler:SetFont(face, size, flags or "")
+    else
+        treeTextRuler:SetFontObject(fontString:GetFontObject() or "GameFontHighlight")
+    end
     treeTextRuler:SetText(fontString:GetText() or "")
     return treeTextRuler:GetStringWidth()
 end
@@ -2804,6 +2812,15 @@ local function createEditBox()
         end
     end
 
+    -- Pooled: compact mode hides the label and centres the box by anchors, which
+    -- the field sweep cannot undo, so a box released from a compact use came
+    -- back labelless and centred for the next caller. Put the label layout back.
+    widget.__gseResetState = function()
+        widget.compactNoLabel = nil
+        widget.labelBoxPadding = nil
+        positionEditBox()
+    end
+
     if GSE.Skin and GSE.Skin.EditBox then GSE.Skin.EditBox(editBox) end
     return widget
 end
@@ -2980,8 +2997,16 @@ local function createCheckBox()
     end
 
     check:SetScript("OnClick", function(self) widget:Fire("OnValueChanged", self:GetChecked()) end)
-    check:SetScript("OnEnter", function(self) setElvUITextButtonHover(self, true); setElvUICheckBoxHover(self, true); widget:Fire("OnEnter") end)
-    check:SetScript("OnLeave", function(self) setElvUITextButtonHover(self, false); setElvUICheckBoxHover(self, false); widget:Fire("OnLeave") end)
+    -- The label's grow-on-hover is the ElvUI skin's text-button effect; gated on
+    -- that skin as setElvUICheckBoxHover is, so default-skin labels hold still.
+    check:SetScript("OnEnter", function(self)
+        if shouldUseElvUISkin() then setElvUITextButtonHover(self, true) end
+        setElvUICheckBoxHover(self, true); widget:Fire("OnEnter")
+    end)
+    check:SetScript("OnLeave", function(self)
+        if shouldUseElvUISkin() then setElvUITextButtonHover(self, false) end
+        setElvUICheckBoxHover(self, false); widget:Fire("OnLeave")
+    end)
     applyElvUICheckBoxSkin(check, text)
     applyNormalAccentCheckBoxText(check, text)
     -- Under an external skin provider both apply* helpers above bail out,

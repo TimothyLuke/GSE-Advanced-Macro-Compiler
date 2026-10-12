@@ -533,6 +533,19 @@ function GSE.GetConditionalsFromString(str)
     return found, mods, str
 end
 
+--- The spell or item one macro clause names: "[mod] reset=combat !Maul" is
+--- "Maul". Conditionals and a castsequence reset= go through
+--- GetConditionalsFromString, then the "!" toggle guard. Split ';' and ','
+--- first -- this reads a single clause.
+function GSE.GetMacroClauseTarget(str)
+    local _, _, etc = GSE.GetConditionalsFromString(tostring(str or ""))
+    etc = string.match(etc, "^%s*(.-)%s*$")
+    while string.sub(etc, 1, 1) == "!" do
+        etc = string.match(string.sub(etc, 2), "^%s*(.-)%s*$")
+    end
+    return etc
+end
+
 --- Converts a string spell name to an id and back again.
 --- Find a spell ID for a name in ANY locale table we hold.
 --
