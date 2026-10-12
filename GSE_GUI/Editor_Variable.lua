@@ -642,7 +642,14 @@ local function showVariableNotes(editframe, name, container, height)
         GSE.CreateToolTip(L["Save"], L["Save the changes made to this variable."], editframe)
     end)
     savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-    container:AddChild(savebutton)
+    -- Centred, as the Configuration page's Save / Delete Variable row is.
+    local buttonRow = UI:Create("SimpleGroup")
+    buttonRow:SetLayout("Flow")
+    buttonRow:SetFullWidth(true)
+    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
+    if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
+    buttonRow:AddChild(savebutton)
+    container:AddChild(buttonRow)
 end
 
 -- ---------------------------------------------------------------------------
