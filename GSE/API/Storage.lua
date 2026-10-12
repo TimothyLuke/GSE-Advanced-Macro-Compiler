@@ -1556,8 +1556,8 @@ function GSE.HelplinkAllowed(link)
     if GSE.isEmpty(link) then return true end
     return not string.find(string.lower(tostring(link)), GSE.HelplinkBlockedHost, 1, true)
 end
---- Replace a disallowed MetaData.Helplink with the default.  Returns true if
---- it wrote.
+--- Replace a disallowed MetaData.Helplink with the default, on a sequence,
+--- variable or macro.  Returns true if it wrote.
 function GSE.SanitizeHelplink(sequence)
     if type(sequence) ~= "table" or type(sequence.MetaData) ~= "table" then return false end
     if GSE.HelplinkAllowed(sequence.MetaData.Helplink) then return false end
@@ -2659,6 +2659,26 @@ local contextVersionPriority = {
     { metaKey = "Party",       flag = "inParty",       valueKey = "Party"       },
 }
 
+-- WoW Forever has no Delves or Scenarios, Arenas, Heroic, Mythic or Mythic+
+-- dungeons, or Timewalking. There those contexts are not GSE's at all: taken
+-- out of the list, they get no row in the editor, never pick a version, and a
+-- value set elsewhere is dropped (GSE.DropUnusedContextVersions).
+local notOnForever = {
+    Scenario = true, Arena = true, Heroic = true, Mythic = true, MythicPlus = true, Timewalking = true,
+}
+if GSE.IsForever then
+    for i = #contextVersionPriority, 1, -1 do
+        if notOnForever[contextVersionPriority[i].valueKey] then table.remove(contextVersionPriority, i) end
+    end
+end
+
+--- Remove from MetaData the version settings for contexts this client does
+--- not have (WoW Forever's, above), so they are not saved back.
+function GSE.DropUnusedContextVersions(meta)
+    if not GSE.IsForever or type(meta) ~= "table" then return end
+    for key in pairs(notOnForever) do meta[key] = nil end
+end
+
 --- Every MetaData key that holds a VERSION NUMBER, derived from
 -- contextVersionPriority above rather than repeated. PVP appears twice in
 -- that table (once routing to Arena), so dedupe on valueKey.
@@ -3307,25 +3327,6 @@ local function trimMacroIconCandidate(value)
     return trimmed
 end
 
-local function stripLeadingMacroIconConditionals(value)
-    value = trimMacroIconCandidate(value)
-    while string.sub(value, 1, 1) == "[" do
-        local closing = string.find(value, "]", 1, true)
-        if not closing then break end
-        value = trimMacroIconCandidate(string.sub(value, closing + 1))
-    end
-    return value
-end
-
-local function normaliseMacroIconCandidate(value)
-    value = stripLeadingMacroIconConditionals(value)
-    value = trimMacroIconCandidate(value:gsub("^reset=%S+%s*", ""))
-    while string.sub(value, 1, 1) == "!" do
-        value = trimMacroIconCandidate(string.sub(value, 2))
-    end
-    return value
-end
-
 local function getMacroIconItemInfo(candidate)
     local icon = select(10, C_Item.GetItemInfo(candidate))
     if icon then
@@ -3337,7 +3338,7 @@ local function getMacroIconItemInfo(candidate)
 end
 
 local function getMacroIconSpellOrItemInfo(candidate, preferItem)
-    candidate = normaliseMacroIconCandidate(candidate)
+    candidate = GSE.GetMacroClauseTarget(candidate)
     if candidate == "" then return nil end
 
     if preferItem then
@@ -3359,7 +3360,7 @@ end
 
 local function getMacroIconFallbackCandidateInfo(candidate, preferItem)
     for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
-        semicolonCandidate = normaliseMacroIconCandidate(semicolonCandidate)
+        semicolonCandidate = GSE.GetMacroClauseTarget(semicolonCandidate)
         for _, commaCandidate in ipairs(GSE.split(semicolonCandidate, ",")) do
             local iconInfo = getMacroIconSpellOrItemInfo(commaCandidate, preferItem)
             if iconInfo then return iconInfo end
@@ -3456,7 +3457,7 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
         foundSpell = label
     elseif action.type == "macro" and action.macrotext then
         local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
-        if macroIconInfo and #macroIconInfo > 1 then
+        if macroIconInfo and #macroIconInfo > 0 then
             macroIconInfo = macroIconInfo[1]
         end
 
@@ -3566,19 +3567,17 @@ function GSE.GetSpellsFromString(str, suppressUIErrors)
                 local processed = {}
                 for _, y in ipairs(GSE.split(oetc, ";")) do
                     for _, v in ipairs(GSE.SplitCastSequence(y)) do
-                        local _, _, etc = GSE.GetConditionalsFromString(v)
-                        local elements = GSE.split(etc, ",")
-
-                        for _, v1 in ipairs(elements) do
-                            local spellstuff = safeGetSpellInfo(string.trim(v1))
-                            if spellstuff and spellstuff.name and not processed[v1] then
-                                table.insert(returnspells, spellstuff)
-                                processed[v1] = true
-                            end
+                        local name = GSE.GetMacroClauseTarget(v)
+                        local spellstuff = safeGetSpellInfo(name)
+                        if spellstuff and spellstuff.name and not processed[name] then
+                            table.insert(returnspells, spellstuff)
+                            processed[name] = true
                         end
                     end
                 end
-                return returnspells
+                -- A line naming no spell this client knows is not the answer;
+                -- the next line may be.
+                if #returnspells > 0 then return returnspells end
             elseif Statics.CastCmds[strlower(cmd)] then
                 local _, _, etc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. oetc)
                 if string.sub(etc, 1, 1) == "/" then
@@ -3613,7 +3612,7 @@ local function GetDebuggerTraceSpell(action, foundSpell)
 
     if action.type == "macro" and action.macrotext then
         local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext, true) or GSE.GetSpellsFromString(action.macrotext, true)
-        if macroIconInfo and #macroIconInfo > 1 then
+        if macroIconInfo and #macroIconInfo > 0 then
             macroIconInfo = macroIconInfo[1]
         end
         if macroIconInfo and macroIconInfo.name then return macroIconInfo.name end
@@ -4512,6 +4511,7 @@ function GSE.UpdateVariable(variable, name, status)
         GSE.CompanionCancelPendingDelete("variable", name)
     end
     GSE.UpgradeVariable(variable, name)
+    GSE.SanitizeHelplink(variable)
     GSE.ComputeVariableDependencies(variable)
     local storedVariable = GSE.Store("variable") and GSE.Store("variable")[name]
     if GSE.IsProtectedAtRest(storedVariable, variable) then
@@ -4652,6 +4652,7 @@ function GSE.UpdateMacro(node, category, skipStore)
             node.LastUpdated = GSE.GetTimestamp()
             -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
             node.GSEVersion = GSE.VersionNumber
+            GSE.SanitizeHelplink(node)
             if not node.Managed then
                 for _, version in pairs(node.Versions) do
                     if type(version) == "table" and type(version.text) == "string" then
@@ -4817,7 +4818,7 @@ local function getManagedMacroSequenceIcon(sequenceName)
             local iconInfo
             if action.type == "macro" and action.macrotext then
                 iconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
-                if iconInfo and #iconInfo > 1 then
+                if iconInfo and #iconInfo > 0 then
                     iconInfo = iconInfo[1]
                 end
             elseif action.type == "macro" and action.macro then

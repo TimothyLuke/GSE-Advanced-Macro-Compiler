@@ -33,19 +33,7 @@ end
 
 local function getPreviewMacroOptionCandidate(options)
     for segment in tostring(options or ""):gmatch("([^;]+)") do
-        local candidate = segment:gsub("^%s+", ""):gsub("%s+$", "")
-        while string.sub(candidate, 1, 1) == "[" do
-            local closing = string.find(candidate, "]", 1, true)
-            if not closing then
-                candidate = ""
-                break
-            end
-            candidate = string.sub(candidate, closing + 1):gsub("^%s+", ""):gsub("%s+$", "")
-        end
-        candidate = candidate:gsub("^reset=%S+%s*", ""):gsub("^%s+", ""):gsub("%s+$", "")
-        while string.sub(candidate, 1, 1) == "!" do
-            candidate = string.sub(candidate, 2):gsub("^%s+", ""):gsub("%s+$", "")
-        end
+        local candidate = GSE.GetMacroClauseTarget(segment)
         if candidate ~= "" then return candidate end
     end
 end

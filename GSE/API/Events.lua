@@ -383,11 +383,37 @@ end
 -- Blizzard/other bars that don't provide the method. Combat-guarded by Dominos.
 local GSE_FORCE_SHOWGRID_REASON = 262144 -- 0x40000, a single high bit
 
+-- Blizzard's own bars (Retail and Forever) do the same with the "showgrid"
+-- attribute: with "Always Show Buttons" off, ActionBarMixin:UpdateShownButtons
+-- shows a button only when it has an action or showgrid is non-zero. The same
+-- private bit goes into showgrid inside the SecureHandler -- written from
+-- insecure Lua the attribute would be tainted, and Blizzard's secure bar code
+-- reads it (the #1931 lesson) -- and the button is shown at once.
+local SHOWGRID_ON = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 0 then b:SetAttribute("showgrid", grid + 262144) end
+    b:Show()
+]]
+local SHOWGRID_OFF = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 1 then b:SetAttribute("showgrid", grid - 262144) end
+]]
 local function setOverrideButtonForcedShown(buttonOrName, shown)
     local btn = type(buttonOrName) == "string" and _G[buttonOrName] or buttonOrName
-    if not btn or not btn.SetShowGridInsecure then return end
-    if InCombatLockdown() then return end
-    btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
+    if not btn or InCombatLockdown() then return end
+    if btn.SetShowGridInsecure then
+        btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
+    elseif btn.GetShowGrid and btn.bar and btn.bar.UpdateShownButtons then
+        -- Only when the bit has to change: repaints call this often.
+        local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
+        if hasBit == (shown and true or false) and (not shown or btn:IsShown()) then return end
+        SHBT:SetFrameRef("gseGridButton", btn)
+        SHBT:Execute(shown and SHOWGRID_ON or SHOWGRID_OFF)
+    end
 end
 
 local function repaintGSEOverrideButton(button, defer)
@@ -441,18 +467,41 @@ local function scheduleGSEOverrideIconRepaint()
 end
 -- Small GSE logo overlaid in the bottom-right corner of overridden buttons.
 local watermarkedButtons = {}
+-- Watermarks on frames that stand in for an override button (the editor's
+-- Config icon), so the option shows and hides them too.
+local otherWatermarks = setmetatable({}, {__mode = "k"})
+local WATERMARK_SIZE, WATERMARK_INSET = 14, 2
+
+-- Size and place a watermark for a button drawn at scale times a bar button.
+function GSE.PlaceGSEWatermark(wm, frame, scale)
+    scale = scale or 1
+    wm:SetSize(WATERMARK_SIZE * scale, WATERMARK_SIZE * scale)
+    wm:ClearAllPoints()
+    wm:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -WATERMARK_INSET * scale, WATERMARK_INSET * scale)
+end
+
+local function createGSEWatermark(frame)
+    local wm = frame:CreateTexture(nil, "OVERLAY", nil, 7)
+    wm:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png")
+    wm:SetAlpha(0.85)
+    GSE.PlaceGSEWatermark(wm, frame)
+    if GSEOptions.showActionBarWatermark == false then wm:Hide() end
+    return wm
+end
+
+-- The override button's watermark on a frame that is not one, as it would
+-- show on the bar.
+function GSE.CreateGSEWatermark(frame)
+    local wm = createGSEWatermark(frame)
+    otherWatermarks[wm] = true
+    return wm
+end
 
 local function addGSEWatermark(Button)
     if watermarkedButtons[Button] then return end
     local btn = _G[Button]
     if not btn then return end
-    local wm = btn:CreateTexture(nil, "OVERLAY", nil, 7)
-    wm:SetTexture("Interface\\AddOns\\GSE_GUI\\Assets\\GSE_Logo_Dark_512.png")
-    wm:SetSize(14, 14)
-    wm:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 2)
-    wm:SetAlpha(0.85)
-    if GSEOptions.showActionBarWatermark == false then wm:Hide() end
-    watermarkedButtons[Button] = wm
+    watermarkedButtons[Button] = createGSEWatermark(btn)
 end
 
 local function removeGSEWatermark(Button)
@@ -471,6 +520,9 @@ end
 
 function GSE.SetActionBarWatermarkEnabled(enabled)
     for _, wm in pairs(watermarkedButtons) do
+        if enabled then wm:Show() else wm:Hide() end
+    end
+    for wm in pairs(otherWatermarks) do
         if enabled then wm:Show() else wm:Hide() end
     end
 end
@@ -1247,7 +1299,7 @@ function LoadKeyBindings(payload)
         end
     end
     -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
-    if not GSE.KeybindingsEnabled() then return end
+    if GSE.IsForever then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.
@@ -1311,6 +1363,7 @@ end
 
 function GSE.ReloadOverrides(force)
     LoadOverrides(force)
+    GSE:SendMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED)
 end
 
 --- Put sequence id on action-bar button buttonName.
@@ -1399,6 +1452,20 @@ end
 local function isOverrideTarget(frame)
     local ok, result = pcall(isOverrideTargetUnsafe, frame)
     return ok and result == true
+end
+
+-- Every shown action button under frame. Hidden branches are skipped (a
+-- hidden button is no drop target): walking every frame in the game with
+-- EnumerateFrames froze a Retail UI with many addons for seconds.
+local function collectOverrideTargets(frame, out)
+    if isOverrideTarget(frame) then out[#out + 1] = frame end
+    local children = { frame:GetChildren() }
+    for i = 1, #children do
+        local child = children[i]
+        if not (child.IsForbidden and child:IsForbidden()) and child:IsShown() then
+            collectOverrideTargets(child, out)
+        end
+    end
 end
 
 local drag -- the drag in progress: { sequenceId, candidates, target }
@@ -1490,18 +1557,25 @@ function GSE.BeginSequenceDrag(sequenceId)
         return false
     end
     ensureDragFrames()
-    -- Every action button that exists now; the drag tests these for the mouse.
-    local candidates = {}
-    local frame = EnumerateFrames()
-    while frame do
-        if isOverrideTarget(frame) then candidates[#candidates + 1] = frame end
-        frame = EnumerateFrames(frame)
-    end
-    drag = { sequenceId = sequenceId, candidates = candidates }
+    local thisDrag = { sequenceId = sequenceId, candidates = {} }
+    drag = thisDrag
+    -- The icon first, at the cursor, so it shows the moment the drag starts.
     dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    dragIcon:ClearAllPoints()
+    dragIcon:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x / scale, y / scale)
     pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
     dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
     dragIcon:Show()
+    -- Every action button shown now; the drag tests these for the mouse. It
+    -- runs on the next frame so the icon shows first.
+    C_Timer.After(0, function()
+        if drag ~= thisDrag then return end
+        local candidates = {}
+        pcall(collectOverrideTargets, UIParent, candidates)
+        thisDrag.candidates = candidates
+    end)
     return true
 end
 

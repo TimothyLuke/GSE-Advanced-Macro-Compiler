@@ -2059,7 +2059,7 @@ local function FormatSpamKey(sequence, mods, explicitButtonName)
     local seen = {}
     local buttonName = explicitButtonName or lastSequenceButtonName
 
-    if sequence and GSE_C and GSE.KeybindingsEnabled() then
+    if sequence and GSE_C and not GSE.IsForever then
         local specKey = GetCurrentSpecKey()
         local specBinds = GSE.SpecKeyBinds(specKey, false)
         AddMatchingGSEKeyBindings(values, seen, specBinds, sequence, buttonName)

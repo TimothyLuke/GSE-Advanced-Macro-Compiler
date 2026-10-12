@@ -401,7 +401,7 @@ local function buildKeybindMenu()
     end
 
     -- Keybinding switched off (WoW Forever, #2109): Button Bindings only.
-    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
+    if GSE.IsForever then table.remove(tree, 2) end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -523,6 +523,31 @@ local function dropdownFieldEdge(dropdown)
     local button = dropdown.button
     if button and button.IsShown and button:IsShown() then return button, 0 end
     return nil, 0
+end
+
+-- A measured fix-up -- wrap heights, slid columns -- is only right for the
+-- size the pane had when it ran, and a pane built into a still-hidden editor
+-- (the reopen after a /reload) has no real size yet. Run the pass again on
+-- the next frame each time the pane is shown or resized, coalesced, as a
+-- drag-resize fires many. Returns the queue so a caller can run it at once.
+-- The pane is a ScrollFrame, which is not pooled: the hooks go away with it,
+-- and once it is released (parent cleared) the queue does nothing.
+local function refitWithPane(rightContainer, pass)
+    local queued = false
+    local function queue()
+        if queued or not rightContainer.parent or not (C_Timer and C_Timer.After) then return end
+        queued = true
+        C_Timer.After(0, function()
+            queued = false
+            if rightContainer.parent then pass() end
+        end)
+    end
+    local frame = rightContainer.frame
+    if frame and frame.HookScript then
+        frame:HookScript("OnSizeChanged", queue)
+        frame:HookScript("OnShow", queue)
+    end
+    return queue
 end
 
 local showKeybindPanel
@@ -1023,6 +1048,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- button may not have its final position yet on the first pass.
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
+    refitWithPane(rightContainer, tightenRemoveIcons)
     rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
 
     -- Without a gutter the last row scrolls underneath the pinned button.
@@ -1720,6 +1746,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     pinSave()
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
+    refitWithPane(rightContainer, tightenRows)
     rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
 
     local bottomGutter = UI:Create("Spacer")
@@ -2149,35 +2176,41 @@ local function showKeybindChooser(editframe, rightContainer)
         function() lightRow(keybindPath) end, function() restoreRow(keybindPath) end)
 
     -- Heights are only right once the widths are: once now for the case
-    -- where layout is live, and once more after the editor's suspended
-    -- layout actually runs.
+    -- where layout is live, then through refitWithPane after every show and
+    -- resize of the pane.
     fitParagraphs(rightContainer)
     mirrorHotspots(rightContainer)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, function()
-            fitParagraphs(rightContainer)
-            alignRightColumn(topRow, overrideTopCell, keybindTopCell)
-            alignRightColumn(noteRow, overrideNoteCell, keybindNoteCell)
-            alignRightColumn(bulletRow, overrideBulletCell, keybindBulletCell)
-            mirrorHotspots(rightContainer)
-            -- A frame later again, once those heights have landed: measure the
-            -- block and grow the spacer so its middle sits on the pane's middle.
-            -- Straight from the geometry, and the spacer only ever grows, so a
-            -- block taller than the pane stays where it is.
-            C_Timer.After(0, function()
-                if centreSpacer.parent ~= rightContainer or not rightContainer.scrollframe then return end
-                local viewTop = rightContainer.scrollframe:GetTop()
-                local viewBottom = rightContainer.scrollframe:GetBottom()
-                local blockTop = topRow.frame:GetTop()
-                local blockBottom = bulletRow.frame:GetBottom()
-                if not (viewTop and viewBottom and blockTop and blockBottom) then return end
-                local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
-                centreSpacer:SetHeight(math.max(1, math.floor(1 + blockTop - wantTop)))
-                if rightContainer.DoLayout then rightContainer:DoLayout() end
-                mirrorHotspots(rightContainer)
-            end)
-        end)
+
+    local spacerHeight = 1
+    local function showingChooser()
+        return centreSpacer.parent == rightContainer
     end
+    -- Measure the block and size the spacer so its middle sits on the pane's
+    -- middle. A block taller than the pane stays at the top.
+    local function centreBlock()
+        if not showingChooser() or not rightContainer.scrollframe then return end
+        local viewTop = rightContainer.scrollframe:GetTop()
+        local viewBottom = rightContainer.scrollframe:GetBottom()
+        local blockTop = topRow.frame:GetTop()
+        local blockBottom = bulletRow.frame:GetBottom()
+        if not (viewTop and viewBottom and blockTop and blockBottom) then return end
+        local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
+        spacerHeight = math.max(1, math.floor(spacerHeight + blockTop - wantTop))
+        centreSpacer:SetHeight(spacerHeight)
+        if rightContainer.DoLayout then rightContainer:DoLayout() end
+        mirrorHotspots(rightContainer)
+    end
+    local function relayout()
+        if not showingChooser() then return end
+        fitParagraphs(rightContainer)
+        alignRightColumn(topRow, overrideTopCell, keybindTopCell)
+        alignRightColumn(noteRow, overrideNoteCell, keybindNoteCell)
+        alignRightColumn(bulletRow, overrideBulletCell, keybindBulletCell)
+        mirrorHotspots(rightContainer)
+        -- A frame later again, once those heights have landed.
+        if C_Timer and C_Timer.After then C_Timer.After(0, centreBlock) end
+    end
+    refitWithPane(rightContainer, relayout)()
 end
 
 -- ---------------------------------------------------------------------------
