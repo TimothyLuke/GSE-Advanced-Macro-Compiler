@@ -682,6 +682,8 @@ local function processCollection(payload)
       end
     end
   )
+  -- The Import button centred under the list.
+  if toolbarrow.SetFlowHAlign then toolbarrow:SetFlowHAlign("CENTER") end
   toolbarrow:AddChild(importbutton)
   importframe:AddChild(toolbarrow)
 end
@@ -1000,6 +1002,8 @@ local function processQueueCollections(collections)
     -- are empty.
     if processQueue then processQueue() end
   end)
+  -- The Import button centred under the list.
+  if toolbarrow.SetFlowHAlign then toolbarrow:SetFlowHAlign("CENTER") end
   toolbarrow:AddChild(importbutton)
   importframe:AddChild(toolbarrow)
 end
@@ -1247,6 +1251,8 @@ local function LandingPage()
       end
     end
   )
+  -- The Import button centred under the paste box.
+  if recButtonGroup.SetFlowHAlign then recButtonGroup:SetFlowHAlign("CENTER") end
   recButtonGroup:AddChild(recbutton)
   importframe:AddChild(recButtonGroup)
 
@@ -1360,6 +1366,8 @@ renderQueueManager = function()
   end
 
   local toolbar = createImportToolbar()
+  -- Clear All and Close centred under the queue.
+  if toolbar.SetFlowHAlign then toolbar:SetFlowHAlign("CENTER") end
 
   local clearBtn = UI:Create("Button")
   clearBtn:SetText("Clear All")
