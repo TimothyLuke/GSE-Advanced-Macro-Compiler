@@ -63,7 +63,7 @@ function GSE.GetClassIDforSpec(specid)
         local _, _, _, _, _, class = GetSpecializationInfoByID(specid)
         if specid <= 13 then
             classid = specid
-        else
+        elseif class then
             for i = 1, 13, 1 do
                 local classInfo = C_CreatureInfo.GetClassInfo(i)
                 local st = classInfo and classInfo.classFile
@@ -72,8 +72,25 @@ function GSE.GetClassIDforSpec(specid)
                 end
             end
         end
+        -- WoW Forever knows no retail spec id (66 is Protection Paladin there
+        -- only through the talent-tree mapping in Statics.lua), so the client
+        -- answers nothing and the sequence would be filed as Global.
+        if classid == 0 then classid = GSE.SpecIDClassList[specid] or 0 end
     end
     return classid
+end
+
+--- A spec's icon: the client's own, else its talent tree's (WoW Forever has
+--- trees but no spec record for a retail id), or nil.
+function GSE.GetSpecIcon(specID)
+    specID = tonumber(specID)
+    if not specID or specID <= 13 then return nil end
+    if GetSpecializationInfoByID then
+        local id, _, _, icon = GetSpecializationInfoByID(specID)
+        if id and icon then return icon end
+    end
+    local _ = Statics.SpecIDList[0] -- the trees are read when the list is built
+    return Statics.SpecIDIconList[specID]
 end
 
 function GSE.GetClassIcon(classid)
@@ -351,49 +368,18 @@ function GSE.setActionButtonUseKeyDown()
     GSE.ReloadSequences()
 end
 
---- Key identifying the current talent "loadout" for keybinding and action bar
---- override storage, as a string.
+--- Key identifying the current talent loadout for keybinding and action bar
+--- override storage, as a string: the saved loadout's config id (Retail), whose
+--- binds sit on top of its spec's.
 ---
---- Retail partitions these by saved loadout, which works because a loadout is
---- 1:1 with the build you are actually playing. WoW Forever has no saved
---- loadouts at all -- it has DUAL SPEC, Primary and Secondary, and one
---- specialisation per class -- so every build returned the same key: GetSpec()
---- is always "1" there and GetLastSelectedSavedConfigID has nothing to return.
---- Both spec groups therefore shared one set of binds, and switching between
---- them rebuilt the bindings to exactly what they already were.
----
---- The active spec group is the 1:1 on such a client, so it stands in for the
---- loadout. Only when there is genuinely more than one group AND no saved
---- loadout, so retail keeps its existing keys untouched: a real config id still
---- wins, and a retail character without one still keys on tostring(nil) exactly
---- as before rather than having its saved binds orphaned under a new key.
----
---- Prefixed rather than bare, so a group of 1 or 2 can never be mistaken for a
---- config id of 1 or 2.
---- Does GSE bind sequences to keys here? Always, except on WoW Forever, where
---- it never does: Forever's gamepad handling is still moving, so there a
---- sequence goes on an action-bar button (Button Bindings) and WoW binds the
---- button (#2109). There is no option to turn it on.
-function GSE.KeybindingsEnabled()
-    local _, _, _, tocversion = GetBuildInfo()
-    return GSE.TOCFlavour(tocversion) ~= "forever"
-end
-
+--- A dual-spec client's Primary and Secondary are not loadouts: they are its
+--- specs (GSE.CurrentSpecKey), so they never come through here. tostring(nil)
+--- with no saved loadout, as it always was, so stored keys are untouched.
 function GSE.GetBindingLoadoutKey()
     local currentSpecID = GSE.GetCurrentSpecID()
     local saved =
         currentSpecID and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and
         C_ClassTalents.GetLastSelectedSavedConfigID(currentSpecID)
-    if saved then
-        return tostring(saved)
-    end
-    local groups = GetNumSpecGroups and GetNumSpecGroups() or 1
-    if groups and groups > 1 and C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup then
-        local group = C_SpecializationInfo.GetActiveSpecGroup()
-        if group then
-            return "specgroup:" .. tostring(group)
-        end
-    end
     return tostring(saved)
 end
 

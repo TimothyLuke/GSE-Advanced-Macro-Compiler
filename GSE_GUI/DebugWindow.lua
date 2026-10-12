@@ -3291,7 +3291,9 @@ if GSE.RegisterMessage and GSE.Static and GSE.Static.Messages and GSE.Static.Mes
     -- AceEvent signature: :RegisterMessage(name, methodNameOrFunc). The 1914
     -- Native.lua reimplementation accepted an extra "key" arg between name
     -- and the callback; AceEvent does not, so pass the function directly.
-    GSE:RegisterMessage(GSE.Static.Messages.GSE_MODS_VISIBLE, UpdateHardwareStateFromPayload)
+    -- A listener of its own: AceEvent keeps ONE handler per message per object,
+    -- and the Tracker listens for this message too.
+    LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(GSE.Static.Messages.GSE_MODS_VISIBLE, UpdateHardwareStateFromPayload)
 end
 
 hardwareWidget:SetScript(

@@ -54,7 +54,7 @@ end
 -- override rebuilds use (GetLastSelectedSavedConfigID), so the loadout with the
 -- gold ring is the one whose binds are live.
 local function activeLoadoutForSpec(specIndex)
-    if not (C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and GetSpecializationInfo) then
+    if not (GSE.HasTalentLoadouts() and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and GetSpecializationInfo) then
         return nil
     end
     local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
@@ -65,7 +65,7 @@ local function activeLoadoutForSpec(specIndex)
 end
 
 local function loadoutsForSpec(specIndex)
-    if not (C_ClassTalents and C_ClassTalents.GetConfigIDsBySpecID and GetSpecializationInfoForClassID) then
+    if not (GSE.HasTalentLoadouts() and C_ClassTalents and C_ClassTalents.GetConfigIDsBySpecID and GetSpecializationInfoForClassID) then
         return {}
     end
     local specid = GetSpecializationInfoForClassID(GSE.GetCurrentClassID(), specIndex)
@@ -185,6 +185,51 @@ local function overrideScope(specialization, loadout, create)
     return binds["LoadOuts"][specialization][loadout]
 end
 
+-- A page's spec as the tree names it (GSE.BindingSpecs): Retail's
+-- specialisation, Primary / Secondary, or nothing when the page is just the
+-- class (no second name to show).
+local function specLabelFor(specialization, classname)
+    for _, spec in ipairs(GSE.BindingSpecs()) do
+        if spec.key == tostring(specialization) then
+            if spec.label == classname then return nil end
+            return spec.label, spec.icon
+        end
+    end
+end
+
+-- The Bindings tree goes area > class > spec > talent loadout, as the other
+-- areas go area > class.  Binds are this character's class's, so there is one
+-- class node; it is there so the tree reads the same as the rest.
+local function bindingsClassNode()
+    local classid = GSE.GetCurrentClassID()
+    local classname, classfile = GetClassInfo(classid)
+    local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
+    local text = classname or tostring(classid)
+    if color and classname then text = WrapTextInColorCode(classname, color:GenerateHexColor()) end
+    return {value = tostring(classid), text = text, icon = GSE.GetClassIcon(classid), children = {}}
+end
+
+-- The tree path to a spec's page (and a talent loadout's, with `loadout`).
+-- area: "AO" or "KB".  Without spec, the class node.
+function GSE.GUI.BindingsPath(area, spec, loadout)
+    local path = "KEYBINDINGS\001" .. area .. "\001" .. tostring(GSE.GetCurrentClassID())
+    if spec then path = path .. "\001" .. tostring(spec) end
+    if spec and loadout then path = path .. "\001" .. tostring(loadout) end
+    return path
+end
+
+-- Unfold the tree down to a Bindings path, wherever the current grouping
+-- puts it (gseTreePath maps the by-type path; By Class has Bindings inside
+-- the class's group).
+function GSE.GUI.ExpandBindingsPath(editframe, path)
+    local tree = editframe and editframe.treeContainer
+    local status = tree and (tree.status or tree.localstatus)
+    if not (status and status.groups) then return end
+    if tree.gseTreePath then path = tree.gseTreePath(path) end
+    local parts = {("\001"):split(path)}
+    for n = 1, #parts do status.groups[table.concat(parts, "\001", 1, n)] = true end
+end
+
 -- The player's current spec index, for the panel's default scope.
 -- The binder's own key (Profiles.lua): this used to switch at GameMode 10 where
 -- the binder switches at 7, so Legion to Shadowlands clients opened on spec 1.
@@ -271,6 +316,8 @@ local function buildKeybindMenu()
             children = {}
         }
     }
+    tree[1].children[1] = bindingsClassNode()
+    tree[2].children[1] = bindingsClassNode()
 
     -- Button Bindings nodes.  Same shape as the keybind nodes below: the
     -- tree stops at spec and its talent loadouts; every override in a scope is
@@ -292,17 +339,20 @@ local function buildKeybindMenu()
             end
         end
         -- And the shared profiles' for this class's specs.
-        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
-            local buttons = GSE.SpecOverrides(tostring(specIndex), false)
+        for _, spec in ipairs(GSE.BindingSpecs()) do
+            local buttons = GSE.SpecOverrides(spec.key, false)
             for key, override in pairs(buttons or {}) do
                 if type(override) ~= "table" or not sequenceExists(override.Sequence) then buttons[key] = nil end
             end
         end
 
-        if GetSpecializationInfo then
-            for specIndex = 1, (GetNumSpecializations and GetNumSpecializations() or 0) do
-                local _, speclabel, _, specIcon = GetSpecializationInfo(specIndex)
-                local node = {value = tostring(specIndex), text = speclabel, icon = specIcon, selectHighlight = true, children = {}}
+        -- One node per spec the binds are kept by (Profiles.lua): Retail's
+        -- specialisations with their talent loadouts, or a dual-spec client's
+        -- Primary and Secondary, or the class.
+        do
+            for _, spec in ipairs(GSE.BindingSpecs()) do
+                local specIndex = tonumber(spec.key)
+                local node = {value = spec.key, text = spec.label, icon = spec.icon, selectHighlight = true, children = {}}
                 local activeLoadout = activeLoadoutForSpec(specIndex)
                 for _, configid in ipairs(loadoutsForSpec(specIndex)) do
                     local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(configid)
@@ -319,7 +369,7 @@ local function buildKeybindMenu()
                         })
                     end
                 end
-                table.insert(tree[1]["children"], node)
+                table.insert(tree[1]["children"][1]["children"], node)
             end
         end
     end
@@ -335,8 +385,8 @@ local function buildKeybindMenu()
         -- This character's tables, and the shared profiles' for its class.
         local tables = {}
         for _, v in pairs(GSE_C["KeyBindings"] or {}) do tables[#tables + 1] = v end
-        for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
-            local shared = GSE.UsesSharedProfile(tostring(specIndex)) and GSE.SpecKeyBinds(tostring(specIndex), false)
+        for _, spec in ipairs(GSE.BindingSpecs()) do
+            local shared = GSE.UsesSharedProfile(spec.key) and GSE.SpecKeyBinds(spec.key, false)
             if shared then tables[#tables + 1] = shared end
         end
         for _, v in ipairs(tables) do
@@ -363,19 +413,20 @@ local function buildKeybindMenu()
             end
         end
 
-        if GetSpecializationInfo then
-            for specIndex = 1, (GetNumSpecializations and GetNumSpecializations() or 0) do
-                local _, speclabel, _, specIcon = GetSpecializationInfo(specIndex)
+        do
+            for _, spec in ipairs(GSE.BindingSpecs()) do
+                local specIndex = tonumber(spec.key)
                 local node = {
-                    value = tostring(specIndex),
-                    text = speclabel,
-                    icon = specIcon,
+                    value = spec.key,
+                    text = spec.label,
+                    icon = spec.icon,
                     selectHighlight = true,
                     children = {}
                 }
                 -- Every loadout for the spec, not only those that already have
                 -- binds -- the panel is where binds get added, so you have to
-                -- be able to navigate to an empty loadout.
+                -- be able to navigate to an empty loadout. Talent loadouts are
+                -- Retail's; elsewhere there are none to list.
                 local activeLoadout = activeLoadoutForSpec(specIndex)
                 for _, configid in ipairs(loadoutsForSpec(specIndex)) do
                     local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(configid)
@@ -395,13 +446,13 @@ local function buildKeybindMenu()
                         )
                     end
                 end
-                table.insert(tree[2]["children"], node)
+                table.insert(tree[2]["children"][1]["children"], node)
             end
         end
     end
 
     -- Keybinding switched off (WoW Forever, #2109): Button Bindings only.
-    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
+    if GSE.IsForever then table.remove(tree, 2) end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -525,12 +576,212 @@ local function dropdownFieldEdge(dropdown)
     return nil, 0
 end
 
+-- A measured fix-up -- wrap heights, slid columns -- is only right for the
+-- size the pane had when it ran, and a pane built into a still-hidden editor
+-- (the reopen after a /reload) has no real size yet. Run the pass again on
+-- the next frame each time the pane is shown or resized, coalesced, as a
+-- drag-resize fires many. Returns the queue so a caller can run it at once.
+-- The pane is a ScrollFrame, which is not pooled: the hooks go away with it,
+-- and once it is released (parent cleared) the queue does nothing.
+local function refitWithPane(rightContainer, pass)
+    local queued = false
+    local function queue()
+        if queued or not rightContainer.parent or not (C_Timer and C_Timer.After) then return end
+        queued = true
+        C_Timer.After(0, function()
+            queued = false
+            if rightContainer.parent then pass() end
+        end)
+    end
+    local frame = rightContainer.frame
+    if frame and frame.HookScript then
+        frame:HookScript("OnSizeChanged", queue)
+        frame:HookScript("OnShow", queue)
+    end
+    return queue
+end
+
+-- ---------------------------------------------------------------------------
+-- The two layers on one page.  A spec's binds hold for every talent loadout;
+-- a loadout's own sit on top and win where both set the same key or button.
+-- A spec page marks what a loadout replaces; a loadout page lists what it
+-- takes from the spec unchanged, under its own rows.
+-- ---------------------------------------------------------------------------
+local KB_COL_MARK = KB_ICON_SIZE + 4
+local KB_INHERITED_COLOUR = "|cff9d9d9d"
+
+local function loadoutNameOf(loadout)
+    local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(tonumber(loadout))
+    return (info and info.name) or tostring(loadout)
+end
+
+-- { [key] = {loadout name, ...} } for a spec's loadout layers, where `layers`
+-- is { [loadout] = { [key] = ... } }.
+local function loadoutReplacements(layers)
+    local out = {}
+    for loadout, t in pairs(layers or {}) do
+        if type(t) == "table" then
+            for k in pairs(t) do
+                out[k] = out[k] or {}
+                table.insert(out[k], loadoutNameOf(loadout))
+            end
+        end
+    end
+    for _, names in pairs(out) do table.sort(names) end
+    return out
+end
+
+-- A spec-page row's last cell: the talent icon where loadouts replace the
+-- row, naming them; blank otherwise, so the columns stay in line.
+local function loadoutMark(editframe, names)
+    local mark
+    if names then
+        mark = UI:Create("Icon")
+        mark:SetImage(Statics.Icons.Talents)
+        mark:SetImageSize(KB_ICON_SIZE, KB_ICON_SIZE)
+        mark:SetCallback("OnEnter", function()
+            GSE.CreateToolTip(L["Replaced by a talent loadout"],
+                string.format(L["While %s is the active talent loadout, its own binding is used instead of this one."],
+                    table.concat(names, ", ")),
+                editframe)
+        end)
+        mark:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    else
+        mark = UI:Create("Spacer")
+    end
+    mark:SetWidth(KB_COL_MARK)
+    mark:SetHeight(KB_ROW_HEIGHT)
+    return mark
+end
+
+-- Shrink text to `width` by taking characters out of the middle: a long
+-- button name differs at both ends (the bar and the slot number).  Cut by
+-- character, not byte, so a sequence name with accents is never split
+-- inside one.
+local function fitText(fontString, text, width)
+    fontString:SetText(text)
+    if not (fontString.GetStringWidth and width and width > 0) or fontString:GetStringWidth() <= width then
+        return text
+    end
+    local chars = {}
+    for ch in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars + 1] = ch end
+    for keep = #chars - 1, 4, -1 do
+        local head = math.ceil(keep / 2)
+        local fitted = table.concat(chars, "", 1, head) .. "…" .. table.concat(chars, "", #chars - (keep - head) + 1)
+        fontString:SetText(fitted)
+        if fontString:GetStringWidth() <= width then return fitted end
+    end
+    return table.concat(chars, "", 1, math.min(3, #chars)) .. "…"
+end
+
+-- What a button is called on the panel: its bar and slot.  Frame names
+-- spend most of their length on "Action" and "Button", which every one of
+-- them shares, and cutting a long one short hid the bar -- two buttons on
+-- different bars read the same.  GamepadMainActionButton7 -> GamepadMain 7,
+-- MultiBarBottomLeftButton7 -> MultiBarBottomLeft 7.  The frame name is in
+-- the tooltip.
+local function buttonLabel(name)
+    if GSE.isEmpty(name) then return name end
+    -- Forever's gamepad bars: the name is mostly frame nesting
+    -- (GamepadMainActionBarFramePageUnitBottomCenteredAnchorBottomBarActionButton7).
+    if string.find(name, "PageUnit", 1, true) then
+        local bar, slot = string.match(name, "(%u%l+Bar)ActionButton(%d+)$")
+        if bar then return "Gamepad " .. bar .. " " .. slot end
+    end
+    local prefix, num = string.match(name, "^(.-)(%d+)$")
+    if not prefix then return name end
+    local bar = prefix:gsub("Action", ""):gsub("Button", ""):gsub("[_%s]+$", "")
+    if bar == "" then bar = prefix end
+    return bar .. " " .. num
+end
+
+-- Shrink text to `width` from the front, keeping its end: a button label ends
+-- in what tells it from its neighbours -- the bar and the slot -- and begins
+-- with what they share (buttonLabel).
+local function fitTail(fontString, text, width)
+    fontString:SetText(text)
+    if not (fontString.GetStringWidth and width and width > 0) or fontString:GetStringWidth() <= width then
+        return text
+    end
+    local chars = {}
+    for ch in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars + 1] = ch end
+    for keep = #chars - 1, 3, -1 do
+        local fitted = "…" .. table.concat(chars, "", #chars - keep + 1)
+        fontString:SetText(fitted)
+        if fontString:GetStringWidth() <= width then return fitted end
+    end
+    return "…" .. table.concat(chars, "", math.max(1, #chars - 2))
+end
+
+-- On a talent loadout's page, the spec's binds it does not replace, which
+-- are live in this loadout too.  Read-only here: Override copies one into the
+-- loadout's own rows, to change for this loadout only.
+-- entries: { {first = text, firstWidth = px, seq = id, onOverride = fn} }
+local function inheritedSection(editframe, container, entries)
+    container:ReleaseChildren()
+    if #entries == 0 then return end
+    local caption = UI:Create("Label")
+    caption:SetFullWidth(true)
+    caption:SetJustifyH("CENTER")
+    caption:SetText(KB_INHERITED_COLOUR .. "« " .. L["All Talent Loadouts"] .. " »  -  "
+        .. L["also live in this loadout"] .. Statics.StringReset)
+    container:AddChild(caption)
+    for _, entry in ipairs(entries) do
+        local row = UI:Create("SimpleGroup")
+        row:SetFullWidth(true)
+        row:SetLayout("Flow")
+        if row.SetFlowGap then row:SetFlowGap(6) end
+        if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
+        if row.SetFlowVAlign then row:SetFlowVAlign("CENTER") end
+        if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
+        local first = UI:Create("Label")
+        first:SetWidth(entry.firstWidth)
+        first:SetJustifyH("CENTER")
+        first:SetJustifyV("MIDDLE")
+        first:SetText(KB_INHERITED_COLOUR .. fitTail(first.text, entry.first, entry.firstWidth - 8) .. Statics.StringReset)
+        local seq = UI:Create("Label")
+        seq:SetWidth(KB_COL_SEQ)
+        seq:SetJustifyH("CENTER")
+        seq:SetJustifyV("MIDDLE")
+        seq:SetText(KB_INHERITED_COLOUR .. fitText(seq.text, sequenceLabel(entry.seq), KB_COL_SEQ - 8)
+            .. Statics.StringReset)
+        local override = UI:Create("Button")
+        override:SetText(L["Override"])
+        override:SetWidth(100)
+        override:SetCallback("OnClick", entry.onOverride)
+        override:SetCallback("OnEnter", function()
+            GSE.CreateToolTip(L["Override"], L["Copy this into the loadout's own rows, to change it for this loadout only."],
+                editframe)
+        end)
+        override:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        row:AddChild(first)
+        row:AddChild(seq)
+        row:AddChild(override)
+        container:AddChild(row)
+    end
+end
+
+-- A loadout page's row list takes an inherited one: the lone blank row the
+-- panel always opens on is filled rather than left above it.
+local function addInheritedRow(rows, row)
+    local only = rows[1]
+    if #rows == 1 and not next(only) then
+        rows[1] = row
+    else
+        table.insert(rows, row)
+    end
+end
+
 local showKeybindPanel
 showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
     local rows = {}
-    local saveButton, rowContainer, redraw
+    local saveButton, rowContainer, inheritedContainer, redraw
+    -- A spec page: which keys a talent loadout replaces.  nil on a loadout
+    -- page, and when no loadout replaces anything (no mark column then).
+    local marks = not loadout and loadoutReplacements(GSE.SpecLoadoutKeyBinds(specialization, false)) or nil
+    if marks and not next(marks) then marks = nil end
     -- Per-row {field, icon} pairs, so the post-layout pass can hang each X off
     -- the dropdown's real right edge.  Rebuilt by every redraw.
     local rowEdges = {}
@@ -548,9 +799,12 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
                 if fieldRight and iconLeft then
                     local slack = iconLeft - (fieldRight + (edge.pad or 0) + KB_ICON_GAP)
                     if slack > 0.5 then
-                        local point, relativeTo, relativePoint, x, y = icon:GetPoint(1)
-                        if point then
-                            icon:SetPoint(point, relativeTo, relativePoint, (x or 0) - slack, y or 0)
+                        -- The loadout mark rides beside the X.
+                        for _, frame in ipairs({icon, edge.mark}) do
+                            local point, relativeTo, relativePoint, x, y = frame:GetPoint(1)
+                            if point then
+                                frame:SetPoint(point, relativeTo, relativePoint, (x or 0) - slack, y or 0)
+                            end
                         end
                     end
                 end
@@ -802,14 +1056,16 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
         keybind:SetHeight(KB_ROW_HEIGHT)
         remove:SetHeight(KB_ROW_HEIGHT)
 
-        local fieldEdge, fieldPad = dropdownFieldEdge(sequence)
-        rowEdges[#rowEdges + 1] = {field = fieldEdge, pad = fieldPad, icon = remove.frame}
+        local mark = marks and loadoutMark(editframe, not GSE.isEmpty(model.key) and marks[model.key] or nil)
 
+        local fieldEdge, fieldPad = dropdownFieldEdge(sequence)
+        rowEdges[#rowEdges + 1] = {field = fieldEdge, pad = fieldPad, icon = remove.frame, mark = mark and mark.frame}
 
         row:AddChild(addSlot)
         row:AddChild(keybind)
         row:AddChild(sequence)
         row:AddChild(remove)
+        if mark then row:AddChild(mark) end
         row:SetHeight(KB_ROW_HEIGHT)
         return row
     end
@@ -825,6 +1081,29 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
             rowContainer:AddChild(buildRow(i))
         end
         rowContainer:DoLayout()
+
+        -- A loadout page: the spec's binds on keys it has no row for.
+        if loadout then
+            local own, entries = {}, {}
+            for _, r in ipairs(rows) do
+                if not GSE.isEmpty(r.key) then own[r.key] = true end
+            end
+            local spec = keybindScope(specialization, nil, false) or {}
+            local keys = {}
+            for k in pairs(spec) do
+                if k ~= "LoadOuts" and not own[k] then table.insert(keys, k) end
+            end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                entries[#entries + 1] = {first = k, firstWidth = KB_COL_KEY, seq = spec[k], onOverride = function()
+                    addInheritedRow(rows, {key = k, seq = spec[k]})
+                    markDirty()
+                    redraw()
+                end}
+            end
+            inheritedSection(editframe, inheritedContainer, entries)
+            inheritedContainer:DoLayout()
+        end
 
         tightenRemoveIcons()
         -- The editor builds inside UI:SuspendLayout(), which makes the DoLayout
@@ -845,11 +1124,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     local classid = GSE.GetCurrentClassID()
     local classname, classfile = "", nil
     if GetClassInfo then classname, classfile = GetClassInfo(classid) end
-    local specname, specicon
-    if GetSpecializationInfo then
-        local _, n, _, i = GetSpecializationInfo(tonumber(specialization) or 1)
-        specname, specicon = n, i
-    end
+    local specname, specicon = specLabelFor(specialization, classname)
 
     -- Class colour, via the same C_ClassColor path the tree uses for its class
     -- nodes.  Falls back to the accent where C_ClassColor is missing.
@@ -930,6 +1205,10 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     rowContainer:SetFullWidth(true)
     rowContainer:SetLayout("List")
     if rowContainer.SetListGap then rowContainer:SetListGap(2) end
+    inheritedContainer = UI:Create("SimpleGroup")
+    inheritedContainer:SetFullWidth(true)
+    inheritedContainer:SetLayout("List")
+    if inheritedContainer.SetListGap then inheritedContainer:SetListGap(2) end
 
     -- Flow groups default to STYLE.flowPadY above and below their contents.
     -- Stacked, those pads were most of the gap between the headings and the
@@ -972,13 +1251,22 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     headings:AddChild(keyHeading)
     headings:AddChild(seqHeading)
     headings:AddChild(removeHeading)
+    if marks then
+        local markHeading = UI:Create("Label")
+        markHeading:SetWidth(KB_COL_MARK)
+        markHeading:SetText("")
+        headings:AddChild(markHeading)
+    end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
-    rightContainer:AddChild(loadoutRow or centeredRow(loadoutLabel))
+    -- No loadout line where there are no talent loadouts: the spec is all
+    -- there is, and "All Talent Loadouts" would name something that is not.
+    if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow or centeredRow(loadoutLabel)) end
     if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
+    rightContainer:AddChild(inheritedContainer)
 
     -- Save is pinned to the bottom of the scroll viewport rather than added as
     -- the last child: the List layout re-anchors every child on each DoLayout
@@ -1023,6 +1311,7 @@ showKeybindPanel = function(editframe, specialization, loadout, rightContainer)
     -- button may not have its final position yet on the first pass.
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
+    refitWithPane(rightContainer, tightenRemoveIcons)
     rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
 
     -- Without a gutter the last row scrolls underneath the pinned button.
@@ -1038,8 +1327,8 @@ end
 -- ---------------------------------------------------------------------------
 -- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
-local AO_COL_BUTTON, AO_COL_STATE, AO_COL_SEQ = 200, 110, 220
-local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 24
+local AO_COL_BUTTON, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 170, 110, 110, 220
+local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEYS + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
 
 -- Every action button this client can override, name -> name.  One scan per
 -- panel build, not per row: ButtonForge alone is a thousand _G lookups.
@@ -1120,8 +1409,8 @@ local function actionButtonNames()
     local binds = GSE_C["ActionBarBinds"] or {}
     local specTables = {}
     for _, buttons in pairs(binds["Specialisations"] or {}) do specTables[#specTables + 1] = buttons end
-    for specIndex = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
-        local shared = GSE.SpecOverrides(tostring(specIndex), false)
+    for _, spec in ipairs(GSE.BindingSpecs()) do
+        local shared = GSE.SpecOverrides(spec.key, false)
         if shared then specTables[#specTables + 1] = shared end
     end
     for _, buttons in ipairs(specTables) do
@@ -1174,6 +1463,121 @@ local function stateDefaultFor(buttonName)
     if string.sub(buttonName, 1, 4) == "CPB_" then return "" end
     return "1"
 end
+-- The classes whose bars change with a stance or form, which is what a
+-- button state is for: Warrior, Rogue, Druid.
+local STATE_CLASSES = {[1] = true, [4] = true, [11] = true}
+
+-- Whether the panel has a State column: a stance or form class with a
+-- LibActionButton bar (state_types) on this client -- or a saved row that
+-- already has a state, which must stay visible to be changed or removed.
+local function stateColumnWanted(rows, buttonNames)
+    for _, r in ipairs(rows) do
+        if r.state then return true end
+    end
+    if not STATE_CLASSES[GSE.GetCurrentClassID()] then return false end
+    for name in pairs(buttonNames) do
+        local frame = _G[name]
+        if type(frame) == "table" and frame.state_types then return true end
+    end
+    return false
+end
+
+-- The key WoW's Key Bindings put on a button.  It is the button's, not
+-- GSE's -- the panel shows it and never sets it.  Blizzard's bars bind by
+-- command; bar addons bind a click on the frame; anything else, read the
+-- hotkey the bar itself draws.
+local BAR_COMMANDS = {
+    ActionButton = "ACTIONBUTTON",
+    MultiBarBottomLeftButton = "MULTIACTIONBAR1BUTTON", MultiBarBottomRightButton = "MULTIACTIONBAR2BUTTON",
+    MultiBarRightButton = "MULTIACTIONBAR3BUTTON", MultiBarLeftButton = "MULTIACTIONBAR4BUTTON",
+    MultiBar5Button = "MULTIACTIONBAR5BUTTON", MultiBar6Button = "MULTIACTIONBAR6BUTTON",
+    MultiBar7Button = "MULTIACTIONBAR7BUTTON",
+}
+-- Every key bound to a binding action.  Some actions live in a binding
+-- context of their own -- Forever's crossbar modifiers are in
+-- GamepadModeInGameCore -- and GetBindingKey finds those only when given it,
+-- the way Blizzard's Key Bindings screen asks (Blizzard_Keybindings.lua).
+local function bindingKeys(action)
+    local context = C_KeyBindings and C_KeyBindings.GetBindingContextForAction
+        and C_KeyBindings.GetBindingContextForAction(action)
+    if context then return GetBindingKey(action, nil, context) end
+    return GetBindingKey(action)
+end
+
+-- Forever's gamepad bars (Blizzard_GamepadActionBars) have no key binding
+-- per button.  There are four -- TopBar / LeftBar / RightBar / BottomBar, each
+-- inside its own anchor frame, so the name runs PageUnit<Side>CenteredAnchor
+-- <Side>BarActionButton<n>.  Blizzard draws what reaches one from fixed
+-- input keys, not from bindings: each button's glyph is its
+-- ButtonIcon.mappedButtonKey, and a bar's modifiers are the triggers held
+-- for it (ActionBarTemplates.xml: LeftIcon GAMEPAD_TRIGGER_LEFT, RightIcon
+-- GAMEPAD_TRIGGER_RIGHT, the bottom bar both).  The same keys through the
+-- same lookup the bar uses give the glyphs it shows, for whichever
+-- controller style is active.
+local function gamepadBarModifiers(bar)
+    if bar == "LeftBar" then return {GAMEPAD_TRIGGER_LEFT} end
+    if bar == "RightBar" then return {GAMEPAD_TRIGGER_RIGHT} end
+    if bar == "BottomBar" then return {GAMEPAD_TRIGGER_LEFT, GAMEPAD_TRIGGER_RIGHT} end
+    if bar == "TopBar" then return {} end
+end
+-- The glyphs for a gamepad bar button, as inline atlases; nil for any other
+-- button, or where the client cannot say.
+local function gamepadBarKeys(buttonName)
+    if not string.find(buttonName, "PageUnit", 1, true) then return nil end
+    local bar = string.match(buttonName, "(%u%l+Bar)ActionButton%d$")
+    local modifiers = bar and gamepadBarModifiers(bar)
+    local frame = _G[buttonName]
+    local key = type(frame) == "table" and frame.ButtonIcon and frame.ButtonIcon.mappedButtonKey
+    local util = InputIconTextureSetUtility
+    if not (modifiers and key and util and util.GetNormalActiveInputIconButtonTexture) then return nil end
+    local glyphs = {}
+    for _, input in ipairs(modifiers) do glyphs[#glyphs + 1] = input end
+    glyphs[#glyphs + 1] = key
+    for i, input in ipairs(glyphs) do
+        local ok, atlas = pcall(util.GetNormalActiveInputIconButtonTexture, input)
+        if not (ok and atlas) then return nil end
+        glyphs[i] = "|A:" .. atlas .. ":24:24|a"
+    end
+    return table.concat(glyphs, " + ")
+end
+
+-- A controller button's name is a glyph, not text: Blizzard sets KEY_PAD1
+-- and the rest to "|A:Gamepad_..._64:24:24|a" (SetGamepadBindingStrings), and
+-- GetBindingText hands that back.  Drawn at `size` so it sits in a row.
+local function sizeGlyphs(text, size)
+    return (text:gsub("|A:([^:|]+):%d+:%d+|a", "|A:%1:" .. size .. ":" .. size .. "|a"))
+end
+
+-- Every key on the binding, as Key Bindings lists them (Move Forward: W and
+-- Up Arrow), joined by `separator` -- ", " in the column, a line each in the
+-- tooltip, where the column is too narrow to show more than one.
+local function buttonKeysText(buttonName, separator)
+    if GSE.isEmpty(buttonName) then return nil end
+    local keys = {}
+    if GetBindingKey then
+        local prefix, num = string.match(buttonName, "^(.-)(%d+)$")
+        local command = prefix and BAR_COMMANDS[prefix]
+        if command then keys = {bindingKeys(command .. num)} end
+        if #keys == 0 then keys = {bindingKeys("CLICK " .. buttonName .. ":LeftButton")} end
+        if #keys == 0 then keys = {bindingKeys("CLICK " .. buttonName .. ":Keybind")} end
+    end
+    if #keys == 0 then
+        local gamepad = gamepadBarKeys(buttonName)
+        if gamepad then return gamepad end
+    end
+    -- ConsolePort's buttons are the pad buttons themselves.
+    if #keys == 0 and string.sub(buttonName, 1, 4) == "CPB_" then keys = {string.sub(buttonName, 5)} end
+    local shown = {}
+    for _, key in ipairs(keys) do shown[#shown + 1] = GetBindingText and GetBindingText(key) or key end
+    if #shown > 0 then return table.concat(shown, separator or ", ") end
+    local frame = _G[buttonName]
+    local hotKey = type(frame) == "table" and ((frame.TextOverlayContainer and frame.TextOverlayContainer.HotKey)
+        or frame.HotKey)
+    local text = hotKey and hotKey.GetText and hotKey:GetText()
+    if text and text ~= "" and text ~= RANGE_INDICATOR then return text end
+    return nil
+end
+
 local function stateListFor(buttonName)
     local frame = buttonName and _G[buttonName]
     if not (frame and frame.state_types) then return nil end
@@ -1198,7 +1602,15 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
     local rows = {}
-    local saveButton, rowContainer, redraw
+    local saveButton, rowContainer, inheritedContainer, redraw
+    local showState
+    -- A spec page: which buttons a talent loadout replaces (by row key).
+    local marks
+    if not loadout then
+        local layers = GSE_C["ActionBarBinds"] and GSE_C["ActionBarBinds"]["LoadOuts"]
+        marks = loadoutReplacements(layers and layers[specialization])
+        if not next(marks) then marks = nil end
+    end
     -- One chain per row: the row's frames left to right, and for each frame
     -- that is a dropdown, the frame + pad whose RIGHT edge is its visible
     -- edge (dropdownFieldEdge).  The heading cells are a chain too, shifted
@@ -1208,6 +1620,15 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- Part of the target, not an extra slide, so the measured pass still
     -- converges instead of re-applying it on every run.
     local headingNudge = {[2] = -10}
+    -- The columns, left to right, for the rows and the headings alike.
+    -- Button stays second, which headingNudge counts on.
+    local function columnLayout()
+        local order = {"add", "button", "keys", "sequence"}
+        if showState then order[#order + 1] = "state" end
+        order[#order + 1] = "remove"
+        if marks then order[#order + 1] = "mark" end
+        return order
+    end
     local buttonNames, buttonOrder = actionButtonNames()
 
     -- Negative `by` slides right; both directions are used below.
@@ -1432,9 +1853,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             redraw()
         end)
 
-        local state = UI:Create("Dropdown")
-        state:SetWidth(AO_COL_STATE)
+        local state = showState and UI:Create("Dropdown")
+        if state then state:SetWidth(AO_COL_STATE) end
         local function refreshStates()
+            if not state then return end
             local states, order = stateListFor(model.bind)
             if states then
                 state:SetList(states, order)
@@ -1447,10 +1869,37 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 model.state = nil
             end
         end
-        state:SetCallback("OnValueChanged", function(_, _, key)
-            model.state = key ~= "Default" and key or nil
-            markDirty()
+        if state then
+            state:SetCallback("OnValueChanged", function(_, _, key)
+                model.state = key ~= "Default" and key or nil
+                markDirty()
+            end)
+        end
+
+        -- WoW's key for the button, read-only (buttonKeysText).
+        local keys = UI:Create("InteractiveLabel")
+        keys:SetWidth(AO_COL_KEYS)
+        keys:SetJustifyH("CENTER")
+        keys:SetJustifyV("MIDDLE")
+        keys:SetCallback("OnEnter", function()
+            local hint = L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."]
+            local all = buttonKeysText(model.bind, "\n")
+            GSE.CreateToolTip(L["Key"], all and (all .. "\n\n" .. hint) or hint, editframe)
         end)
+        keys:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        local function refreshKeys()
+            local text = buttonKeysText(model.bind)
+            if text and text:find("|A:", 1, true) then
+                -- Controller glyphs: sized to the row (their atlases carry
+                -- padding, so smaller reads as specks), and never cut -- a cut
+                -- through the |A..|a markup prints it as text.
+                keys:SetText(sizeGlyphs(text, 22))
+            else
+                if text then text = fitText(keys.text, text, AO_COL_KEYS - 4) end
+                keys:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
+            end
+            keys:SetHeight(KB_ROW_HEIGHT)
+        end
 
         -- ~100 action buttons is too many for one flat list.  The picker is
         -- a button showing the current name that opens a NESTED menu -- one
@@ -1459,14 +1908,26 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local button = UI:Create("Button")
         button:SetWidth(AO_COL_BUTTON)
         button:SetHeight(KB_ROW_HEIGHT)
+        -- Bar and slot (buttonLabel), fitted to the button; the frame name
+        -- is in the tooltip.
         local function refreshButtonText()
-            button:SetText(GSE.isEmpty(model.bind) and L["Pick a button"] or model.bind)
+            if GSE.isEmpty(model.bind) then
+                button:SetText(L["Pick a button"])
+            else
+                button:SetText(fitTail(button.text, buttonLabel(model.bind), AO_COL_BUTTON - 20))
+            end
         end
+        button:SetCallback("OnEnter", function()
+            if GSE.isEmpty(model.bind) then return end
+            GSE.CreateToolTip(model.bind, buttonKeysText(model.bind) or "", editframe)
+        end)
+        button:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
         local function choose(name)
             model.bind = name
             model.state = nil
             refreshButtonText()
             refreshStates()
+            refreshKeys()
             markDirty()
         end
         button:SetCallback("OnClick", function()
@@ -1542,23 +2003,25 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             markDirty()
         end)
 
-        compactDropdown(state)
+        if state then compactDropdown(state) end
         compactDropdown(sequence)
         refreshStates()
+        refreshKeys()
 
-        -- Column order: button, sequence, state.
-        local chain = {frames = {addSlot.frame, button.frame, sequence.frame, state.frame, remove.frame}, edges = {}}
-        for i, dropdown in pairs({[3] = sequence, [4] = state}) do
-            local edgeFrame, pad = dropdownFieldEdge(dropdown)
-            chain.edges[i] = {frame = edgeFrame, pad = pad}
+        local mark = marks and loadoutMark(editframe, rowKey(model) and marks[rowKey(model)] or nil)
+        local cells = {add = addSlot, button = button, keys = keys, sequence = sequence, state = state,
+            remove = remove, mark = mark}
+        local chain = {frames = {}, edges = {}}
+        for i, name in ipairs(columnLayout()) do
+            local cell = cells[name]
+            chain.frames[i] = cell.frame
+            if name == "sequence" or name == "state" then
+                local edgeFrame, pad = dropdownFieldEdge(cell)
+                chain.edges[i] = {frame = edgeFrame, pad = pad}
+            end
+            row:AddChild(cell)
         end
         rowChains[#rowChains + 1] = chain
-
-        row:AddChild(addSlot)
-        row:AddChild(button)
-        row:AddChild(sequence)
-        row:AddChild(state)
-        row:AddChild(remove)
         row:SetHeight(KB_ROW_HEIGHT)
         return row
     end
@@ -1571,21 +2034,44 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             rowContainer:AddChild(buildRow(i))
         end
         rowContainer:DoLayout()
+        -- A loadout page: the spec's overrides on buttons it has no row for.
+        if loadout then
+            local own, entries = {}, {}
+            for _, r in ipairs(rows) do
+                local key = rowKey(r)
+                if key then own[key] = true end
+            end
+            local spec = overrideScope(specialization, nil, false) or {}
+            local keys = {}
+            for k, v in pairs(spec) do
+                if type(v) == "table" and not own[k] then table.insert(keys, k) end
+            end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                local v = spec[k]
+                local label = buttonLabel(v.Bind or k)
+                if v.State then label = label .. " (" .. v.State .. ")" end
+                entries[#entries + 1] = {first = label, firstWidth = AO_COL_BUTTON, seq = v.Sequence, onOverride = function()
+                    addInheritedRow(rows, {bind = v.Bind or k, state = v.State, seq = v.Sequence})
+                    markDirty()
+                    redraw()
+                end}
+            end
+            inheritedSection(editframe, inheritedContainer, entries)
+            inheritedContainer:DoLayout()
+        end
         -- Once now, once after the editor's suspended layout has really run.
         tightenRows()
         if C_Timer and C_Timer.After then C_Timer.After(0, tightenRows) end
     end
 
     loadRows()
+    showState = stateColumnWanted(rows, buttonNames)
 
     local classid = GSE.GetCurrentClassID()
     local classname, classfile = "", nil
     if GetClassInfo then classname, classfile = GetClassInfo(classid) end
-    local specname, specicon
-    if GetSpecializationInfo then
-        local _, n, _, i = GetSpecializationInfo(tonumber(specialization) or 1)
-        specname, specicon = n, i
-    end
+    local specname, specicon = specLabelFor(specialization, classname)
     local classColour = GSEOptions.KEYWORD
     if classfile and C_ClassColor and C_ClassColor.GetClassColor then
         local colour = C_ClassColor.GetClassColor(classfile)
@@ -1652,6 +2138,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     rowContainer:SetFullWidth(true)
     rowContainer:SetLayout("List")
     if rowContainer.SetListGap then rowContainer:SetListGap(2) end
+    inheritedContainer = UI:Create("SimpleGroup")
+    inheritedContainer:SetFullWidth(true)
+    inheritedContainer:SetLayout("List")
+    if inheritedContainer.SetListGap then inheritedContainer:SetListGap(2) end
 
     local headings = UI:Create("SimpleGroup")
     headings:SetFullWidth(true)
@@ -1669,28 +2159,38 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             or (KB_HEADING_COLOUR .. text .. Statics.StringReset))
         return h
     end
-    local blankAdd = UI:Create("Label"); blankAdd:SetWidth(KB_COL_ADD); blankAdd:SetText("")
-    local blankRemove = UI:Create("Label"); blankRemove:SetWidth(KB_COL_REMOVE); blankRemove:SetText("")
-    -- Same order as the row: button, sequence, state.  Recorded so the
-    -- tighten pass can slide each heading by what its column moved.
+    local function blank(width)
+        local b = UI:Create("Label")
+        b:SetWidth(width)
+        b:SetText("")
+        return b
+    end
+    local headingCells = {
+        add = function() return blank(KB_COL_ADD) end,
+        button = function() return heading(AO_COL_BUTTON, Statics.Icons.Button, L["Actionbar Buttons"]) end,
+        keys = function() return heading(AO_COL_KEYS, nil, L["Key"]) end,
+        sequence = function() return heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]) end,
+        state = function() return heading(AO_COL_STATE, nil, L["State"]) end,
+        remove = function() return blank(KB_COL_REMOVE) end,
+        mark = function() return blank(KB_COL_MARK) end,
+    }
+    -- Same order as the row.  Recorded so the tighten pass can slide each
+    -- heading by what its column moved.
     wipe(headingFrames)
-    for _, cell in ipairs({
-        blankAdd,
-        heading(AO_COL_BUTTON, Statics.Icons.Button, L["Actionbar Buttons"]),
-        heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]),
-        heading(AO_COL_STATE, nil, L["State"]),
-        blankRemove,
-    }) do
+    for _, name in ipairs(columnLayout()) do
+        local cell = headingCells[name]()
         headings:AddChild(cell)
         headingFrames[#headingFrames + 1] = cell.frame
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
     rightContainer:AddChild(centeredRow(headerLabel))
-    rightContainer:AddChild(loadoutRow)
+    -- As on the keybind panel: no loadout line without talent loadouts.
+    if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow) end
     if not loadout then rightContainer:AddChild(sharedProfileRow(editframe, specialization, classname)) end
     rightContainer:AddChild(headings)
     rightContainer:AddChild(rowContainer)
+    rightContainer:AddChild(inheritedContainer)
 
     -- Save pinned to the viewport bottom, centred on the footer's Resources
     -- button; identical mechanism to the keybind panel.
@@ -1720,6 +2220,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     pinSave()
     if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
     if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
+    refitWithPane(rightContainer, tightenRows)
     rightContainer:SetCallback("OnRelease", function() saveButton:Release() end)
 
     local bottomGutter = UI:Create("Spacer")
@@ -2026,11 +2527,9 @@ local function showKeybindChooser(editframe, rightContainer)
     -- talent loadouts -- and the gold ring on the one in use -- show without a click.
     local tree = editframe.treeContainer
     local status = tree and (tree.status or tree.localstatus)
-    if GetSpecializationInfo and status and status.groups and tree.RefreshTree then
-        local spec = tostring(defaultSpecIndex())
+    if status and status.groups and tree.RefreshTree then
         for _, area in ipairs({"KB", "AO"}) do
-            status.groups["KEYBINDINGS\001" .. area] = true
-            status.groups["KEYBINDINGS\001" .. area .. "\001" .. spec] = true
+            GSE.GUI.ExpandBindingsPath(editframe, GSE.GUI.BindingsPath(area, defaultSpecIndex()))
         end
         tree:RefreshTree()
     end
@@ -2048,18 +2547,13 @@ local function showKeybindChooser(editframe, rightContainer)
         end
     end
 
-    -- Where each tile lands: this character's spec, which opens on All Talent
-    -- Loadouts; without GetSpecializationInfo no spec nodes exist and the
-    -- area node itself is the panel.
-    local keybindPath = GetSpecializationInfo
-        and ("KEYBINDINGS\001KB\001" .. tostring(defaultSpecIndex()))
-        or "KEYBINDINGS\001KB"
+    -- Where each tile lands: this character's spec (every client has a node
+    -- per spec, GSE.BindingSpecs), which opens on All Talent Loadouts.
+    local keybindPath = GSE.GUI.BindingsPath("KB", defaultSpecIndex())
     -- The loadout the player is in, when there is one: each tile goes straight
     -- to it rather than to the spec, and lights its row in the tree on hover.
-    local activeLoadout = GetSpecializationInfo and activeLoadoutForSpec(defaultSpecIndex())
-    local overridePath = GetSpecializationInfo
-        and ("KEYBINDINGS\001AO\001" .. tostring(defaultSpecIndex()))
-        or "KEYBINDINGS\001AO"
+    local activeLoadout = activeLoadoutForSpec(defaultSpecIndex())
+    local overridePath = GSE.GUI.BindingsPath("AO", defaultSpecIndex())
     if activeLoadout then
         keybindPath = keybindPath .. "\001" .. tostring(activeLoadout)
         overridePath = overridePath .. "\001" .. tostring(activeLoadout)
@@ -2149,35 +2643,41 @@ local function showKeybindChooser(editframe, rightContainer)
         function() lightRow(keybindPath) end, function() restoreRow(keybindPath) end)
 
     -- Heights are only right once the widths are: once now for the case
-    -- where layout is live, and once more after the editor's suspended
-    -- layout actually runs.
+    -- where layout is live, then through refitWithPane after every show and
+    -- resize of the pane.
     fitParagraphs(rightContainer)
     mirrorHotspots(rightContainer)
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, function()
-            fitParagraphs(rightContainer)
-            alignRightColumn(topRow, overrideTopCell, keybindTopCell)
-            alignRightColumn(noteRow, overrideNoteCell, keybindNoteCell)
-            alignRightColumn(bulletRow, overrideBulletCell, keybindBulletCell)
-            mirrorHotspots(rightContainer)
-            -- A frame later again, once those heights have landed: measure the
-            -- block and grow the spacer so its middle sits on the pane's middle.
-            -- Straight from the geometry, and the spacer only ever grows, so a
-            -- block taller than the pane stays where it is.
-            C_Timer.After(0, function()
-                if centreSpacer.parent ~= rightContainer or not rightContainer.scrollframe then return end
-                local viewTop = rightContainer.scrollframe:GetTop()
-                local viewBottom = rightContainer.scrollframe:GetBottom()
-                local blockTop = topRow.frame:GetTop()
-                local blockBottom = bulletRow.frame:GetBottom()
-                if not (viewTop and viewBottom and blockTop and blockBottom) then return end
-                local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
-                centreSpacer:SetHeight(math.max(1, math.floor(1 + blockTop - wantTop)))
-                if rightContainer.DoLayout then rightContainer:DoLayout() end
-                mirrorHotspots(rightContainer)
-            end)
-        end)
+
+    local spacerHeight = 1
+    local function showingChooser()
+        return centreSpacer.parent == rightContainer
     end
+    -- Measure the block and size the spacer so its middle sits on the pane's
+    -- middle. A block taller than the pane stays at the top.
+    local function centreBlock()
+        if not showingChooser() or not rightContainer.scrollframe then return end
+        local viewTop = rightContainer.scrollframe:GetTop()
+        local viewBottom = rightContainer.scrollframe:GetBottom()
+        local blockTop = topRow.frame:GetTop()
+        local blockBottom = bulletRow.frame:GetBottom()
+        if not (viewTop and viewBottom and blockTop and blockBottom) then return end
+        local wantTop = (viewTop + viewBottom) / 2 + (blockTop - blockBottom) / 2
+        spacerHeight = math.max(1, math.floor(spacerHeight + blockTop - wantTop))
+        centreSpacer:SetHeight(spacerHeight)
+        if rightContainer.DoLayout then rightContainer:DoLayout() end
+        mirrorHotspots(rightContainer)
+    end
+    local function relayout()
+        if not showingChooser() then return end
+        fitParagraphs(rightContainer)
+        alignRightColumn(topRow, overrideTopCell, keybindTopCell)
+        alignRightColumn(noteRow, overrideNoteCell, keybindNoteCell)
+        alignRightColumn(bulletRow, overrideBulletCell, keybindBulletCell)
+        mirrorHotspots(rightContainer)
+        -- A frame later again, once those heights have landed.
+        if C_Timer and C_Timer.After then C_Timer.After(0, centreBlock) end
+    end
+    refitWithPane(rightContainer, relayout)()
 end
 
 -- ---------------------------------------------------------------------------

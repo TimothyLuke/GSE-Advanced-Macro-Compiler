@@ -121,11 +121,18 @@ function showCompareWindow(id, classid, newsequence)
   local headerGroup = UI:Create("SimpleGroup")
   headerGroup:SetFullWidth(true)
   headerGroup:SetLayout("Flow")
+  -- No side padding and a 10 gap: a relative width is of the row less 10, so
+  -- two halves plus the gap are exactly the row -- equal boxes, edge to edge.
+  if headerGroup.SetFlowPadding then headerGroup:SetFlowPadding(0, 0, 0, 0) end
+  if headerGroup.SetFlowGap then headerGroup:SetFlowGap(10) end
 
   local leftColumn = UI:Create("MultiLineEditBox")
   compareframe.OrigText = leftColumn
-  leftColumn:SetRelativeWidth(0.48)
-  leftColumn:SetNumLines(25)
+  leftColumn:SetRelativeWidth(0.5)
+  -- 23 lines: the stacked action block below, at its widgets' default
+  -- heights, fits under them above the window's bottom edge (25 clipped
+  -- Continue in game by ~16-20).
+  leftColumn:SetNumLines(23)
   leftColumn:DisableButton(true)
   leftColumn:SetLabel(L["Local Sequence"])
   IndentationLib.enable(leftColumn.editBox, Statics.IndentationColorTable, 4)
@@ -133,8 +140,8 @@ function showCompareWindow(id, classid, newsequence)
 
   local rightColumn = UI:Create("MultiLineEditBox")
   compareframe.NewText = rightColumn
-  rightColumn:SetRelativeWidth(0.48)
-  rightColumn:SetNumLines(25)
+  rightColumn:SetRelativeWidth(0.5)
+  rightColumn:SetNumLines(23)
   rightColumn:DisableButton(true)
   rightColumn:SetLabel(L["Updated Sequence"])
   IndentationLib.enable(rightColumn.editBox, Statics.IndentationColorTable, 4)
@@ -145,15 +152,35 @@ function showCompareWindow(id, classid, newsequence)
 
   compareframe:AddChild(headerGroup)
 
+  -- Stacked and centred on the window: the action label beside its dropdown,
+  -- then the new name (label above its box), then Continue.
   local actionButtonGroup = UI:Create("SimpleGroup")
-  actionButtonGroup:SetWidth(602)
-  actionButtonGroup:SetLayout("Flow")
-  actionButtonGroup:SetHeight(15)
+  actionButtonGroup:SetFullWidth(true)
+  actionButtonGroup:SetLayout("List")
+  if actionButtonGroup.SetListPadding then actionButtonGroup:SetListPadding(0, 0, 0, 0) end
+  if actionButtonGroup.SetListGap then actionButtonGroup:SetListGap(4) end
+  local function centredLine()
+    local line = UI:Create("SimpleGroup")
+    if line.SetFlowVAlign then line:SetFlowVAlign("CENTER") end
+    line:SetFullWidth(true)
+    line:SetLayout("Flow")
+    if line.SetFlowPadding then line:SetFlowPadding(0, 0, 0, 0) end
+    if line.SetFlowGap then line:SetFlowGap(10) end
+    if line.SetFlowHAlign then line:SetFlowHAlign("CENTER") end
+    actionButtonGroup:AddChild(line)
+    return line
+  end
+  local topGap = UI:Create("Spacer")
+  topGap:SetHeight(8)
+  actionButtonGroup:AddChild(topGap)
+  local actionLine, nameLine, buttonLine = centredLine(), centredLine(), centredLine()
 
   local actionLabel = UI:Create("Label")
-  actionLabel:SetText(L["Choose import action:"] .. "   ")
+  actionLabel:SetText(L["Choose import action:"])
+  if actionLabel.label then actionLabel:SetWidth(math.ceil(actionLabel.label:GetStringWidth()) + 4) end
+  if actionLabel.SetJustifyV then actionLabel:SetJustifyV("MIDDLE") end
 
-  actionButtonGroup:AddChild(actionLabel)
+  actionLine:AddChild(actionLabel)
 
   local actionChoiceRadio = UI:Create("Dropdown")
   actionChoiceRadio:SetList(
@@ -164,9 +191,11 @@ function showCompareWindow(id, classid, newsequence)
       ["RENAME"] = L["Rename New Sequence"]
     }
   )
+  -- Compact: no room kept above the box for a label it does not have.
+  if actionChoiceRadio.SetDropdownStyle then actionChoiceRadio:SetDropdownStyle(true) end
   actionChoiceRadio:SetValue(GSEOptions.DefaultImportAction)
 
-  actionButtonGroup:AddChild(actionChoiceRadio)
+  actionLine:AddChild(actionChoiceRadio)
 
   local nameeditbox = UI:Create("EditBox")
 
@@ -196,7 +225,7 @@ function showCompareWindow(id, classid, newsequence)
   nameeditbox:DisableButton(true)
   nameeditbox:SetText(compareframe.sequenceName)
 
-  actionButtonGroup:AddChild(nameeditbox)
+  nameLine:AddChild(nameeditbox)
 
   local actionbutton = UI:Create("Button")
   actionbutton:SetText(L["Continue"])
@@ -221,7 +250,7 @@ function showCompareWindow(id, classid, newsequence)
     end
   )
 
-  actionButtonGroup:AddChild(actionbutton)
+  buttonLine:AddChild(actionbutton)
   compareframe:AddChild(actionButtonGroup)
 
   compareframe.NewSequence = newsequence

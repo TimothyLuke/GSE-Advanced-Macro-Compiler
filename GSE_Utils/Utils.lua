@@ -2175,8 +2175,8 @@ function GSE:GSSlash(input)
             -- This character's binds only: the shared profiles belong to every
             -- character of the class, so it leaves them, with none of its own.
             GSE_C.ProfileOptOut = {}
-            for i = 1, math.max(1, (GetNumSpecializations and GetNumSpecializations()) or 1) do
-                GSE_C.ProfileOptOut[tostring(i)] = true
+            for _, spec in ipairs(GSE.BindingSpecs()) do
+                GSE_C.ProfileOptOut[spec.key] = true
             end
             GSE.ReloadOverrides()
             if GSE.ReloadKeyBindings then GSE.ReloadKeyBindings() end
@@ -2275,7 +2275,7 @@ function GSE:GSSlash(input)
         local spec = tostring(params[2])
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
-        if not GSE.KeybindingsEnabled() then
+        if GSE.IsForever then
             GSE.Print(L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."])
         elseif spec and sequence and physicalkey then
             -- Into the binds in force for that spec: the shared profile's, or
@@ -2525,53 +2525,59 @@ do
         table.sort(names, function(a, b) return a.name < b.name end)
 
         local buttonName = self:GetName()
-        -- One list, two ways to draw it. kind: "title", "divider", "button".
-        local rows = {}
-        if existingSequence then
-            -- gse-button holds the sequence's id; show its label.
-            rows[#rows + 1] = { kind = "title", text = L["GSE"] .. ": "
-                .. (GSE.SequenceName(existingSequence) or existingSequence) }
-            rows[#rows + 1] = { kind = "button", text = L["Clear Override"], onClick = function()
-                GSE.RemoveActionBarOverride(buttonName)
-            end }
-            if #names > 0 then
-                rows[#rows + 1] = { kind = "divider" }
-                rows[#rows + 1] = { kind = "title", text = L["Change Sequence"] }
-            end
-        else
-            rows[#rows + 1] = { kind = "title", text = L["Assign GSE Sequence"] }
-        end
-        for _, entry in ipairs(names) do
-            local iconText = classIconText
-            local specID = entry.specID
-            if specID and specID >= 15 then
-                local _, _, _, specIconID = GetSpecializationInfoByID(specID)
-                if specIconID then
-                    iconText = "|T" .. specIconID .. ":16:16|t "
+        -- Binds sit in two layers on Retail: the spec's, for every talent
+        -- loadout, and the active loadout's on top. Say which one this button
+        -- shows, and let a change go to either.
+        local loadoutName = GSE.ActiveBindingLoadoutName and GSE.ActiveBindingLoadoutName()
+        local layer = existingSequence and GSE.OverrideLayerFor and GSE.OverrideLayerFor(buttonName)
+
+        local function addSequenceButtons(parent, toLayer)
+            for _, entry in ipairs(names) do
+                local iconText = classIconText
+                local specID = entry.specID
+                if specID and specID >= 15 then
+                    local _, _, _, specIconID = GetSpecializationInfoByID(specID)
+                    if specIconID then
+                        iconText = "|T" .. specIconID .. ":16:16|t "
+                    end
+                end
+                local entryId = entry.id
+                if entry.disabled then
+                    local element = parent:CreateButton("|cFF808080" .. iconText .. entry.name .. "|r", function() end)
+                    element:SetTooltip(function(tooltip)
+                        GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
+                    end)
+                else
+                    parent:CreateButton(iconText .. entry.name,
+                        function() GSE.CreateActionBarOverride(buttonName, entryId, toLayer) end)
                 end
             end
-            local entryId = entry.id
-            rows[#rows + 1] = { kind = "button", text = iconText .. entry.name, disabled = entry.disabled,
-                onClick = function() GSE.CreateActionBarOverride(buttonName, entryId) end }
         end
 
         -- Through GSE.OpenContextMenu: Blizzard's menu cannot be opened from an
         -- addon in Forever's gamepad mode (see GSE/API/ContextMenu.lua).
         GSE.OpenContextMenu(self, function(ownerRegion, rootDescription)
-            for _, row in ipairs(rows) do
-                if row.kind == "title" then
-                    rootDescription:CreateTitle(row.text)
-                elseif row.kind == "divider" then
-                    rootDescription:CreateDivider()
-                elseif row.disabled then
-                    local element = rootDescription:CreateButton("|cFF808080" .. row.text .. "|r", function() end)
-                    element:SetTooltip(function(tooltip, elementDescription)
-                        GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
-                    end)
-                else
-                    rootDescription:CreateButton(row.text, row.onClick)
+            if existingSequence then
+                -- gse-button holds the sequence's id; show its label.
+                rootDescription:CreateTitle(L["GSE"] .. ": " .. (GSE.SequenceName(existingSequence) or existingSequence))
+                if layer == "loadout" then
+                    rootDescription:CreateTitle(string.format(L["From talent loadout %s"], loadoutName or ""))
                 end
+                rootDescription:CreateButton(L["Clear Override"], function()
+                    GSE.RemoveActionBarOverride(buttonName)
+                end)
+                if #names == 0 then return end
+                rootDescription:CreateDivider()
+                rootDescription:CreateTitle(L["Change Sequence"])
+            else
+                rootDescription:CreateTitle(L["Assign GSE Sequence"])
             end
+            if not loadoutName then
+                addSequenceButtons(rootDescription, "spec")
+                return
+            end
+            addSequenceButtons(rootDescription:CreateButton(L["All Talent Loadouts"]), "spec")
+            addSequenceButtons(rootDescription:CreateButton(string.format(L["%s only"], loadoutName)), "loadout")
         end)
     end
 

@@ -1,19 +1,26 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
-L["Enable Button Binding Popup"] = true
+L["Enable Popup"] = true
 L["GSE Sequence"] = true
-L["Show Button Binding Watermark"] = true
+L["Show Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
-L["Show Button Binding Label"] = true
+L["Show Label"] = true
 L["Show the sequence name as a text label on actionbar override buttons."] = true
-L["Keep Button Binding Icons in Full Colour"] = true
+L["Force Icon Coloring"] = true
+L["Sort %s"] = true
 L["Copy this link with Ctrl+C:"] = true
 L["Click to copy this link"] = true
 L["Sequences cannot be put on action buttons in combat."] = true
 L["Only a saved sequence for this character's class can be put on an action button."] = true
 L["That action button already holds something. Clear it first, then drop the sequence on it."] = true
 L["Put on an Action Button"] = true
+L["DRAG ME!"] = true
+L["Notes - Help"] = true
+L["Website or forum URL where a player can get more information or ask questions about this variable."] = true
+L["Website or forum URL where a player can get more information or ask questions about this macro."] = true
+L["Tick Manage Macro with GSE on its Configuration page to give this macro notes."] = true
+L["A sequence shows the icon of its first step."] = true
 L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
 L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
@@ -733,6 +740,16 @@ L["Insert Test Case"] = true
 L["Talent Loadout"] = true
 L["%s is bound more than once.  Change or remove one before saving."] = true
 L["All Talent Loadouts"] = true
+L["Changed for talent loadout %s only."] = true
+L["From talent loadout %s"] = true
+L["%s only"] = true
+L["Replaced by a talent loadout"] = true
+L["While %s is the active talent loadout, its own binding is used instead of this one."] = true
+L["also live in this loadout"] = true
+L["Override"] = true
+L["Copy this into the loadout's own rows, to change it for this loadout only."] = true
+L["Key"] = true
+L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."] = true
 L["Replace an action bar button with a sequence."] = true
 L["Bind a key straight to a sequence."] = true
 L["State"] = true
@@ -775,6 +792,8 @@ L["GSE: Middle Click to open the Keybinding Interface"] = true
 -- #1621
 L["Select Icon"] = true
 L["Choose any icon..."] = true
+L["Choose an Icon"] = true
+L["Search by name or ID"] = true
 
 -- #1683
 L["There is an error in the sequence that needs to be corrected before it can be saved."] = true

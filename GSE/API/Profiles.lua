@@ -12,9 +12,9 @@ local _, GSE = ...
 --   }
 --
 -- specID, not the spec index a character's binds were kept by: it is the same
--- on every character of the class. Before WoD (GameMode < 7) the Mod keeps one
--- set of binds per character, not per spec, so a profile there is per class
--- (specID = classID).
+-- on every character of the class. Where binds are split by spec group rather
+-- than specialisation, Primary's profile is the class's (specID = classID, or
+-- the one class-level specialisation) and Secondary's its own (SpecIDForKey).
 --
 -- What stays on the character (GSE_C): anything keyed by a talent loadout --
 -- its config id belongs to that character -- and, per spec, whether it has
@@ -33,24 +33,118 @@ local SETTINGS = {
 }
 GSE.ProfileSettingNames = SETTINGS
 
---- The current spec's key in a character's binds: the spec index as a string,
---- "1" before WoD. The one definition Events' GetSpec defers to.
+-- What a character's binds are split by -- its "specs". Decided by what the
+-- client can do, not its version:
+--   * A client with dual spec: the active spec group, Primary or Secondary.
+--     TBC Anniversary, Wrath through WoD, Era, MoP Classic and Forever. They
+--     are what the player switches between, and the player knows what each
+--     one is. Primary from the start, Secondary once the character has it:
+--     the key must not change when dual spec is learned, or Primary's binds
+--     would be left behind under a specialisation.
+--   * Otherwise several specialisations per class (Retail): the
+--     specialisation, by index.
+--   * Otherwise one, "1".
+-- A talent loadout's binds sit on top of its spec's (Retail's loadouts).
+--
+-- Dual spec is the client being able to switch spec groups:
+-- C_SpecializationInfo.SetActiveSpecGroup, or the SetActiveTalentGroup global
+-- older clients had (Blizzard's deprecation shims alias one to the other).
+-- Retail has GetActiveSpecGroup and GetNumSpecGroups still, but no setter.
+local function specInfoApi()
+    return C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo or GetSpecializationInfo
+end
+
+local function hasSpecGroups()
+    return (C_SpecializationInfo and C_SpecializationInfo.SetActiveSpecGroup or SetActiveTalentGroup) ~= nil
+end
+
+--- Whether this client has talent loadouts -- Retail. A dual-spec client has
+--- none, whatever C_ClassTalents it carries (Forever's lists some).
+function GSE.HasTalentLoadouts()
+    return not hasSpecGroups() and C_ClassTalents ~= nil and C_ClassTalents.GetLastSelectedSavedConfigID ~= nil
+end
+
+local function specGroupCount()
+    local api = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups or GetNumSpecGroups or GetNumTalentGroups
+    return tonumber(api and api()) or 1
+end
+
+local function activeSpecGroup()
+    local api = C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup or GetActiveSpecGroup
+        or GetActiveTalentGroup
+    return tonumber(api and api()) or 1
+end
+
+local function specialisationCount()
+    return tonumber(GetNumSpecializations and GetNumSpecializations()) or 0
+end
+
+--- The current spec's key in a character's binds (see above). The one
+--- definition Events' GetSpec defers to.
 function GSE.CurrentSpecKey()
-    if GSE.GameMode < 7 then return "1" end
-    local getSpec = GSE.GameMode >= 12 and C_SpecializationInfo and C_SpecializationInfo.GetSpecialization
-        or GetSpecialization
-    return tostring((getSpec and getSpec()) or 1)
+    if hasSpecGroups() then return tostring(activeSpecGroup()) end
+    if specialisationCount() > 1 then
+        local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
+        return tostring((getSpec and getSpec()) or 1)
+    end
+    return "1"
+end
+
+--- The specs a character's binds are kept by, in order, for the Bindings tree:
+--- { { key, label, icon }, ... }.
+function GSE.BindingSpecs()
+    local specs = {}
+    local info = specInfoApi()
+    local classID = GSE.GetCurrentClassID()
+    local classIcon = classID and GSE.GetClassIcon and GSE.GetClassIcon(classID)
+    if hasSpecGroups() then
+        local groups = math.max(1, specGroupCount())
+        local names = { _G.TALENT_SPEC_PRIMARY or "Primary", _G.TALENT_SPEC_SECONDARY or "Secondary" }
+        for g = 1, groups do
+            -- The group's specialisation's icon where it has one (Cata to WoD).
+            local index = GetSpecialization and GetSpecialization(false, false, g)
+            local icon = index and info and select(4, info(index))
+            specs[#specs + 1] = { key = tostring(g), label = names[g] or tostring(g), icon = icon or classIcon }
+        end
+        return specs
+    end
+    if specialisationCount() > 1 and info then
+        for i = 1, specialisationCount() do
+            local _, name, _, icon = info(i)
+            specs[#specs + 1] = { key = tostring(i), label = name, icon = icon }
+        end
+        return specs
+    end
+    local className = classID and GetClassInfo and GetClassInfo(classID)
+    specs[1] = { key = "1", label = className or "", icon = classIcon }
+    return specs
 end
 
 --- The specID a spec key names for the current character, or nil when WoW has
---- not said yet (early in a login).
+--- not said yet (early in a login). A shared profile is kept by it.
+---
+--- By spec group, Primary keeps the id the class's profile always had, so
+--- nothing moves: the class where it has several specialisations or none, the
+--- one class-level specialisation where that is all there is (Forever).
+--- Another group gets one of its own, and starts empty.
 function GSE.SpecIDForKey(specKey)
-    if GSE.GameMode < 7 then return GSE.GetCurrentClassID() end
-    local index = tonumber(specKey)
-    local info = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo or GetSpecializationInfo
-    local specID = index and info and info(index)
-    if type(specID) == "number" and specID > 0 then return specID end
-    return nil
+    local info = specInfoApi()
+    if not hasSpecGroups() and specialisationCount() > 1 then
+        local index = tonumber(specKey)
+        local specID = index and info and info(index)
+        if type(specID) == "number" and specID > 0 then return specID end
+        return nil
+    end
+    local base
+    if specialisationCount() == 1 then
+        local specID = info and info(1)
+        base = (type(specID) == "number" and specID > 0) and specID or nil
+    else
+        base = GSE.GetCurrentClassID()
+    end
+    if not base then return nil end
+    local group = tonumber(specKey) or 1
+    return group <= 1 and base or (tostring(base) .. ":" .. group)
 end
 
 local function profiles()
@@ -139,6 +233,75 @@ function GSE.SpecOverrides(specKey, create)
         return p.ActionBarBinds
     end
     return charTable({ "ActionBarBinds", "Specialisations", specKey }, create)
+end
+
+--- The saved talent loadout whose binds sit on top of the current spec's, as
+--- the loadout tables key it, or nil -- no saved loadout, which is every
+--- client but Retail.
+function GSE.ActiveBindingLoadout()
+    if not GSE.HasTalentLoadouts() then return nil end
+    local key = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
+    if key == nil or key == "nil" then return nil end
+    return tostring(key)
+end
+
+--- A talent loadout's action-bar overrides for a spec, always the character's
+--- own: { [buttonKey] = { Bind, State, Sequence } }.
+function GSE.SpecLoadoutOverrides(specKey, loadout, create)
+    if not loadout then return nil end
+    return charTable({ "ActionBarBinds", "LoadOuts", tostring(specKey or GSE.CurrentSpecKey()), tostring(loadout) },
+        create)
+end
+
+-- The keys in an override table that put something on buttonName (a key is
+-- the button's name, or name-state for a state).
+local function overrideKeysFor(t, buttonName)
+    local keys = {}
+    for k, v in pairs(t or {}) do
+        if k == buttonName or (type(v) == "table" and v.Bind == buttonName) then keys[#keys + 1] = k end
+    end
+    return keys
+end
+
+--- Which layer puts an override on buttonName for the current spec:
+--- "loadout" (the active talent loadout's, applied last so it wins), "spec",
+--- or nil.
+function GSE.OverrideLayerFor(buttonName)
+    local spec = GSE.CurrentSpecKey()
+    if #overrideKeysFor(GSE.SpecLoadoutOverrides(spec, GSE.ActiveBindingLoadout(), false), buttonName) > 0 then
+        return "loadout"
+    end
+    if #overrideKeysFor(GSE.SpecOverrides(spec, false), buttonName) > 0 then return "spec" end
+    return nil
+end
+
+--- Put a sequence on buttonName for the current spec. layer "loadout" keeps it
+--- to the active talent loadout; anything else is the spec's, for every
+--- loadout -- and then the active loadout's own entry for the button goes, or
+--- it would go on hiding the change.
+function GSE.SetOverrideData(buttonName, sequenceId, layer)
+    local spec, loadout = GSE.CurrentSpecKey(), GSE.ActiveBindingLoadout()
+    local bind = { Bind = buttonName, Sequence = sequenceId }
+    if layer == "loadout" and loadout then
+        GSE.SpecLoadoutOverrides(spec, loadout, true)[buttonName] = bind
+        return "loadout"
+    end
+    GSE.SpecOverrides(spec, true)[buttonName] = bind
+    local own = GSE.SpecLoadoutOverrides(spec, loadout, false)
+    for _, k in ipairs(overrideKeysFor(own, buttonName)) do own[k] = nil end
+    return "spec"
+end
+
+--- Take buttonName's override off the layer that applies it, and only that
+--- one: clearing a loadout's lets the spec's show again, and clearing the
+--- spec's leaves every loadout's alone. Returns the layer cleared.
+function GSE.ClearOverrideData(buttonName)
+    local layer = GSE.OverrideLayerFor(buttonName)
+    local spec = GSE.CurrentSpecKey()
+    local t = layer == "loadout" and GSE.SpecLoadoutOverrides(spec, GSE.ActiveBindingLoadout(), false)
+        or layer == "spec" and GSE.SpecOverrides(spec, false)
+    for _, k in ipairs(overrideKeysFor(t, buttonName)) do t[k] = nil end
+    return layer
 end
 
 local function copy(t)
