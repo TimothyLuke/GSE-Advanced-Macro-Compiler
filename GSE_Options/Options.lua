@@ -3026,8 +3026,9 @@ function GSE:CreateConfigPanels()
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
         end
-        -- Button Binding popup (Retail only - Classic requires a different menu API)
-        if GSE.GameMode > 10 then
+        -- Button Binding popup: the right-click menu runs on every client
+        -- (GSE.OpenContextMenu), so its switch is on every client too.
+        do
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end

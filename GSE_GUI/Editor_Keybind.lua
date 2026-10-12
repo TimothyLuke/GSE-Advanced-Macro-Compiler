@@ -1493,39 +1493,52 @@ local BAR_COMMANDS = {
     MultiBar5Button = "MULTIACTIONBAR5BUTTON", MultiBar6Button = "MULTIACTIONBAR6BUTTON",
     MultiBar7Button = "MULTIACTIONBAR7BUTTON",
 }
+-- Every key bound to a binding action.  Some actions live in a binding
+-- context of their own -- Forever's crossbar modifiers are in
+-- GamepadModeInGameCore -- and GetBindingKey finds those only when given it,
+-- the way Blizzard's Key Bindings screen asks (Blizzard_Keybindings.lua).
+local function bindingKeys(action)
+    local context = C_KeyBindings and C_KeyBindings.GetBindingContextForAction
+        and C_KeyBindings.GetBindingContextForAction(action)
+    if context then return GetBindingKey(action, nil, context) end
+    return GetBindingKey(action)
+end
+
 -- Forever's gamepad bars (Blizzard_GamepadActionBars) have no key binding
 -- per button.  There are four -- TopBar / LeftBar / RightBar / BottomBar, each
 -- inside its own anchor frame, so the name runs PageUnit<Side>CenteredAnchor
--- <Side>BarActionButton<n> -- each of eight fixed positions: ActionButton1-4 the d-pad
--- (left, up, right, down), 5-8 the face buttons (left, top, right, bottom).
--- Which bar is live is which crossbar modifier is held (PageUnit.lua): none,
--- the left (GAMEPADLEFTMOD), the right (GAMEPADRIGHTMOD), or both.  The face
--- buttons as WoW names them (SharedConstants.lua): PAD1 bottom (A / Cross),
--- PAD2 right (B / Circle), PAD3 left (X / Square), PAD4 top (Y / Triangle).
-local GAMEPAD_SLOT_KEYS = {"PADDLEFT", "PADDUP", "PADDRIGHT", "PADDDOWN", "PAD3", "PAD4", "PAD2", "PAD1"}
-local GAMEPAD_BAR_MODIFIERS = {
-    TopBar = {}, LeftBar = {"GAMEPADLEFTMOD"}, RightBar = {"GAMEPADRIGHTMOD"},
-    BottomBar = {"GAMEPADLEFTMOD", "GAMEPADRIGHTMOD"},
-}
--- "LT + RT + B" for a gamepad bar button, the modifiers read from their
--- bindings (as GamepadMode.IsBindingDown reads them); nil for any other
--- button, or when a modifier the bar needs is not bound -- it cannot be
--- reached then.
+-- <Side>BarActionButton<n>.  Blizzard draws what reaches one from fixed
+-- input keys, not from bindings: each button's glyph is its
+-- ButtonIcon.mappedButtonKey, and a bar's modifiers are the triggers held
+-- for it (ActionBarTemplates.xml: LeftIcon GAMEPAD_TRIGGER_LEFT, RightIcon
+-- GAMEPAD_TRIGGER_RIGHT, the bottom bar both).  The same keys through the
+-- same lookup the bar uses give the glyphs it shows, for whichever
+-- controller style is active.
+local function gamepadBarModifiers(bar)
+    if bar == "LeftBar" then return {GAMEPAD_TRIGGER_LEFT} end
+    if bar == "RightBar" then return {GAMEPAD_TRIGGER_RIGHT} end
+    if bar == "BottomBar" then return {GAMEPAD_TRIGGER_LEFT, GAMEPAD_TRIGGER_RIGHT} end
+    if bar == "TopBar" then return {} end
+end
+-- The glyphs for a gamepad bar button, as inline atlases; nil for any other
+-- button, or where the client cannot say.
 local function gamepadBarKeys(buttonName)
     if not string.find(buttonName, "PageUnit", 1, true) then return nil end
-    local bar, slot = string.match(buttonName, "(%u%l+Bar)ActionButton(%d)$")
-    local modifiers = bar and GAMEPAD_BAR_MODIFIERS[bar]
-    local pad = slot and GAMEPAD_SLOT_KEYS[tonumber(slot)]
-    if not (modifiers and pad and GetBindingKey) then return nil end
-    local keys = {}
-    for _, command in ipairs(modifiers) do
-        local key = GetBindingKey(command, 1)
-        if not key then return nil end
-        keys[#keys + 1] = key
+    local bar = string.match(buttonName, "(%u%l+Bar)ActionButton%d$")
+    local modifiers = bar and gamepadBarModifiers(bar)
+    local frame = _G[buttonName]
+    local key = type(frame) == "table" and frame.ButtonIcon and frame.ButtonIcon.mappedButtonKey
+    local util = InputIconTextureSetUtility
+    if not (modifiers and key and util and util.GetNormalActiveInputIconButtonTexture) then return nil end
+    local glyphs = {}
+    for _, input in ipairs(modifiers) do glyphs[#glyphs + 1] = input end
+    glyphs[#glyphs + 1] = key
+    for i, input in ipairs(glyphs) do
+        local ok, atlas = pcall(util.GetNormalActiveInputIconButtonTexture, input)
+        if not (ok and atlas) then return nil end
+        glyphs[i] = "|A:" .. atlas .. ":24:24|a"
     end
-    keys[#keys + 1] = pad
-    for i, key in ipairs(keys) do keys[i] = GetBindingText and GetBindingText(key) or key end
-    return table.concat(keys, " + ")
+    return table.concat(glyphs, " + ")
 end
 
 -- A controller button's name is a glyph, not text: Blizzard sets KEY_PAD1
@@ -1544,9 +1557,9 @@ local function buttonKeysText(buttonName, separator)
     if GetBindingKey then
         local prefix, num = string.match(buttonName, "^(.-)(%d+)$")
         local command = prefix and BAR_COMMANDS[prefix]
-        if command then keys = {GetBindingKey(command .. num)} end
-        if #keys == 0 then keys = {GetBindingKey("CLICK " .. buttonName .. ":LeftButton")} end
-        if #keys == 0 then keys = {GetBindingKey("CLICK " .. buttonName .. ":Keybind")} end
+        if command then keys = {bindingKeys(command .. num)} end
+        if #keys == 0 then keys = {bindingKeys("CLICK " .. buttonName .. ":LeftButton")} end
+        if #keys == 0 then keys = {bindingKeys("CLICK " .. buttonName .. ":Keybind")} end
     end
     if #keys == 0 then
         local gamepad = gamepadBarKeys(buttonName)
