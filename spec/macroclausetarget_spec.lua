@@ -79,6 +79,28 @@ describe(
       end
     )
 
+    -- The Select Icon menu's every-branch reader. Editor.lua cannot be loaded
+    -- here, so lift the function out of the shipped file (CRLF normalised, see
+    -- CLAUDE.md) and run it.
+    it(
+      "offers every conditional branch's spell in the icon menu, past the ! guard",
+      function()
+        local fh = assert(io.open("GSE_GUI/Editor.lua", "r"))
+        local src = fh:read("*a")
+        fh:close()
+        src = (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
+        local block = src:match("(local function getAllConditionalBranchSpells.-\n    if #candidates > 0 then return candidates end\nend)")
+        assert(block, "getAllConditionalBranchSpells not found in Editor.lua")
+        local compile = loadstring or load
+        local getAllConditionalBranchSpells = assert(compile(
+          "local GSE, Statics = ...\n" .. block .. "\nreturn getAllConditionalBranchSpells"))(GSE, GSE.Static)
+        local spells = getAllConditionalBranchSpells("/cast [mod:alt] !Arcane Shot; [@focus] Frostbolt")
+        assert.equals(2, #spells)
+        assert.equals("Arcane Shot", spells[1].name)
+        assert.equals("Frostbolt", spells[2].name)
+      end
+    )
+
     it(
       "moves past a castsequence line naming no known spell",
       function()
