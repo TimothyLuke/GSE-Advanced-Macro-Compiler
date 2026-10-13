@@ -43,17 +43,22 @@ function GSE.CreateToolTip(title, tip, GSEFrame)
   local tooltip = LibQTip:AcquireTooltip("GSE", 1, "CENTER")
 
   GSEFrame.tooltip = tooltip
-  tooltip:AddHeadingRow(GSEOptions.TitleColour .. title .. Statics.StringReset)
-  -- Wrap the text: a QTip cell is as wide as its text, so a long tip ran the
-  -- full width of the screen. The width is applied when the text is set, so
-  -- set it on the empty cell first.
-  local row = tooltip:AddRow()
-  local cell = row and row.GetCell and row:GetCell(1)
-  if cell and cell.SetMaxWidth and cell.SetText then
-    cell:SetMaxWidth(TOOLTIP_MAX_WIDTH)
-    cell:SetText(tip)
-  else
-    tooltip:AddRow(tip)
+  -- A tip that says it all has no title; a title that says it all, no tip.
+  if not GSE.isEmpty(title) then
+    tooltip:AddHeadingRow(GSEOptions.TitleColour .. title .. Statics.StringReset)
+  end
+  if not GSE.isEmpty(tip) then
+    -- Wrap the text: a QTip cell is as wide as its text, so a long tip ran the
+    -- full width of the screen. The width is applied when the text is set, so
+    -- set it on the empty cell first.
+    local row = tooltip:AddRow()
+    local cell = row and row.GetCell and row:GetCell(1)
+    if cell and cell.SetMaxWidth and cell.SetText then
+      cell:SetMaxWidth(TOOLTIP_MAX_WIDTH)
+      cell:SetText(tip)
+    else
+      tooltip:AddRow(tip)
+    end
   end
   AnchorTooltipToCursor(tooltip)
   tooltip:SetScript("OnUpdate", AnchorTooltipToCursor)
