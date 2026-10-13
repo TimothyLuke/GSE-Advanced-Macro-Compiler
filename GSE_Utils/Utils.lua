@@ -2637,10 +2637,26 @@ do
             end
         end
 
+        -- EllesmereUI builds no buttons at login for a bar that is hidden and
+        -- has no key bound (Bars 6-8 by default); it builds them when the bar
+        -- is first shown. Its bar frames (EABBar_<key>) always exist, so hook
+        -- the buttons again whenever one shows; gseRightClickHooked keeps a
+        -- button from being hooked twice.
         if _G["EABButton1"] then
-            for i = 1, 180 do
-                local btn = _G["EABButton" .. i]
-                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+            local function hookEABButtons()
+                for i = 1, 180 do
+                    local btn = _G["EABButton" .. i]
+                    if btn and not btn.gseRightClickHooked then
+                        btn.gseRightClickHooked = true
+                        btn:HookScript("OnClick", gseEmptyButtonHandler)
+                    end
+                end
+            end
+            hookEABButtons()
+            for _, key in ipairs({ "MainBar", "Bar2", "Bar3", "Bar4", "Bar5", "Bar6", "Bar7", "Bar8", "Bar9", "Bar10" }) do
+                local bar = _G["EABBar_" .. key]
+                -- The buttons are built in the same pass that shows the bar.
+                if bar then bar:HookScript("OnShow", function() C_Timer.After(0, hookEABButtons) end) end
             end
         end
 

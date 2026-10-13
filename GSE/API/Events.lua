@@ -982,13 +982,13 @@ local function overrideActionButton(savedBind, force)
                 -- and HookScript (non-secure) for OnEnter tooltip/type correction.
                 local isBlizzardButton =
                     string.sub(Button, 1, 12) == "ActionButton" or
-                    string.sub(Button, 1, 22) == "MultiBarBottomLeftButton" or
-                    string.sub(Button, 1, 23) == "MultiBarBottomRightButton" or
-                    string.sub(Button, 1, 13) == "MultiBar5Button" or
-                    string.sub(Button, 1, 13) == "MultiBar6Button" or
-                    string.sub(Button, 1, 13) == "MultiBar7Button" or
-                    string.sub(Button, 1, 18) == "MultiBarRightButton" or
-                    string.sub(Button, 1, 17) == "MultiBarLeftButton" or
+                    string.sub(Button, 1, 24) == "MultiBarBottomLeftButton" or
+                    string.sub(Button, 1, 25) == "MultiBarBottomRightButton" or
+                    string.sub(Button, 1, 15) == "MultiBar5Button" or
+                    string.sub(Button, 1, 15) == "MultiBar6Button" or
+                    string.sub(Button, 1, 15) == "MultiBar7Button" or
+                    string.sub(Button, 1, 19) == "MultiBarRightButton" or
+                    string.sub(Button, 1, 18) == "MultiBarLeftButton" or
                     -- WoW Forever's Gamepad action bars are Blizzard frames too.
                     string.sub(Button, 1, 7) == "Gamepad"
 
