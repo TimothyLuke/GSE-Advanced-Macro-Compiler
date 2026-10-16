@@ -21,6 +21,8 @@ L["Website or forum URL where a player can get more information or ask questions
 L["Website or forum URL where a player can get more information or ask questions about this macro."] = true
 L["Tick Manage Macro with GSE on its Configuration page to give this macro notes."] = true
 L["A sequence shows the icon of its first step."] = true
+L["Select Base Icon"] = true
+L["Right Click to choose No Combat Base Icon"] = true
 L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
 L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
@@ -749,7 +751,10 @@ L["also live in this loadout"] = true
 L["Override"] = true
 L["Copy this into the loadout's own rows, to change it for this loadout only."] = true
 L["Key"] = true
+L["Backup Key"] = true
 L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."] = true
+L["Click > Set Keys or ESC to Clear > Save!"] = true
+L["%s is bound to %s now; Save moves it to %s."] = true
 L["Replace an action bar button with a sequence."] = true
 L["Bind a key straight to a sequence."] = true
 L["State"] = true
@@ -782,6 +787,7 @@ L[" was imported."] = true
 -- #1617
 L["Button Bindings"] = true
 L["Actionbar Buttons"] = true
+L["Actionbar Button"] = true
 L["New Button Binding"] = true
 
 L["Missing Variable "] = true
