@@ -27,6 +27,9 @@ local GNOME = "Storage"
 --     -- which character macros each character holds (see "Characters")
 --
 --   GSEStore.alias[oldId] = newId      -- where a sequence moved (see "Sequences")
+--   GSEStore.mergedNames[classid][name] = id
+--                                      -- a legacy name folded into the sequence
+--                                      -- that shares its PlatformID (migrateLegacy)
 --
 -- id is the GSE.Tools PlatformID once an element has synced, and a
 -- "local-..." id until then (a PlatformID is 24 hex, so the two cannot
@@ -310,14 +313,29 @@ local function migrateLegacy(store)
     local mPid  = type(_G[LEGACY.macroPid]) == "table" and _G[LEGACY.macroPid] or {}
 
     if type(seqs) == "table" then
+        -- One GSE.Tools sequence could sit in the legacy tables twice, under
+        -- two names (#2160: a synced copy and the author's sealed copy, both
+        -- carrying the same PlatformID). The store keeps one envelope per
+        -- PlatformID, and filing the second used to overwrite the first's
+        -- name and body. The first filed is kept; the second's name is
+        -- recorded against it, so whatever was bound to that name follows it
+        -- (UpdateCharacterSequenceRefs).
+        local filed = {}   -- [PlatformID] = id filed in this pass
         for classid, names in pairs(seqs) do
             if type(names) == "table" then
                 for name, body in pairs(names) do
                     local meta = sequenceMeta(body)
                     local author = meta and meta.Author or ""
                     local pid = sPid[name .. "|" .. author] or (meta and meta.PlatformID)
-                    upsert(store, "sequence", classid, name,
-                        { Body = body, PlatformID = pid, Author = author })
+                    if pid and filed[pid] then
+                        if type(store.mergedNames) ~= "table" then store.mergedNames = {} end
+                        if type(store.mergedNames[classid]) ~= "table" then store.mergedNames[classid] = {} end
+                        store.mergedNames[classid][name] = filed[pid]
+                    else
+                        local id = upsert(store, "sequence", classid, name,
+                            { Body = body, PlatformID = pid, Author = author })
+                        if pid then filed[pid] = id end
+                    end
                 end
             end
         end
@@ -595,7 +613,8 @@ function GSE.UpdateCharacterSequenceRefs()
         if type(v) ~= "string" or v == "" then return v end
         local resolved = GSE.ResolveSequenceId(v)
         if GSE.SequenceEnvelope(resolved) then return resolved end
-        return GSE.FindSequenceId(v) or v      -- a name, from before ids
+        -- a name, from before ids: its sequence, or the one it was merged into
+        return GSE.FindSequenceId(v) or GSE.MergedSequenceId(v) or v
     end
     local function fixBinds(t)
         for key, v in pairs(t) do
@@ -652,6 +671,25 @@ end
 function GSE.SequenceName(id, classid)
     local env = GSE.SequenceEnvelope(id, classid)
     return env and env.Name or nil
+end
+
+--- The sequence a legacy name was merged into when the store was first
+--- built (see migrateLegacy), for the current class, then global. Only for
+--- turning a binding that still holds a name into an id.
+function GSE.MergedSequenceId(name)
+    ensureStore()
+    local merged = GSEStore.mergedNames
+    if type(merged) ~= "table" or type(name) ~= "string" then return nil end
+    local cur = GSE.GetCurrentClassID and GSE.GetCurrentClassID()
+    local order = { 0 }
+    if cur and cur ~= 0 then order = { cur, 0 } end
+    for _, c in ipairs(order) do
+        local id = type(merged[c]) == "table" and merged[c][name]
+        if id then
+            id = GSE.ResolveSequenceId(id)
+            if GSE.SequenceEnvelope(id) then return id end
+        end
+    end
 end
 
 --- The id of a sequence by its label, and its class. With a classid, that

@@ -109,6 +109,40 @@ describe("GSEStore", function()
       assert.is_not_nil(envs("sequence", 2)["sidecar00000000000000001"])
     end)
 
+    -- #2160: one GSE.Tools sequence twice in the legacy tables, under two names.
+    local SEQ_ONE = "SEQ|SheHulks_ARMS_-_1_Button|Tim@Realm|pidDup0000000000000000aa"
+    local SEQ_TWO = "SEQ|SheHulks ARMS AIO|Tim@Realm|pidDup0000000000000000aa"
+
+    it("keeps one sequence intact when two legacy names share a PlatformID", function()
+      firstRun({ GSESequences = { [1] = { ["SheHulks_ARMS_-_1_Button"] = SEQ_ONE,
+                                          ["SheHulks ARMS AIO"] = SEQ_TWO } } })
+      local e = envs("sequence", 1)
+      assert.equals(1, count(e), "one envelope per PlatformID")
+      local env = e["pidDup0000000000000000aa"]
+      assert.is_not_nil(env)
+      -- whichever was filed first, its name and body still belong together
+      local expected = env.Name == "SheHulks ARMS AIO" and SEQ_TWO or SEQ_ONE
+      assert.equals(expected, env.Body, "the survivor's body was not overwritten by the other's")
+      local other = env.Name == "SheHulks ARMS AIO" and "SheHulks_ARMS_-_1_Button" or "SheHulks ARMS AIO"
+      assert.equals("pidDup0000000000000000aa", GSEStore.mergedNames[1][other],
+        "the other name is recorded against it")
+    end)
+
+    it("moves a binding on the merged name to the sequence it was merged into", function()
+      firstRun({ GSESequences = { [1] = { ["SheHulks_ARMS_-_1_Button"] = SEQ_ONE,
+                                          ["SheHulks ARMS AIO"] = SEQ_TWO } } })
+      loginAs("Player-1-00000001", 1)
+      local survivor = GSEStore.sequence[1]["pidDup0000000000000000aa"].Name
+      local merged = survivor == "SheHulks ARMS AIO" and "SheHulks_ARMS_-_1_Button" or "SheHulks ARMS AIO"
+      _G.GSE_C = { KeyBindings = { ["71"] = { ["F1"] = merged, ["F2"] = survivor, ["F3"] = "Nothing" } } }
+      GSE.UpdateCharacterSequenceRefs()
+      local b = GSE_C.KeyBindings["71"]
+      assert.equals("pidDup0000000000000000aa", b["F1"], "the merged name binds the survivor")
+      assert.equals("pidDup0000000000000000aa", b["F2"])
+      assert.equals("Nothing", b["F3"], "a name that never existed is left alone")
+      _G.GSE_C = nil
+    end)
+
     it("gives an unsynced sequence a local id", function()
       firstRun({ GSESequences = { [2] = { Beta = "SEQ|Beta|Tim@Realm|" } } })
       assert.is_true(isLocal(onlyId(envs("sequence", 2))))
