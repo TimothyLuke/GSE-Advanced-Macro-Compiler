@@ -929,7 +929,22 @@ local function overrideActionButton(savedBind, force)
             -- the type change). VEHICLE_OAC_LAB gates its type="click" restore
             -- on this mark so it never captures the bar addon's own custom
             -- states, and gse-lab-state-* stays untainted (see issue #1931).
+            -- Remember what each state held before GSE took it over, so clearing
+            -- the override puts every one back (LoadOverrides). Only the first
+            -- take-over is recorded: a state already carrying GSE's mark holds
+            -- GSE's own custom state, not the bar's.
+            local function rememberState(st)
+                local btn = _G[Button]
+                local key = tostring(st)
+                btn.gseLabOriginal = btn.gseLabOriginal or {}
+                if btn.gseLabOriginal[key] ~= nil then return end
+                if btn:GetAttribute("gse-lab-state-" .. key) then return end
+                local kind = type(stateTypes) == "table" and stateTypes[key] or nil
+                local action = type(stateActions) == "table" and stateActions[key] or nil
+                btn.gseLabOriginal[key] = kind and { kind = kind, action = action } or false
+            end
             local function applyGSEState(st)
+                rememberState(st)
                 SHBT:SetFrameRef("gseArmButton", _G[Button])
                 SHBT:Execute(
                     "local b = self:GetFrameRef('gseArmButton') " ..
@@ -1167,14 +1182,45 @@ local function LoadOverrides(force)
             setOverrideButtonForcedShown(k, false)
             -- revert all buttons
             if _G[k] and _G[k].SetState then
-                local state = "1"
-                --_G[Button]:GetAttribute("state"),
-                if string.sub(k, 1, 3) == "BT4" then
-                    state = "0"
-                elseif string.sub(k, 1, 4) == "CPB_" then
-                    state = ""
+                local btn = _G[k]
+                local original = btn.gseLabOriginal
+                btn.gseLabOriginal = nil
+                -- Every state GSE took over gets back what the bar had there --
+                -- an action on its page, the bar's own custom button
+                -- (Bartender4's vehicle exit), or nothing. Restoring only one
+                -- state left the override live on every other page, form and
+                -- stance.
+                local restore = {}
+                if original and next(original) then
+                    for st, was in pairs(original) do restore[#restore + 1] = { st, was } end
+                else
+                    local state = "1"
+                    if string.sub(k, 1, 3) == "BT4" then
+                        state = "0"
+                    elseif string.sub(k, 1, 4) == "CPB_" then
+                        state = ""
+                    end
+                    restore[1] = { state, { kind = "action", action = tonumber(string.match(k, "%d+$")) } }
                 end
-                _G[k]:SetState(state, "action", tonumber(string.match(k, "%d+$")))
+                -- Un-GSE the button FIRST. VEHICLE_OAC_LAB turns any custom
+                -- type on a marked GSE button into a click on the sequence, so
+                -- restoring a custom state (the vehicle exit) while still
+                -- marked would hand it straight back to GSE. The marks are
+                -- cleared where they were set: in the secure environment (#1931).
+                btn:SetAttribute("gse-button", nil)
+                SHBT:SetFrameRef("gseArmButton", btn)
+                local unmark = { "local b = self:GetFrameRef('gseArmButton') if not b then return end" }
+                for _, r in ipairs(restore) do
+                    unmark[#unmark + 1] = "b:SetAttribute('gse-lab-state-" .. tostring(r[1]) .. "', nil)"
+                end
+                SHBT:Execute(table.concat(unmark, " "))
+                for _, r in ipairs(restore) do
+                    if r[2] then
+                        btn:SetState(r[1], r[2].kind, r[2].action)
+                    else
+                        btn:SetState(r[1], "empty")
+                    end
+                end
                 removeGSEWatermark(k)
             else
                 _G[k]:SetAttribute("gse-button", nil)
@@ -1453,14 +1499,22 @@ end
 -- Every shown action button under frame. Hidden branches are skipped (a
 -- hidden button is no drop target): walking every frame in the game with
 -- EnumerateFrames froze a Retail UI with many addons for seconds.
+-- Each frame is visited under its own pcall: one frame that errors (a
+-- secret value in Midnight, an addon's odd frame) is skipped with whatever it
+-- holds. Under a single pcall around the whole walk it ended the walk, and
+-- every frame after it -- Bartender4's bars, created late -- was never a
+-- drop target, so a drop on them did nothing.
 local function collectOverrideTargets(frame, out)
     if isOverrideTarget(frame) then out[#out + 1] = frame end
-    local children = { frame:GetChildren() }
+    local ok, children = pcall(function() return { frame:GetChildren() } end)
+    if not ok then return end
     for i = 1, #children do
         local child = children[i]
-        if not (child.IsForbidden and child:IsForbidden()) and child:IsShown() then
-            collectOverrideTargets(child, out)
-        end
+        pcall(function()
+            if not (child.IsForbidden and child:IsForbidden()) and child:IsShown() then
+                collectOverrideTargets(child, out)
+            end
+        end)
     end
 end
 
