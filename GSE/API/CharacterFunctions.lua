@@ -384,7 +384,9 @@ function GSE.GetBindingLoadoutKey()
 end
 
 function GSE.GetSelectedLoadoutConfigID()
-    GSE.GetCurrentTalents()
+    -- Read only. GetCurrentTalents ran the talent frame's UpdateTreeInfo from
+    -- addon code, which left the frame's tree data tainted, so Blizzard's own
+    -- Share > Copy to Clipboard was then blocked as GSE's (ADDON_ACTION_FORBIDDEN).
     local currentSpecID = GSE.GetCurrentSpecID()
     local lastSelected =
         currentSpecID and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and
