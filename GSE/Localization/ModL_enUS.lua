@@ -223,12 +223,6 @@ L["No plugins are currently registered."] = true
 L["Reload All"] = true
 L["Restore"] = true
 L["Sequence '%s' was created with an older version of GSE (%s) - importing anyway as part of collection."] = true
-L["Compatible with this version of GSE"] = true
-L["Not compatible with this version of GSE (sequence version: %s)"] = true
-L["unknown"] = true
-L["Checksum valid"] = true
-L["Checksum invalid - sequence may have been modified"] = true
-L["No checksum"] = true
 
 L["Import"] = true
 L["Imported: %s"] = true

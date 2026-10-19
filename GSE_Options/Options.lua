@@ -2655,27 +2655,11 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 -- Per-sequence restore buttons (only available when the plugin passes its Sequences table)
                 if not GSE.isEmpty(v.Sequences) and v.SequenceNames then
                     for _, seqName in ipairs(v.SequenceNames) do
-                        local encodedSeq = v.Sequences[seqName]
-                        local status = GSE.GetPluginSequenceStatus(encodedSeq)
-
-                        local compatText
-                        if status.compatible then
-                            compatText = L["Compatible with this version of GSE"]
-                        else
-                            local verStr = status.GSEVersion and tostring(status.GSEVersion) or L["unknown"]
-                            compatText = string.format(L["Not compatible with this version of GSE (sequence version: %s)"], verStr)
-                        end
-
-                        local checksumText
-                        if status.checksum == "valid" then
-                            checksumText = L["Checksum valid"]
-                        elseif status.checksum == "invalid" then
-                            checksumText = L["Checksum invalid - sequence may have been modified"]
-                        else
-                            checksumText = L["No checksum"]
-                        end
-
-                        local seqDesc = compatText .. "\n" .. checksumText
+                        -- No compatibility or checksum line here: working them
+                        -- out decoded and signature-checked every sequence of
+                        -- every pack while the panel was built (about 0.5 s
+                        -- each), which ran past WoW's script time limit with
+                        -- many packs. Restore checks the sequence as it imports.
                         local capturedSeqName = seqName
                         layout:AddInitializer(CreateSettingsButtonInitializer(
                             capturedSeqName,
@@ -2698,7 +2682,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                                 GSE.ImportSerialisedSequence(seq, false)
                                 GSE.PerformReloadSequences()
                             end,
-                            seqDesc,
+                            nil,
                             false
                         ))
                     end
