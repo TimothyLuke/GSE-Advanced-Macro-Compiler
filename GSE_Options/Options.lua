@@ -2656,26 +2656,35 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                 if not GSE.isEmpty(v.Sequences) and v.SequenceNames then
                     for _, seqName in ipairs(v.SequenceNames) do
                         local encodedSeq = v.Sequences[seqName]
-                        local status = GSE.GetPluginSequenceStatus(encodedSeq)
+                        -- Worked out when the tooltip is first shown, not
+                        -- while the panel is built: checking every sequence of
+                        -- every pack up front ran past WoW's script time limit
+                        -- at login (#2163).
+                        local seqDesc
+                        local function describeSequence()
+                            if seqDesc then return seqDesc end
+                            local status = GSE.GetPluginSequenceStatus(encodedSeq)
 
-                        local compatText
-                        if status.compatible then
-                            compatText = L["Compatible with this version of GSE"]
-                        else
-                            local verStr = status.GSEVersion and tostring(status.GSEVersion) or L["unknown"]
-                            compatText = string.format(L["Not compatible with this version of GSE (sequence version: %s)"], verStr)
+                            local compatText
+                            if status.compatible then
+                                compatText = L["Compatible with this version of GSE"]
+                            else
+                                local verStr = status.GSEVersion and tostring(status.GSEVersion) or L["unknown"]
+                                compatText = string.format(L["Not compatible with this version of GSE (sequence version: %s)"], verStr)
+                            end
+
+                            local checksumText
+                            if status.checksum == "valid" then
+                                checksumText = L["Checksum valid"]
+                            elseif status.checksum == "invalid" then
+                                checksumText = L["Checksum invalid - sequence may have been modified"]
+                            else
+                                checksumText = L["No checksum"]
+                            end
+
+                            seqDesc = compatText .. "\n" .. checksumText
+                            return seqDesc
                         end
-
-                        local checksumText
-                        if status.checksum == "valid" then
-                            checksumText = L["Checksum valid"]
-                        elseif status.checksum == "invalid" then
-                            checksumText = L["Checksum invalid - sequence may have been modified"]
-                        else
-                            checksumText = L["No checksum"]
-                        end
-
-                        local seqDesc = compatText .. "\n" .. checksumText
                         local capturedSeqName = seqName
                         layout:AddInitializer(CreateSettingsButtonInitializer(
                             capturedSeqName,
@@ -2698,7 +2707,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
                                 GSE.ImportSerialisedSequence(seq, false)
                                 GSE.PerformReloadSequences()
                             end,
-                            seqDesc,
+                            describeSequence,
                             false
                         ))
                     end

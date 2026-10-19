@@ -58,24 +58,23 @@ end
 --   - JS arrays arrive as 1-indexed Lua tables after CBOR round-trip
 -- This ensures the canonical string computed here matches what the server signed.
 
+-- JSON.stringify's escapes: the short forms, then \u00XX for any other byte
+-- below 0x20. Everything else, UTF-8 included, goes through as it is.
+local json_escapes = {
+    ['"'] = '\\"', ["\\"] = "\\\\",
+    ["\b"] = "\\b", ["\t"] = "\\t", ["\n"] = "\\n", ["\f"] = "\\f", ["\r"] = "\\r",
+}
+for c = 0, 31 do
+    local ch = string.char(c)
+    if not json_escapes[ch] then json_escapes[ch] = string.format("\\u%04x", c) end
+end
+
 local function json_quote(s)
-    -- Produce a JSON-encoded string (with double-quote delimiters and escapes)
-    local out = {'"'}
-    for i = 1, #s do
-        local c = s:byte(i)
-        if c == 34 then out[#out+1] = '\\"'
-        elseif c == 92 then out[#out+1] = '\\\\'
-        elseif c == 8  then out[#out+1] = '\\b'
-        elseif c == 9  then out[#out+1] = '\\t'
-        elseif c == 10 then out[#out+1] = '\\n'
-        elseif c == 12 then out[#out+1] = '\\f'
-        elseif c == 13 then out[#out+1] = '\\r'
-        elseif c < 32  then out[#out+1] = string.format('\\u%04x', c)
-        else out[#out+1] = s:sub(i,i)
-        end
-    end
-    out[#out+1] = '"'
-    return table.concat(out)
+    -- Produce a JSON-encoded string (with double-quote delimiters and escapes).
+    -- One gsub rather than a loop over every character: a sequence's canonical
+    -- form is checked on import and for the plugin list, and the loop was a
+    -- noticeable share of that (#2163).
+    return '"' .. (s:gsub('[%z\1-\31"\\]', json_escapes)) .. '"'
 end
 
 local function json_number(n)

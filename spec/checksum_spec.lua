@@ -224,4 +224,50 @@ describe("Checksum API", function()
             assert.is_false(GSE.VerifySequenceChecksum(seq))
         end)
     end)
+
+    -- ── GSE_Ed25519Verify against RFC 8032 §7.1 ───────────────────────────────
+    describe("GSE_Ed25519Verify — RFC 8032 test vectors", function()
+        local function unhex(h)
+            return (h:gsub("..", function(c) return string.char(tonumber(c, 16)) end))
+        end
+        local vectors = {
+            { "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a", "",
+              "e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b" },
+            { "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c", "72",
+              "92a009a9f0d4cab8720e820b5f642540a2b27b5416503f8fb3762223ebdb69da085ac1e43e15996e458f3613d0f11d8c387b2eaeb4302aeeb00d291612bb0c00" },
+            { "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025", "af82",
+              "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a" },
+        }
+
+        it("accepts each vector", function()
+            for _, v in ipairs(vectors) do
+                assert.is_true(GSE_Ed25519Verify(unhex(v[1]), unhex(v[2]), unhex(v[3])))
+            end
+        end)
+
+        it("rejects a vector with any one bit of the message, R or S flipped", function()
+            local pub, msg, sig = unhex(vectors[3][1]), unhex(vectors[3][2]), unhex(vectors[3][3])
+            local function flip(s, i, b)
+                return s:sub(1, i - 1) .. string.char((s:byte(i) + b) % 256) .. s:sub(i + 1)
+            end
+            assert.is_false(GSE_Ed25519Verify(pub, flip(msg, 1, 1), sig))
+            assert.is_false(GSE_Ed25519Verify(pub, msg, flip(sig, 1, 1)))    -- R
+            assert.is_false(GSE_Ed25519Verify(pub, msg, flip(sig, 40, 4)))  -- S
+            -- the same signature under another vector's key
+            assert.is_false(GSE_Ed25519Verify(unhex(vectors[1][1]), msg, sig))
+        end)
+
+        it("rejects S >= l (a malleated signature)", function()
+            local pub, msg, sig = unhex(vectors[1][1]), unhex(vectors[1][2]), unhex(vectors[1][3])
+            -- S + l, little-endian byte add
+            local L = { 0xed,0xd3,0xf5,0x5c,0x1a,0x63,0x12,0x58,0xd6,0x9c,0xf7,0xa2,0xde,0xf9,0xde,0x14,
+                        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x10 }
+            local out, carry = {}, 0
+            for i = 1, 32 do
+                local v = sig:byte(32 + i) + L[i] + carry
+                out[i] = string.char(v % 256); carry = math.floor(v / 256)
+            end
+            assert.is_false(GSE_Ed25519Verify(pub, msg, sig:sub(1, 32) .. table.concat(out)))
+        end)
+    end)
 end)
