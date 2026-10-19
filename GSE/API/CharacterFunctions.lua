@@ -253,36 +253,6 @@ function GSE.CharacterMacroBucket(create)
     return macros[key]
 end
 
---- Returns the current Talent Selections as a string
-function GSE.GetCurrentTalents()
-    local talents
-
-    -- force load the addon
-    local addonName = "Blizzard_PlayerSpells"
-
-    xpcall(
-        function()
-            local loaded, reason = C_AddOns.LoadAddOn(addonName)
-
-            if not loaded then
-                talents = ""
-                --@debug@
-                GSE.PrintDebugMessage(reason, "TALENTS")
-                --@end-debug@
-            else
-                if PlayerSpellsFrame and PlayerSpellsFrame.TalentsFrame then
-                    PlayerSpellsFrame.TalentsFrame:UpdateTreeInfo()
-                    talents = PlayerSpellsFrame.TalentsFrame:GetLoadoutExportString()
-                end
-            end
-            return talents
-        end,
-        function()
-            return talents
-        end
-    )
-end
-
 --- Experimental attempt to load a WeakAuras string.
 function GSE.LoadWeakAura(str)
     if C_AddOns.IsAddOnLoaded("WeakAuras") then
@@ -384,7 +354,9 @@ function GSE.GetBindingLoadoutKey()
 end
 
 function GSE.GetSelectedLoadoutConfigID()
-    GSE.GetCurrentTalents()
+    -- Read only. Running the talent frame's UpdateTreeInfo from addon code
+    -- leaves its tree data tainted, and Blizzard's own Share > Copy to
+    -- Clipboard is then blocked as GSE's (ADDON_ACTION_FORBIDDEN, #2161).
     local currentSpecID = GSE.GetCurrentSpecID()
     local lastSelected =
         currentSpecID and C_ClassTalents and C_ClassTalents.GetLastSelectedSavedConfigID and
