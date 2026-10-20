@@ -287,7 +287,7 @@ function GSE.ClearCommonKeyBinds()
     -- used to write KeyBindings["Char-Realm"][spec] -- the nesting update
     -- 3201 removed -- while every reader looks at KeyBindings[spec].
     GSE_C["KeyBindings"] = {}
-    GSE_C["KeyBindings"][tostring(GetSpecialization())] = {}
+    GSE_C["KeyBindings"][GSE.CurrentSpecKey()] = {}
     -- Save for this character
     SaveBindings(2)
     GSE.Print("Common Keybinding combinations cleared for this character.")

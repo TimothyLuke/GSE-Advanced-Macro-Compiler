@@ -209,6 +209,29 @@ describe("Profiles", function()
       if not ok then error(err, 0) end
     end)
 
+    it("Era: a function the client carries but does not support is skipped", function()
+      -- Classic Era has SetActiveSpecGroup and the global GetNumSpecGroups,
+      -- but the latter raises "API unsupported"; GetNumTalentGroups answers.
+      local function unsupported() error("Script_GetNumSpecGroups: API unsupported in this version of World of Warcraft") end
+      _G.GetNumSpecializations = nil
+      _G.C_SpecializationInfo = {
+        SetActiveSpecGroup = function() end,
+        GetActiveSpecGroup = function() return 1 end,
+        GetSpecializationInfo = function() return 0 end,
+        GetSpecialization = unsupported,
+      }
+      _G.GetNumSpecGroups, _G.GetSpecialization = unsupported, unsupported
+      _G.GetNumTalentGroups = function() return 1 end
+      local ok, err = pcall(function()
+        assert.are.equal("1", GSE.CurrentSpecKey())
+        local specs = GSE.BindingSpecs()
+        assert.are.equal(1, #specs)
+        assert.are.equal("Primary", specs[1].label)
+      end)
+      _G.GetNumSpecGroups, _G.GetNumTalentGroups = nil, nil
+      if not ok then error(err, 0) end
+    end)
+
     it("dual spec not learned yet: Primary alone, on the key it keeps after", function()
       dualSpec(1, 1, 1)
       assert.are.equal("1", GSE.CurrentSpecKey())

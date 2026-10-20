@@ -64,15 +64,38 @@ function GSE.HasTalentLoadouts()
     return not hasSpecGroups() and C_ClassTalents ~= nil and C_ClassTalents.GetLastSelectedSavedConfigID ~= nil
 end
 
+-- Ask each of these in turn; the first the client answers is the answer.
+-- Having the function is not enough: Classic Era carries GetNumSpecGroups,
+-- and calling it raises "API unsupported in this version of World of
+-- Warcraft" -- its own talent frame counts groups with GetNumTalentGroups.
+local function firstAnswer(candidates, ...)
+    for i = 1, candidates.n do
+        local api = candidates[i]
+        if type(api) == "function" then
+            local ok, value = pcall(api, ...)
+            if ok then return value end
+        end
+    end
+    return nil
+end
+
+local function specApis(...)
+    return { n = select("#", ...), ... }
+end
+
 local function specGroupCount()
-    local api = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups or GetNumSpecGroups or GetNumTalentGroups
-    return tonumber(api and api()) or 1
+    local C = C_SpecializationInfo or {}
+    return tonumber(firstAnswer(specApis(C.GetNumSpecGroups, GetNumTalentGroups, GetNumSpecGroups))) or 1
 end
 
 local function activeSpecGroup()
-    local api = C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup or GetActiveSpecGroup
-        or GetActiveTalentGroup
-    return tonumber(api and api()) or 1
+    local C = C_SpecializationInfo or {}
+    return tonumber(firstAnswer(specApis(C.GetActiveSpecGroup, GetActiveSpecGroup, GetActiveTalentGroup))) or 1
+end
+
+local function specialisationIndex(...)
+    local C = C_SpecializationInfo or {}
+    return firstAnswer(specApis(C.GetSpecialization, GetSpecialization), ...)
 end
 
 local function specialisationCount()
@@ -84,8 +107,7 @@ end
 function GSE.CurrentSpecKey()
     if hasSpecGroups() then return tostring(activeSpecGroup()) end
     if specialisationCount() > 1 then
-        local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
-        return tostring((getSpec and getSpec()) or 1)
+        return tostring(specialisationIndex() or 1)
     end
     return "1"
 end
@@ -102,7 +124,7 @@ function GSE.BindingSpecs()
         local names = { _G.TALENT_SPEC_PRIMARY or "Primary", _G.TALENT_SPEC_SECONDARY or "Secondary" }
         for g = 1, groups do
             -- The group's specialisation's icon where it has one (Cata to WoD).
-            local index = GetSpecialization and GetSpecialization(false, false, g)
+            local index = specialisationIndex(false, false, g)
             local icon = index and info and select(4, info(index))
             specs[#specs + 1] = { key = tostring(g), label = names[g] or tostring(g), icon = icon or classIcon }
         end
