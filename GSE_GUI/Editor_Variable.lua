@@ -188,6 +188,10 @@ local function saveVariable(editframe, draft)
     -- MetaData.GSEVersion.
     variable.GSEVersion = GSE.VersionNumber
     variable.MetaData.Name = saveName
+    -- The game it was written for, as a sequence's Save stamps it: gse.tools
+    -- files a record under its expansion by this.
+    local _, _, _, tocversion = GetBuildInfo()
+    variable.MetaData.TOC = tocversion
     GSE.EnqueueOOC({
         ["action"] = "updatevariable",
         ["variable"] = GSE.CloneSequence(variable),

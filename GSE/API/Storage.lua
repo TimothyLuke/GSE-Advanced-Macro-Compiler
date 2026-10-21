@@ -4737,6 +4737,12 @@ function GSE.UpdateMacro(node, category, skipStore)
             node.LastUpdated = GSE.GetTimestamp()
             -- The build that wrote it, as sequences carry in MetaData.GSEVersion.
             node.GSEVersion = GSE.VersionNumber
+            -- And the game it was written for, as a sequence's Save stamps
+            -- MetaData.TOC: gse.tools files a record under its expansion by this.
+            if type(node.MetaData) == "table" then
+                local _, _, _, tocversion = GetBuildInfo()
+                node.MetaData.TOC = tocversion
+            end
             GSE.SanitizeHelplink(node)
             if not node.Managed then
                 for _, version in pairs(node.Versions) do
