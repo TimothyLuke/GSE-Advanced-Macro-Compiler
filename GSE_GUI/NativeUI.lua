@@ -4449,6 +4449,97 @@ local function createDropdown()
     return widget
 end
 
+-- A dropdown whose box can also be typed in: a combo box. Picking an item, or
+-- typing one and pressing Enter, fires OnValueChanged with it, and the box
+-- clears for the next. The list is the dropdown's own; the box shows a
+-- placeholder (SetPlaceholder) while it is empty.
+local function createComboBox()
+    local widget = createDropdown()
+    widget.type = "ComboBox"
+    -- The dropdown's own list, opened from the arrow (or its click overlay).
+    widget:SetMaxVisibleItems(20)
+    local frame = widget.frame
+    local native = widget.nativeDropdown
+    local arrow = native and (native.Button or _G[native:GetName() .. "Button"]) or widget.button.dropdownArrow
+    local clickArea = widget.dropdownClickOverlay or widget.button
+
+    local input = CreateFrame("EditBox", nextName("ComboBoxInput"), frame)
+    input:SetAutoFocus(false)
+    input:SetFontObject(GameFontHighlightSmall)
+    input:SetHeight(STYLE.compactControlHeight)
+    input:SetPoint("LEFT", clickArea, "LEFT", STYLE.padLarge, 0)
+    if arrow then
+        input:SetPoint("RIGHT", arrow, "LEFT", -STYLE.padXXS, 0)
+    else
+        input:SetPoint("RIGHT", clickArea, "RIGHT", -24, 0)
+    end
+    -- Above the click overlay, which covers the whole box: the text part types,
+    -- the arrow still opens the list.
+    input:SetFrameLevel((clickArea:GetFrameLevel() or frame:GetFrameLevel()) + 5)
+    widget.input = input
+
+    local placeholder = input:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+    placeholder:SetPoint("LEFT", input, "LEFT", 0, 0)
+    placeholder:SetPoint("RIGHT", input, "RIGHT", 0, 0)
+    placeholder:SetJustifyH("LEFT")
+    placeholder:SetWordWrap(false)
+    widget.placeholder = placeholder
+    local function showPlaceholder()
+        if input:HasFocus() or (input:GetText() or "") ~= "" then placeholder:Hide() else placeholder:Show() end
+    end
+
+    -- Whatever was chosen goes out once; the box then reads empty again.
+    local fire = widget.Fire
+    widget.Fire = function(self, event, ...)
+        local result = fire(self, event, ...)
+        if event == "OnValueChanged" then
+            self.value = nil
+            if self.SetValue then self:SetValue(nil) end
+        end
+        return result
+    end
+
+    input:SetScript("OnEnterPressed", function(self)
+        local text = (self:GetText() or ""):match("^%s*(.-)%s*$")
+        self:SetText("")
+        self:ClearFocus()
+        if text ~= "" then widget:Fire("OnValueChanged", text) end
+    end)
+    input:SetScript("OnEscapePressed", function(self)
+        self:SetText("")
+        self:ClearFocus()
+    end)
+    input:SetScript("OnEditFocusGained", showPlaceholder)
+    input:SetScript("OnEditFocusLost", showPlaceholder)
+    input:SetScript("OnTextChanged", showPlaceholder)
+    input:SetScript("OnEnter", function() widget:Fire("OnEnter") end)
+    input:SetScript("OnLeave", function() widget:Fire("OnLeave") end)
+    -- A box put back in the pool comes out empty.
+    input:SetScript("OnHide", function(self)
+        self:SetText("")
+        self:ClearFocus()
+    end)
+
+    function widget:SetPlaceholder(text)
+        placeholder:SetText(textValue(text))
+        showPlaceholder()
+    end
+
+    local setDisabled = widget.SetDisabled
+    function widget:SetDisabled(disabled)
+        setDisabled(self, disabled)
+        if disabled then
+            input:ClearFocus()
+            input:Disable()
+        else
+            input:Enable()
+        end
+        input:SetAlpha(disabled and 0.5 or 1)
+    end
+
+    return widget
+end
+
 local function createTabGroup()
     local frame = CreateFrame("Frame", nextName("TabGroup"), UIParent)
     frame:SetSize(300, 220)
@@ -6147,6 +6238,8 @@ local function constructWidget(typeName)
         return createIcon()
     elseif typeName == "Dropdown" then
         return createDropdown()
+    elseif typeName == "ComboBox" then
+        return createComboBox()
     elseif typeName == "TabGroup" then
         return createTabGroup()
     elseif typeName == "ControllerKeybinding" then
@@ -6183,7 +6276,7 @@ end
 local POOLED_TYPES = {
     SimpleGroup = true, InlineGroup = true, Spacer = true,
     Label = true, Heading = true, InteractiveLabel = true,
-    CheckBox = true, Icon = true, Button = true, Dropdown = true,
+    CheckBox = true, Icon = true, Button = true, Dropdown = true, ComboBox = true,
     EditBox = true, EditBoxExampleAll = true, MultiLineEditBox = true,
 }
 local widgetPool = {}

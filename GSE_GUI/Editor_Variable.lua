@@ -39,9 +39,13 @@ local function SetEditBoxLabelGap(widget, gap)
 end
 
 -- ---------------------------------------------------------------------------
--- buildVariablesMenu()  →  tree node for the Variables section
+-- buildVariablesMenu()  →  tree node for the Variables section, and where each
+-- variable sits in it
 -- ---------------------------------------------------------------------------
-local function buildVariablesMenu()
+-- A variable is filed under the class it is scoped to, Global last, as a
+-- sequence is. Returns the node, and "VARIABLES\001<name>" -> the node's path
+-- through its class folder, for selecting a variable by name.
+local function buildVariablesMenu(editframe)
     local tree = {
         value = "VARIABLES",
         text = L["Variables"],
@@ -54,17 +58,27 @@ local function buildVariablesMenu()
             }
         }
     }
+    local folders, byClass, paths = {}, {}, {}
     -- Alphabetical, the same order and the same comparison the sequence tree
     -- uses. pairs() gave hash order, so the list shuffled between sessions.
     for k, _ in GSE.pairsByKeys(GSE.Store("variable") or {}, GSE.AlphabeticalTableSortAlgorithm) do
-        local node = {
+        local classid = GSE.ElementScopeClass("variable", k) or 0
+        local folder = byClass[classid]
+        if not folder then
+            folder = GSE.GUI.ClassFolder(classid)
+            byClass[classid] = folder
+            folders[#folders + 1] = folder
+        end
+        table.insert(folder.children, {
             value = k,
             text = "|CFFFFFFFF" .. k .. Statics.StringReset,
-            children = GSE.GUI.ElementPageNodes()
-        }
-        table.insert(tree.children, node)
+            children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(k))
+        })
+        paths["VARIABLES\001" .. k] = "VARIABLES\001" .. folder.value .. "\001" .. k
     end
-    return tree
+    GSE.GUI.SortClassFolders(folders)
+    for _, folder in ipairs(folders) do table.insert(tree.children, folder) end
+    return tree, paths
 end
 
 -- ---------------------------------------------------------------------------
@@ -101,15 +115,57 @@ end]]}},
             end
         end
         local storedKey = name ~= "NEWVARIABLES" and name or nil
-        draft = {name = name, storedKey = storedKey, variable = GSE.UpgradeVariable(variable, storedKey), selected = 1}
+        draft = {name = name, storedKey = storedKey, variable = GSE.UpgradeVariable(variable, storedKey)}
         editframe.variableDraft = draft
     end
     return draft
 end
 
+-- A version's editor keeps its function as coloured text until the box loses
+-- focus; take every version back to plain Lua before it is copied or saved.
+local function settleDraft(draft)
+    for _, v in ipairs(draft.variable.Versions) do
+        if type(v.funct) == "string" then v.funct = IndentationLib.decode(v.funct) end
+    end
+end
+
+-- A variable's versions, for its tree nodes: the draft's while it is being
+-- edited (so an unsaved New Version shows), else the stored ones. A stored
+-- variable is decoded once per change to what is stored, not per tree build.
+local storedVersions = {}
+local function variableVersions(editframe, name)
+    local draft = editframe.variableDraft
+    if draft and draft.name == name then return draft.variable.Versions end
+    local stored = GSE.Store("variable") and GSE.Store("variable")[name]
+    if GSE.isEmpty(stored) then return nil end
+    local cached = storedVersions[name]
+    if cached and cached.stored == stored then return cached.versions end
+    local pok, ok, decoded = pcall(GSE.DecodeMessage, stored)
+    if not (pok and ok and type(decoded) == "table") then return nil end
+    local versions = GSE.UpgradeVariable(decoded, name).Versions
+    storedVersions[name] = {stored = stored, versions = versions}
+    return versions
+end
+
+-- New Version: a copy of the Default version, at the end. Returns its index.
+local function newVariableVersion(editframe, name)
+    local draft = variableDraft(editframe, name)
+    settleDraft(draft)
+    local versions = draft.variable.Versions
+    local default = tonumber(draft.variable.MetaData.Default) or 1
+    local copy = GSE.CloneSequence(versions[default] or versions[1] or {})
+    copy.Label = nil
+    table.insert(versions, copy)
+    editframe:SetStatusText(L["Save pending for "] .. draft.name)
+    return #versions
+end
+
 -- Save the draft under saveName: every version has to compile, not only the
 -- one on screen. A rename deletes the old name. Returns true when queued.
-local function saveVariable(editframe, draft, saveName)
+local function saveVariable(editframe, draft)
+    settleDraft(draft)
+    -- A name typed on the Configuration page, wherever Save is pressed.
+    local saveName = draft.pendingName or draft.name
     local variable = draft.variable
     for index, v in ipairs(variable.Versions) do
         local ok, err = GSE.CheckVariable(v.funct or "")
@@ -146,22 +202,41 @@ local function saveVariable(editframe, draft, saveName)
     end
     draft.storedKey = saveName
     draft.name = saveName
+    draft.pendingName = nil
     return true
 end
 
-local function showVariable(editframe, name, container, selected)
+-- Save, centred on its own row; `extra`, when given, is another button beside it.
+local function addSaveRow(editframe, container, draft, extra)
+    local buttonRow = UI:Create("SimpleGroup")
+    buttonRow:SetLayout("Flow")
+    buttonRow:SetFullWidth(true)
+    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
+    if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
+    if buttonRow.SetFlowGap then buttonRow:SetFlowGap(10) end
+    local savebutton = UI:Create("Button")
+    savebutton:SetText(L["Save"])
+    savebutton:SetWidth(150)
+    savebutton:SetCallback("OnClick", function() saveVariable(editframe, draft) end)
+    savebutton:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(L["Save"], L["Save the changes made to this variable."], editframe)
+    end)
+    savebutton:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    buttonRow:AddChild(savebutton)
+    if extra then buttonRow:AddChild(extra) end
+    container:AddChild(buttonRow)
+end
+
+-- The variable's Configuration page: what it is called, who wrote it, where
+-- it loads, which version runs where, and what uses it.
+local function showVariable(editframe, name, container)
     editframe.SequenceName = name
-    local implementation = UI:Create("EditBox")
     local currentKey = name ~= "NEWVARIABLES" and name or nil
     local draft = variableDraft(editframe, name)
     local variable = draft.variable
-    selected = tonumber(selected) or draft.selected or 1
-    if not variable.Versions[selected] then selected = 1 end
-    draft.selected = selected
-    local version = variable.Versions[selected]
-    local function redraw(newSelected)
+    local function redraw()
         container:ReleaseChildren()
-        showVariable(editframe, name, container, newSelected or draft.selected)
+        showVariable(editframe, name, container)
         if container.DoLayout then container:DoLayout() end
     end
 
@@ -170,12 +245,11 @@ local function showVariable(editframe, name, container, selected)
     keyEditBox:DisableButton(true)
     keyEditBox:SetWidth(250)
     keyEditBox:SetHeight(24)
-    keyEditBox:SetText(name)
+    keyEditBox:SetText(draft.pendingName or name)
     keyEditBox:SetCallback(
         "OnTextChanged",
         function(self, event, text)
-            local implementationText = VariableImplementationLink(text)
-            implementation:SetText(implementationText)
+            draft.pendingName = (text ~= draft.name) and text or nil
         end
     )
 
@@ -237,35 +311,105 @@ local function showVariable(editframe, name, container, selected)
         GSE.GUI.DrawElementCollections(container, "variable", currentKey)
     end
 
-    -- Which version this page edits.
-    if GSE.GUI.DrawElementVersionBar then
-        GSE.GUI.DrawElementVersionBar(editframe, container, variable, selected, redraw)
+    -- Which version runs where: Default and the context overrides.
+    if GSE.GUI.DrawElementVersionConfig then
+        local configGap = UI:Create("Spacer")
+        configGap:SetHeight(8)
+        container:AddChild(configGap)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, variable, nil, scopeDropdown)
+    end
+
+    local deleteRowButton = UI:Create("Button")
+    deleteRowButton:SetText(L["Delete Variable"])
+    deleteRowButton:SetWidth(150)
+    deleteRowButton:SetCallback(
+        "OnClick",
+        function()
+            -- Canonical helper clears GSEVariables, GSE.V cache, and the
+            -- Companion PlatformID sidecar. Previously inlined
+            -- `GSEVariables[k] = nil` left orphans the next sync had to
+            -- scrub.
+            GSE.DeleteVariable(draft.storedKey or name)
+            editframe.variableDraft = nil
+            if editframe.loaded then
+                container:ReleaseChildren()
+                editframe.loaded = nil
+            end
+            editframe:ManageTree()
+        end
+    )
+    deleteRowButton:SetCallback(
+        "OnEnter",
+        function()
+            GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
+        end
+    )
+    deleteRowButton:SetCallback(
+        "OnLeave",
+        function()
+            GSE.ClearTooltip(editframe)
+        end
+    )
+    addSaveRow(editframe, container, draft, deleteRowButton)
+
+    -- Dependencies — styled table matching the sequence metadata window
+    local varDeps    = variable.Dependencies
+    local dependents = GSE.GetVariableDependents(name)
+
+    if GSE.GUI.CreateDependencyWindow then
+        local heading = L["Used by Sequences"] .. ":"
+        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
+
+        local rows = {}
+        for _, entry in ipairs(dependents.sequences) do
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
+            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
+            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
+            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
+        end
+
+        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
+    end
+end
+
+-- One version's page: its label, the events it runs on, its function, and a
+-- box to try it in. Returns the version shown (the first, when `index` is gone).
+local function showVariableVersion(editframe, name, container, index)
+    editframe.SequenceName = name
+    local draft = variableDraft(editframe, name)
+    local variable = draft.variable
+    index = tonumber(index) or 1
+    if not variable.Versions[index] then index = 1 end
+    local version = variable.Versions[index]
+
+    if GSE.GUI.DrawElementVersionHeader then
+        GSE.GUI.DrawElementVersionHeader(editframe, container, variable, index, function()
+            editframe:SetStatusText(L["Save pending for "] .. draft.name)
+        end, function(shown)
+            if editframe.ManageTree then editframe.ManageTree() end
+            GSE.GUI.SelectEditorTreePath(editframe, "VARIABLES\001" .. name .. "\001" .. shown)
+        end)
     end
 
     -- Event Callback Section ─────────────────────────────────────────────────
-    -- Helpers: convert between the array stored in variable.eventNames and the
-    -- comma-separated string shown in the edit box.
-    local function parseEventNames(text)
-        local names = {}
-        for token in text:gmatch("[^,%s]+") do
-            if token ~= "" then
-                table.insert(names, token)
-            end
-        end
-        return names
-    end
-
-    local function formatEventNames(names)
-        if GSE.isEmpty(names) then return "" end
-        return table.concat(names, ", ")
-    end
-
+    -- The events a version runs on: listed one to a line, each removable, and
+    -- added from a combo box that offers the known ones and takes any other
+    -- name typed into it.
     local isEventEnabled = version.eventEnabled or false
+
+    -- What GSE registers a name as: a GSE message, a WoW event, or anything
+    -- else as an addon message (GSE.RegisterVariableEvents decides the same).
+    local function eventKind(evtName)
+        if Statics.InternalMessages[evtName] then return L["GSE Message"] end
+        if C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(evtName) then
+            return L["WoW Event"]
+        end
+        return L["Addon Message"]
+    end
 
     local eventToggle = UI:Create("CheckBox")
     eventToggle:SetLabel(L["Execute on Event"])
-    -- 130: the dropdown and Trigger Events box start 20 further left than at 150.
-    eventToggle:SetWidth(130)
+    eventToggle:SetWidth(150)
     eventToggle:SetValue(isEventEnabled)
     eventToggle:SetCallback(
         "OnEnter",
@@ -279,135 +423,103 @@ local function showVariable(editframe, name, container, selected)
     )
     eventToggle:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
-    -- Text box: editable, comma-separated list of event names.
-    local eventEditBox = UI:Create("EditBox")
-    eventEditBox:SetLabel(L["Trigger Events"])
-    eventEditBox:SetWidth(210)
-    -- Box 7 below its label (not 2) so it sits level with the Add from List
-    -- dropdown's box, whose Blizzard art centres ~6 lower under the same-height
-    -- label (measured off an in-game screenshot). Height = label 15 + 7 + box 22.
-    if eventEditBox.SetLabelBoxPadding then eventEditBox:SetLabelBoxPadding(7) end
-    eventEditBox:SetHeight(44)
-    if eventEditBox.SetFlowFillRemaining then eventEditBox:SetFlowFillRemaining(true) end
-    eventEditBox:DisableButton(true)
-    eventEditBox:SetDisabled(not isEventEnabled)
-    eventEditBox:SetText(formatEventNames(version.eventNames))
-    eventEditBox:SetCallback(
-        "OnTextChanged",
-        function(obj, event, text)
-            version.eventNames = parseEventNames(text)
-        end
-    )
-    eventEditBox:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(
-                L["Trigger Events"],
-                L["Comma-separated list of WoW events or GSE messages that trigger this variable. You can type names directly or pick from the list on the right."],
-                editframe
-            )
-        end
-    )
-    eventEditBox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-    eventEditBox:SetCallback(
-        "OnEditFocusLost",
-        function()
-            -- Validate each manually entered event name and show type hints in the
-            -- status bar: WoW events → RegisterEvent, everything else → RegisterMessage.
-            local names = parseEventNames(eventEditBox:GetText())
-            if GSE.isEmpty(names) then return end
-            local parts = {}
-            for _, evtName in ipairs(names) do
-                local tag
-                if Statics.InternalMessages[evtName] then
-                    tag = "[GSE Msg]"
-                elseif C_EventUtils and C_EventUtils.IsEventValid and C_EventUtils.IsEventValid(evtName) then
-                    tag = "[WoW Event]"
-                else
-                    tag = "[Addon Msg]"
-                end
-                table.insert(parts, evtName .. " " .. tag)
-            end
-            editframe:SetStatusText(table.concat(parts, "  |  "))
-        end
-    )
-
-    -- Dropdown: single-select, appends the chosen event to the text box.
-    local eventDropdown = UI:Create("Dropdown")
-    eventDropdown:SetLabel(L["Add from List"])
-    eventDropdown:SetWidth(300)
-    -- 48, the widget's own height with a label: its Blizzard art draws 16 to 48
-    -- down, so at 30 it hung out of the bottom of its frame.
-    eventDropdown:SetHeight(48)
-    if eventDropdown.SetMaxVisibleItems then eventDropdown:SetMaxVisibleItems(20) end
+    local addEvent = UI:Create("ComboBox")
+    addEvent:SetLabel(L["Add Trigger Event"])
+    addEvent:SetWidth(300)
+    if addEvent.SetFlowFillRemaining then addEvent:SetFlowFillRemaining(true) end
     local eventOrder = {}
     for key, _ in pairs(Statics.VariableEventList or {}) do
         table.insert(eventOrder, key)
     end
-    eventDropdown:SetList(Statics.VariableEventList, GSE.SortTableAlphabetical(eventOrder))
-    eventDropdown:SetDisabled(not isEventEnabled)
-    eventDropdown:SetCallback(
-        "OnValueChanged",
-        function(obj, event, key)
-            if GSE.isEmpty(key) then return end
-            local current = parseEventNames(eventEditBox:GetText())
-            local found = false
-            for _, v in ipairs(current) do
-                if v == key then found = true; break end
-            end
-            if not found then
-                table.insert(current, key)
-                version.eventNames = current
-                eventEditBox:SetText(formatEventNames(current))
-            end
-        end
-    )
-    eventDropdown:SetCallback(
+    addEvent:SetList(Statics.VariableEventList, GSE.SortTableAlphabetical(eventOrder))
+    addEvent:SetPlaceholder(L["Pick one, or type an event's name and press Enter"])
+    addEvent:SetDisabled(not isEventEnabled)
+    addEvent:SetCallback(
         "OnEnter",
         function()
             GSE.CreateToolTip(
-                L["Add from List"],
-                L["Select a known WoW event or GSE message to append it to the Trigger Events box."],
+                L["Add Trigger Event"],
+                L["Pick a WoW event or GSE message from the list, or type the name of one that is not listed and press Enter."],
                 editframe
             )
         end
     )
-    eventDropdown:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+    addEvent:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+
+    local eventRow = UI:Create("SimpleGroup")
+    eventRow:SetLayout("Flow")
+    eventRow:SetFullWidth(true)
+    if eventRow.SetFlowPadding then eventRow:SetFlowPadding(0, 8, 8, 0) end
+    if eventRow.SetFlowGap then eventRow:SetFlowGap(8) end
+    if eventRow.SetFlowVAlign then eventRow:SetFlowVAlign("BOTTOM") end
+    eventRow:AddChild(eventToggle)
+    eventRow:AddChild(addEvent)
+    container:AddChild(eventRow)
+
+    -- The list itself, redrawn in place as events come and go.
+    local eventList = UI:Create("SimpleGroup")
+    eventList:SetLayout("List")
+    eventList:SetFullWidth(true)
+    if eventList.SetListPadding then eventList:SetListPadding(158, 0, 8, 4) end
+    if eventList.SetListGap then eventList:SetListGap(2) end
+    container:AddChild(eventList)
+
+    local function drawEventList()
+        eventList:ReleaseChildren()
+        local names = version.eventNames or {}
+        if #names == 0 then
+            local none = UI:Create("Label")
+            none:SetText("|cFF9D9D9D" .. L["No trigger events."] .. "|r")
+            none:SetFullWidth(true)
+            eventList:AddChild(none)
+        end
+        for i, evtName in ipairs(names) do
+            local row = UI:Create("SimpleGroup")
+            row:SetLayout("Flow")
+            row:SetFullWidth(true)
+            if row.SetFlowGap then row:SetFlowGap(8) end
+            if row.SetFlowVAlign then row:SetFlowVAlign("MIDDLE") end
+            local remove = UI:Create("Button")
+            remove:SetText(L["Remove"])
+            remove:SetWidth(80)
+            remove:SetDisabled(not version.eventEnabled)
+            remove:SetCallback("OnClick", function()
+                table.remove(version.eventNames, i)
+                drawEventList()
+            end)
+            local text = UI:Create("Label")
+            text:SetText("|cFFFFFFFF" .. evtName .. "|r  |cFF9D9D9D" .. eventKind(evtName) .. "|r")
+            text:SetWidth(420)
+            row:AddChild(remove)
+            row:AddChild(text)
+            eventList:AddChild(row)
+        end
+        if container.DoLayout then container:DoLayout() end
+    end
+    drawEventList()
+
+    addEvent:SetCallback(
+        "OnValueChanged",
+        function(obj, event, key)
+            if GSE.isEmpty(key) then return end
+            version.eventNames = version.eventNames or {}
+            for _, v in ipairs(version.eventNames) do
+                if v == key then return end
+            end
+            table.insert(version.eventNames, key)
+            drawEventList()
+        end
+    )
 
     eventToggle:SetCallback(
         "OnValueChanged",
         function(obj, event, val)
             version.eventEnabled = val
-            eventEditBox:SetDisabled(not val)
-            eventDropdown:SetDisabled(not val)
-            if not val then
-                version.eventNames = {}
-                eventEditBox:SetText("")
-            end
+            addEvent:SetDisabled(not val)
+            if not val then version.eventNames = {} end
+            drawEventList()
         end
     )
-
-    local eventCallbackGroup = UI:Create("SimpleGroup")
-    eventCallbackGroup:SetLayout("Flow")
-    eventCallbackGroup:SetFullWidth(true)
-    if eventCallbackGroup.SetFlowPadding then eventCallbackGroup:SetFlowPadding(0, 8, 8, 8) end
-    if eventCallbackGroup.SetFlowGap    then eventCallbackGroup:SetFlowGap(4) end
-    -- Tops aligned, so the Add from List and Trigger Events labels share a line.
-    if eventCallbackGroup.SetFlowVAlign then eventCallbackGroup:SetFlowVAlign("TOP") end
-    eventCallbackGroup:AddChild(eventToggle)
-    -- Centred vertically in the row: the tallest item is the Trigger Events
-    -- box at 44, the check square 24, so (44 - 24) / 2 = 10 down, plus 5
-    -- tuned in game.
-    -- Box + label centred across the 130 the row gives the toggle (its frame
-    -- is only the check square, so the label's width is measured).
-    local toggleWidth = (eventToggle.checkbg and eventToggle.checkbg:GetWidth() or 24)
-        + (eventToggle.text and eventToggle.text:GetStringWidth() or 0)
-    if eventToggle.SetFlowOffset then
-        eventToggle:SetFlowOffset(math.max(0, math.floor((130 - toggleWidth) / 2)), -15)
-    end
-    eventCallbackGroup:AddChild(eventDropdown)
-    eventCallbackGroup:AddChild(eventEditBox)
-    container:AddChild(eventCallbackGroup)
     -- ────────────────────────────────────────────────────────────────────────
 
     local valueEditBox = UI:Create("MultiLineEditBox")
@@ -440,13 +552,14 @@ local function showVariable(editframe, name, container, selected)
     )
     container:AddChild(valueEditBox)
 
+    local implementation = UI:Create("EditBox")
     implementation:SetLabel(L["Implementation Link"])
     implementation:SetCompactNoLabel(false)
     implementation:SetWidth(210)
     implementation:SetHeight(32)
     implementation:DisableButton(true)
     SetEditBoxLabelGap(implementation, 2)
-    local implementationText = VariableImplementationLink(name)
+    local implementationText = VariableImplementationLink(draft.name)
     implementation:SetText(implementationText)
 
     local currentOutput = UI:Create("EditBox")
@@ -469,7 +582,8 @@ local function showVariable(editframe, name, container, selected)
 
     -- Initial value: the no-argument call of the live variable.
     if GSE.V[name] and type(GSE.V[name]) == "function" then
-        setCurrentOutput(GSE.V[name]())
+        -- One value: a variable that returns nothing reads as nil.
+        setCurrentOutput((GSE.V[name]()))
     else
         setCurrentOutput(L["Not Yet Active"])
     end
@@ -512,107 +626,10 @@ local function showVariable(editframe, name, container, selected)
     implementationOutputRow:AddChild(currentOutput)
     container:AddChild(implementationOutputRow)
 
-    -- Which version runs where: Default and the context overrides.
-    if GSE.GUI.DrawElementVersionConfig then
-        -- 4 of space above the Configuration heading.
-        local configGap = UI:Create("Spacer")
-        configGap:SetHeight(4)
-        container:AddChild(configGap)
-        local configHeading = UI:Create("Heading")
-        configHeading:SetText(L["Configuration"])
-        configHeading:SetFullWidth(true)
-        if configHeading.SetJustifyH then configHeading:SetJustifyH("CENTER") end
-        container:AddChild(configHeading)
-        local configHeadingGap = UI:Create("Spacer")
-        configHeadingGap:SetHeight(8)
-        container:AddChild(configHeadingGap)
-        GSE.GUI.DrawElementVersionConfig(editframe, container, variable, nil, scopeDropdown)
-    end
-
-    local buttonRow = UI:Create("SimpleGroup")
-    buttonRow:SetLayout("Flow")
-    -- Full width with the buttons centred on the page.
-    buttonRow:SetFullWidth(true)
-    if buttonRow.SetFlowHAlign then buttonRow:SetFlowHAlign("CENTER") end
-    if buttonRow.SetFlowPadding then buttonRow:SetFlowPadding(0, 0, 0, 0) end
-    if buttonRow.SetFlowGap then buttonRow:SetFlowGap(10) end
-
-    local deleteRowButton = UI:Create("Button")
-    deleteRowButton:SetText(L["Delete Variable"])
-    deleteRowButton:SetWidth(150)
-    deleteRowButton:SetCallback(
-        "OnClick",
-        function()
-            -- Canonical helper clears GSEVariables, GSE.V cache, and the
-            -- Companion PlatformID sidecar. Previously inlined
-            -- `GSEVariables[k] = nil` left orphans the next sync had to
-            -- scrub.
-            GSE.DeleteVariable(keyEditBox:GetText())
-            if editframe.loaded then
-                container:ReleaseChildren()
-                editframe.loaded = nil
-            end
-            editframe:ManageTree()
-        end
-    )
-    deleteRowButton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Delete Variable"], L["Delete this variable from the sequence."], editframe)
-        end
-    )
-    deleteRowButton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-
-    local savebutton = UI:Create("Button")
-    savebutton:SetText(L["Save"])
-    savebutton:SetWidth(150)
-    savebutton:SetCallback(
-        "OnClick",
-        function()
-            version.funct = IndentationLib.decode(valueEditBox:GetText())
-            saveVariable(editframe, draft, keyEditBox:GetText())
-        end
-    )
-    savebutton:SetCallback(
-        "OnEnter",
-        function()
-            GSE.CreateToolTip(L["Save"], L["Save the changes made to this variable."], editframe)
-        end
-    )
-    savebutton:SetCallback(
-        "OnLeave",
-        function()
-            GSE.ClearTooltip(editframe)
-        end
-    )
-    buttonRow:AddChild(savebutton)
-    buttonRow:AddChild(deleteRowButton)
-    container:AddChild(buttonRow)
-
-    -- Dependencies — styled table matching the sequence metadata window
-    local varDeps    = variable.Dependencies
-    local dependents = GSE.GetVariableDependents(name)
-
-    if GSE.GUI.CreateDependencyWindow then
-        local heading = L["Used by Sequences"] .. ":"
-        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
-
-        local rows = {}
-        for _, entry in ipairs(dependents.sequences) do
-            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
-            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
-            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
-            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
-        end
-
-        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
-    end
+    addSaveRow(editframe, container, draft)
+    return index
 end
+
 
 -- The variable's Notes - Help page: its Help Link, and Help Information
 -- (MetaData.Notes, read-only once GSE.Tools has rendered Help), with a Save
@@ -631,13 +648,7 @@ local function showVariableNotes(editframe, name, container, height)
     local savebutton = UI:Create("Button")
     savebutton:SetText(L["Save"])
     savebutton:SetWidth(150)
-    savebutton:SetCallback("OnClick", function()
-        -- The version on the Configuration page holds its editor's
-        -- coloured text until it is saved there.
-        local version = draft.variable.Versions[draft.selected]
-        if version and version.funct then version.funct = IndentationLib.decode(version.funct) end
-        saveVariable(editframe, draft, draft.name)
-    end)
+    savebutton:SetCallback("OnClick", function() saveVariable(editframe, draft) end)
     savebutton:SetCallback("OnEnter", function()
         GSE.CreateToolTip(L["Save"], L["Save the changes made to this variable."], editframe)
     end)
@@ -662,10 +673,15 @@ function GSE.GUI.SetupVariable(editframe)
     editframe.showVariable = function(name, container)
         showVariable(editframe, name, container)
     end
+    editframe.showVariableVersion = function(name, container, index)
+        return showVariableVersion(editframe, name, container, index)
+    end
+    editframe.variableVersions = function(name) return variableVersions(editframe, name) end
+    editframe.newVariableVersion = function(name) return newVariableVersion(editframe, name) end
     editframe.showVariableNotes = function(name, container, height)
         showVariableNotes(editframe, name, container, height)
     end
-    editframe.buildVariablesMenu = buildVariablesMenu
+    editframe.buildVariablesMenu = function() return buildVariablesMenu(editframe) end
 end
 end
 table.insert(ns.deferred, setup)

@@ -483,7 +483,6 @@ L["Variables"] = true
 L["Name"] = true
 L["Delete Variable"] = true
 L["Delete this variable from the sequence."] = true
-L["Comma-separated list of WoW events or GSE messages that trigger this variable. You can type names directly or pick from the list on the right."] = true
 L["Default Editor Height"] = true
 L["How many pixels high should the Editor start at.  Defaults to 700"] = true
 L["Default Editor Width"] = true
@@ -838,10 +837,14 @@ L["Add Embed"] = true
 
 -- #1850 Variable Event Callback
 L["Execute on Event"] = true
-L["Trigger Events"] = true
 L["When enabled, this variable's function will be called automatically when the selected WoW events or GSE messages fire."] = true
-L["Add from List"] = true
-L["Select a known WoW event or GSE message to append it to the Trigger Events box."] = true
+L["Add Trigger Event"] = true
+L["Pick one, or type an event's name and press Enter"] = true
+L["Pick a WoW event or GSE message from the list, or type the name of one that is not listed and press Enter."] = true
+L["No trigger events."] = true
+L["GSE Message"] = true
+L["WoW Event"] = true
+L["Addon Message"] = true
 -- Menu orientation & lock
 L["Toolbar"] = true
 L["Toolbar Options"] = true
@@ -1061,8 +1064,7 @@ L["Local changes discarded."] = true
 
 L["Use the author's %s"] = true
 L["Replace your %s on this block with the author's.  Your other changes stay."] = true
-L["Version Label"] = true
-L["Copy the selected version into a new one."] = true
+L["Delete this version."] = true
 L["Version %d is still selected for: %s"] = true
 L["Use %s"] = true
 L["From collections"] = true

@@ -143,6 +143,56 @@ describe("Variable and macro shape", function()
       assert.equals(1, GSE.V.Flat())
     end)
 
+    it("is shown under the class its scope names, before a reload files it there", function()
+      -- Variables are filed by scope at load; the editor's tree reads the
+      -- scope itself, so a variable re-scoped in the editor moves at once.
+      local bodies = {
+        Sealed = {MetaData = {Default = 1, SpecID = 2}, Versions = {{funct = "function() end"}}},
+        Plain = {MetaData = {Default = 1}, Versions = {{funct = "function() end"}}},
+      }
+      local realDecode = GSE.DecodeMessage
+      GSE.DecodeMessage = function(t)
+        if type(t) == "string" then return bodies[t] ~= nil, bodies[t] end
+        return type(t) == "table", t
+      end
+      GSE.Store("variable").Sealed = "Sealed"
+      GSE.Store("variable").Plain = "Plain"
+      local paladin, unscoped = GSE.ElementScopeClass("variable", "Sealed"), GSE.ElementScopeClass("variable", "Plain")
+      GSE.DecodeMessage = realDecode
+      assert.equals(2, paladin, "SpecID 2 is the Paladin class")
+      assert.is_true(unscoped == nil or unscoped == 0, "no scope: where it is filed, Global")
+    end)
+
+    it("saves a variable that returns nothing", function()
+      -- An event-only variable does its work when the event fires and returns
+      -- nothing on the no-argument test call; type() of nothing used to throw.
+      GSE.UpdateVariable({MetaData = {Default = 1}, Versions = {
+        {funct = "function(event) if not event then return end end"},
+      }}, "Quiet")
+      assert.equals("function", type(rawget(GSE.V, "Quiet")))
+      assert.is_nil((GSE.BooleanVariables or {})["GSE.V['Quiet']()"], "and is not a boolean")
+    end)
+
+    it("loads a variable that listens to events though no sequence names it", function()
+      GSE.Store("variable").Watcher = {MetaData = {Default = 1}, Versions = {
+        {funct = "function() return 'w' end", eventEnabled = true, eventNames = {"UNIT_AURA"}},
+      }}
+      GSE.Store("variable").Idle = {MetaData = {Default = 1}, Versions = {
+        {funct = "function() return 'i' end"},
+      }}
+      -- A sequence that declares its (empty) dependencies, so the load is selective.
+      GSE.Library[0] = {Seq = {MetaData = {Dependencies = {Variables = {}}}}}
+      local registered = {}
+      local realRegister = GSE.RegisterVariableEvents
+      GSE.RegisterVariableEvents = function(name, events) registered[name] = events end
+      GSE.LoadVariables()
+      GSE.RegisterVariableEvents = realRegister
+      GSE.Library[0] = nil
+      assert.equals("w", rawget(GSE.V, "Watcher") and rawget(GSE.V, "Watcher")())
+      assert.same({"UNIT_AURA"}, registered.Watcher, "and its events are registered")
+      assert.is_nil(rawget(GSE.V, "Idle"), "a variable nobody needs still waits")
+    end)
+
     it("depends on every variable any of its versions calls", function()
       require("../GSE_Utils/Utils")
       local v = {MetaData = {Default = 1}, Versions = {

@@ -808,6 +808,33 @@ local function elementClassOf(kind, body)
     return ok and tonumber(classid) or nil
 end
 
+-- ElementScopeClass's last answer per variable, with the body it was read from.
+local scopeClassCache = {}
+
+--- The class a variable or account macro is scoped to: the one its own
+--- MetaData.SpecID names -- where the next load files it, so a scope changed in
+--- the editor shows at once -- else the one it is filed in now. For showing
+--- where an element belongs; what is live is still decided by where it is filed.
+function GSE.ElementScopeClass(kind, name)
+    ensureStore()
+    local body = kind == "variable" and VIEWS.variable[name] or nil
+    if kind == "macro" and isMacroNode(VIEWS.macro[name]) then body = VIEWS.macro[name] end
+    local classid
+    if kind == "variable" then
+        local cached = scopeClassCache[name]
+        if cached and cached.body == body then
+            classid = cached.classid
+        else
+            classid = elementClassOf(kind, body)
+            scopeClassCache[name] = {body = body, classid = classid}
+        end
+    else
+        classid = elementClassOf(kind, body)
+    end
+    if classid ~= nil then return classid end
+    return GSE.StoredElementClass(kind, name)
+end
+
 -- File each variable and macro envelope in the class its body names.
 local function fileElementsByScope(store)
     for _, kind in ipairs({"variable", "macro"}) do
@@ -2421,7 +2448,9 @@ local function compileVariable(name, variable)
     if type(chunk) == "function" then
         GSE.V[name] = chunk()
     end
-    if type(GSE.V[name]) == "function" and type(GSE.V[name]()) == "boolean" then
+    -- The extra parentheses keep one value: a variable may return nothing at
+    -- all (one that only acts on events), and type() of nothing is an error.
+    if type(GSE.V[name]) == "function" and type((GSE.V[name]())) == "boolean" then
         GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
     end
     if active.eventEnabled and not GSE.isEmpty(active.eventNames) then
@@ -2537,6 +2566,22 @@ local function collectNeededVariables()
     return needed
 end
 
+--- Does any version of a stored variable run on events? Any version, not just
+-- the active one: a context change recompiles only what is already in GSE.V,
+-- so a variable whose listening version belongs to another context still has
+-- to be loaded now to be there when that context comes.
+local function listensToEvents(stored)
+    local pok, ok, decoded = pcall(GSE.DecodeMessage, stored)
+    if not (pok and ok and type(decoded) == "table") then return false end
+    local variable = GSE.UpgradeVariable(decoded)
+    for _, version in pairs(variable.Versions or {}) do
+        if type(version) == "table" and version.eventEnabled and not GSE.isEmpty(version.eventNames) then
+            return true
+        end
+    end
+    return false
+end
+
 --- Load the GSEVariables.
 -- If all loaded sequences carry dependency data, only the transitively required
 -- variables are compiled via loadstring().  Any sequence that pre-dates
@@ -2557,10 +2602,12 @@ function GSE.LoadVariables()
         return
     end
 
-    -- Selective load: only compile variables the current sequences need.
+    -- Selective load: only compile variables the current sequences need, and
+    -- every variable that listens to events -- it does its work when they fire,
+    -- so no sequence has to name it for it to run.
     local deferred = 0
     for k, v in pairs(GSE.Store("variable")) do
-        if needed[k] and GSE.ElementAvailable("variable", k) then
+        if (needed[k] or listensToEvents(v)) and GSE.ElementAvailable("variable", k) then
             loadOneVariable(k, v)
         else
             deferred = deferred + 1

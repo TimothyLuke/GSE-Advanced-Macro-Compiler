@@ -23,6 +23,9 @@ local CONFIG_CONTENT_LEFT_PADDING = GSE.GUI.CONTENT_PADDING
 -- the path below the group is exactly the by-type path, and every handler
 -- works on it once the group segment is dropped (splitElementPath).
 local GROUP_PREFIX = "GROUP:"
+-- A class folder inside an area of the By Type tree (Variables > Paladin). Like
+-- a group, it is only where the tree draws an element, not part of its path.
+local FOLDER_PREFIX = "FOLDER:"
 
 local function treeGrouping()
     local g = GSEOptions and GSEOptions.editorTreeGrouping
@@ -30,19 +33,54 @@ local function treeGrouping()
     return "type"
 end
 
--- A tree path's segments, the group segment of a grouped tree dropped.
+-- A tree path's segments, the group segment of a grouped tree and any class
+-- folder dropped.
 local function splitElementPath(path)
     local parts = {("\001"):split(path or "")}
     if parts[1] and parts[1]:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then table.remove(parts, 1) end
+    for i = #parts, 1, -1 do
+        if parts[i]:sub(1, #FOLDER_PREFIX) == FOLDER_PREFIX then table.remove(parts, i) end
+    end
     return parts
 end
 
--- A tree path with the group segment of a grouped tree dropped.
+-- A tree path with the group segment of a grouped tree and any class folder
+-- dropped.
 local function stripGroup(path)
     if type(path) ~= "string" then return path end
-    local first = path:match("^([^\001]*)")
-    if first and first:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then return path:sub(#first + 2) end
-    return path
+    return table.concat(splitElementPath(path), "\001")
+end
+
+--- A class folder for an area of the By Type tree: the class's name in its
+--- colour and its icon, or Global for class 0. Sort a list of them with
+--- GSE.GUI.SortClassFolders.
+function GSE.GUI.ClassFolder(classid)
+    local text, sortName
+    if classid == 0 then
+        text, sortName = L["Global"], L["Global"]
+    else
+        local classinfo, classfile = GetClassInfo(classid)
+        local color = classfile and C_ClassColor and C_ClassColor.GetClassColor(classfile)
+        sortName = classinfo or ("Class " .. tostring(classid))
+        text = (color and classinfo) and WrapTextInColorCode(classinfo, color:GenerateHexColor()) or sortName
+    end
+    return {
+        value = FOLDER_PREFIX .. tostring(classid),
+        text = text,
+        icon = classid ~= 0 and GSE.GetClassIcon(classid) or nil,
+        children = {},
+        gseClassID = classid,
+        gseSortName = sortName,
+    }
+end
+
+--- Classes alphabetically, Global last -- the order of the sequence tree.
+function GSE.GUI.SortClassFolders(folders)
+    table.sort(folders, function(a, b)
+        if a.gseClassID == 0 then return false end
+        if b.gseClassID == 0 then return true end
+        return GSE.AlphabeticalTableSortAlgorithm(a.gseSortName or "", b.gseSortName or "")
+    end)
 end
 
 local function SmoothEditorScrollFrame(scrollWidget)
@@ -625,6 +663,8 @@ local function SaveLastAreaNode(unique)
     if not (opts and AREA_OPEN_MODE[area]) then return end
     opts.openMode = AREA_OPEN_MODE[area]
     if unique[2] and unique[2] == AREA_NEW_NODE[area] then return end
+    -- Nor is New Version: coming back to it would make another.
+    if unique[#unique] == "newversion" then return end
     opts.lastNodeByArea = opts.lastNodeByArea or {}
     opts.lastNodeByArea[area] = table.concat(unique, "\001")
 end
@@ -1646,11 +1686,36 @@ function GSE.GUI.ElementPageNodes()
     }
 end
 
+--- A variable's or macro's children in the tree, as a sequence has them: its
+--- pages, a node per version, and New Version. `versions` is nil for an
+--- element with none to edit (a sealed macro), which gets its pages only.
+function GSE.GUI.ElementTreeNodes(editframe, versions)
+    local nodes = GSE.GUI.ElementPageNodes()
+    if type(versions) ~= "table" then return nodes end
+    for i, v in ipairs(versions) do
+        nodes[#nodes + 1] = {
+            value = i,
+            text = editframe.BuildVersionLabel(tostring(i), type(v) == "table" and v.Label or nil)
+        }
+    end
+    nodes[#nodes + 1] = { text = L["New"] .. " " .. L["Version"], value = "newversion", icon = Statics.ActionsIcons.Add }
+    return nodes
+end
+
 -- The room a Notes - Help page has in makeScrollableRightPane under its
 -- section divider: the pane less the scroll padding, header and divider.
 local function notesPageHeight(container)
     local pane = container and container.frame and container.frame:GetHeight() or 0
     return pane - SECTION_HEADER_TOP - CONFIG_CONTENT_LEFT_PADDING - SECTION_HEADER_HEIGHT - 1
+end
+
+-- " (Notes - Help)", " (v2:Label)" or "" after a variable's or macro's name
+-- in the editor's title, as a sequence's version pages are titled.
+local function elementPageTitle(editframe, page, version, versions)
+    if page == "notes" then return " (" .. L["Notes - Help"] .. ")" end
+    if not version then return "" end
+    local v = type(versions) == "table" and versions[version]
+    return " (v" .. version .. ":" .. editframe.BuildVersionLabel(tostring(version), type(v) == "table" and v.Label or nil, true) .. ")"
 end
 
 local function onClick_VARIABLES(editframe, container, group, unique, key)
@@ -1666,20 +1731,33 @@ local function onClick_VARIABLES(editframe, container, group, unique, key)
         return
     end
     local name, page = unique[2], key
-    if page ~= "config" and page ~= "notes" then return end
+    -- New Version: a copy of the Default version, opened on its own node, as
+    -- for a sequence. It is part of the unsaved variable until Save.
+    if page == "newversion" then
+        local index = editframe.newVariableVersion(name)
+        if editframe.ManageTree then editframe.ManageTree() end
+        C_Timer.After(0, function()
+            GSE.GUI.SelectEditorTreePath(editframe, "VARIABLES\001" .. name .. "\001" .. index)
+        end)
+        return
+    end
+    local version = tonumber(page)
+    if page ~= "config" and page ~= "notes" and not version then return end
     if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
     -- Wrap the variable form in a ScrollFrame so it remains reachable when
     -- the editor is sized small. Padding is set on the inner scroll pane,
     -- so we no longer need it on the outer container.
     local scrollPane = makeScrollableRightPane(container)
     addSectionDivider(scrollPane, L["Variables"] or "Variables", Statics.Icons.Variables)
-    editframe:SetTitle("GSE: " .. (L["Variables"] or "Variables") .. ": " .. (name or "")
-        .. (page == "notes" and (" (" .. L["Notes - Help"] .. ")") or ""))
     if page == "notes" then
         editframe.showVariableNotes(name, scrollPane, notesPageHeight(container))
+    elseif version then
+        version = editframe.showVariableVersion(name, scrollPane, version)
     else
         editframe.showVariable(name, scrollPane)
     end
+    editframe:SetTitle("GSE: " .. (L["Variables"] or "Variables") .. ": " .. (name or "")
+        .. elementPageTitle(editframe, page, version, editframe.variableVersions(name)))
     editframe.loaded = true
 end
 
@@ -1713,13 +1791,27 @@ local function onClick_Macro(editframe, container, group, unique, key)
         C_Timer.After(0, function() editframe.treeContainer:SelectByValue(group .. "\001config") end)
         return
     end
-    if #unique ~= 4 or (key ~= "config" and key ~= "notes") then return end
+    if #unique ~= 4 then return end
     local page = key
     ShowSectionFooter(editframe)
     local macroID = tonumber(unique[3])
     if not macroID then return end
     local mname, micon, matext = GetMacroInfo(macroID)
     if not mname then return end
+    local elementPath = table.concat({"Macro", unique[2], unique[3]}, "\001")
+    -- New Version: a copy of the Default version, opened on its own node, as
+    -- for a sequence. A macro's changes are kept as they are made, so this one is.
+    if page == "newversion" then
+        local index = editframe.newMacroVersion(mname, macroID, micon, matext)
+        if not index then return end
+        if editframe.ManageTree then editframe.ManageTree() end
+        C_Timer.After(0, function()
+            GSE.GUI.SelectEditorTreePath(editframe, elementPath .. "\001" .. index)
+        end)
+        return
+    end
+    local version = tonumber(page)
+    if page ~= "config" and page ~= "notes" and not version then return end
     -- The macro as WoW holds it. The editor reads what GSE keeps for it (its
     -- versions and metadata) from the store itself.
     local node = {
@@ -1732,13 +1824,15 @@ local function onClick_Macro(editframe, container, group, unique, key)
     -- Scroll wrapper keeps the macro view (header + buttons + edit box) usable
     -- when the editor frame is sized small.
     local scrollPane = makeScrollableRightPane(container)
-    editframe:SetTitle("GSE: " .. (L["Macros"] or "Macros") .. ": " .. (mname or "")
-        .. (page == "notes" and (" (" .. L["Notes - Help"] .. ")") or ""))
     if page == "notes" then
         editframe.showMacroNotes(node, scrollPane, notesPageHeight(container))
+    elseif version then
+        version = editframe.showMacroVersion(node, scrollPane, version, elementPath)
     else
         editframe.showMacro(node, scrollPane)
     end
+    editframe:SetTitle("GSE: " .. (L["Macros"] or "Macros") .. ": " .. (mname or "")
+        .. elementPageTitle(editframe, page, version, editframe.macroVersions(mname, macroID)))
     editframe.loaded = true
 end
 
@@ -1771,7 +1865,7 @@ end
 -- class's, so inside that group it drops its own class level: each area
 -- node's value carries the class instead (AO\001<class>), which keeps every
 -- path the same as the by-type tree's once the group is dropped.
-local function buildGroupedTree(grouping, classtree, bindings)
+local function buildGroupedTree(editframe, grouping, classtree, bindings)
     -- Every element, with its by-type path as its node value.
     local seqs, vars, macs = {}, {}, {}
     local seqByKey, varByName, macByName = {}, {}, {}
@@ -1789,9 +1883,9 @@ local function buildGroupedTree(grouping, classtree, bindings)
         end
     end
     for name in pairs(GSE.Store("variable") or {}) do
-        local e = { classid = GSE.StoredElementClass("variable", name) or 0, sort = name,
+        local e = { classid = GSE.ElementScopeClass("variable", name) or 0, sort = name,
             node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables,
-                     children = GSE.GUI.ElementPageNodes() } }
+                     children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(name)) } }
         vars[#vars + 1] = e
         varByName[name] = e
     end
@@ -1799,10 +1893,10 @@ local function buildGroupedTree(grouping, classtree, bindings)
     for slot = 1, maxAccount + GSE.GetMaxCharacterMacros() + 2 do
         local mname, micon = GetMacroInfo(slot)
         if mname and not macByName[mname] then
-            local e = { classid = GSE.StoredElementClass("macro", mname) or 0, sort = mname,
+            local e = { classid = GSE.ElementScopeClass("macro", mname) or 0, sort = mname,
                 node = { value = "Macro\001" .. (slot <= maxAccount and "A" or "P") .. "\001" .. slot,
                          text = mname, icon = micon or Statics.Icons.Macros,
-                         children = GSE.GUI.ElementPageNodes() } }
+                         children = GSE.GUI.ElementTreeNodes(editframe, editframe.macroVersions(mname, slot)) } }
             macs[#macs + 1] = e
             macByName[mname] = e
         end
@@ -2070,7 +2164,7 @@ local function ManageTree(editframe)
         -- By class, Bindings sits in the player's class's group; by
         -- collection it has none to go in, and stays where By Type has it.
         local bindings = editframe.buildKeybindMenu()
-        local groups, pathOf = buildGroupedTree(grouping, classtree, grouping == "class" and bindings or nil)
+        local groups, pathOf = buildGroupedTree(editframe, grouping, classtree, grouping == "class" and bindings or nil)
         table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
             icon = Statics.ActionsIcons.Add })
         for _, g in ipairs(groups) do table.insert(tree, g) end
@@ -2138,7 +2232,10 @@ local function ManageTree(editframe)
 
         table.insert(tree, subtree)
         table.insert(tree, editframe.buildKeybindMenu())
-        table.insert(tree, editframe.buildVariablesMenu())
+        local variables, variablePaths = editframe.buildVariablesMenu()
+        table.insert(tree, variables)
+        -- "VARIABLES\001<name>" -> its place in its class folder.
+        editframe.treeGroupedPaths = variablePaths
         table.insert(tree, editframe.buildMacroMenu())
     end
 
@@ -2153,8 +2250,10 @@ local function ManageTree(editframe)
             -- A path from another grouping (the selection kept across a
             -- switch) drops its group and is found again from its by-type part.
             if type(path) == "string" and path:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then
-                local kind = treeGrouping() == "class" and "class:" or "col:"
-                if not map or path:sub(#GROUP_PREFIX + 1, #GROUP_PREFIX + #kind) ~= kind then
+                local grouping = treeGrouping()
+                local kind = grouping == "class" and "class:" or "col:"
+                if grouping == "type" or not map
+                        or path:sub(#GROUP_PREFIX + 1, #GROUP_PREFIX + #kind) ~= kind then
                     path = stripGroup(path)
                 end
             end

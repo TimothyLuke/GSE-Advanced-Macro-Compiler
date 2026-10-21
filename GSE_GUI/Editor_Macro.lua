@@ -69,7 +69,26 @@ end
 -- ---------------------------------------------------------------------------
 -- buildMacroMenu()  →  "Macros" tree node
 -- ---------------------------------------------------------------------------
-local function buildMacroMenu()
+-- The stored macro a WoW macro slot holds, or nil. Account slots are kept in
+-- the store's root, character slots in this character's bucket.
+local function storedMacro(name, slot)
+    local stored = GSE.Store("macro")
+    if slot > GSE.GetMaxAccountMacros() then
+        stored = stored[GSE.CharacterMacroBucketKey()] or {}
+    end
+    return stored[name]
+end
+
+-- A macro's versions, for its tree nodes. One GSE does not keep yet has the
+-- one version its Configuration page will make it; a sealed one has none.
+local function macroVersions(name, slot)
+    local element = storedMacro(name, slot)
+    if type(element) == "table" and type(element.GSEProtected) == "string" then return nil end
+    if type(element) == "table" and type(element.Versions) == "table" then return element.Versions end
+    return {{}}
+end
+
+local function buildMacroMenu(editframe)
     local maxAccountMacros = GSE.GetMaxAccountMacros()
     local maxmacros = maxAccountMacros + GSE.GetMaxCharacterMacros() + 2
     local tree = {
@@ -99,7 +118,7 @@ local function buildMacroMenu()
                 text = mname,
                 value = macid,
                 icon = micon,
-                children = GSE.GUI.ElementPageNodes()
+                children = GSE.GUI.ElementTreeNodes(editframe, macroVersions(mname, macid))
             }
             if macid <= maxAccountMacros then
                 table.insert(tree.children[1].children, node)
@@ -121,20 +140,21 @@ local function buildMacroMenu()
 end
 
 -- ---------------------------------------------------------------------------
--- showMacro(editframe, node, container, selected)
+-- showMacro(editframe, node, container, index)
 --
 -- `node` is the WoW macro as the tree found it: { value = slot, name, icon,
 -- text }. What GSE keeps for it is the stored macro under that name, in the
 -- current shape (GSE.UpgradeMacro): MetaData for its author, scope, help and
 -- which version runs where, Versions for its text. The page edits the stored
--- macro in place, on version `selected`, and every change is written back to
--- WoW through updatemacro -- which puts in the macro book whatever the version
--- that runs now compiles to (GSE.MacroText). A macro runs by its WoW name, so
+-- macro in place, on its Configuration page (`index` nil) or that version's
+-- page, and every change is written back to WoW through updatemacro -- which
+-- puts in the macro book whatever the version that runs now compiles to
+-- (GSE.MacroText). A macro runs by its WoW name, so
 -- editing a version that does not run now changes nothing in game.
 --
 -- A sealed (protected) macro has no source to show: it gets its WoW text only.
 -- ---------------------------------------------------------------------------
-local function showMacro(editframe, node, container, selected)
+local function showMacro(editframe, node, container, index)
     -- Section header — uses the GSE macro asset icon, not the individual macro's WoW icon
     if GSE.GUI.AddSectionHeader then
         GSE.GUI.AddSectionHeader(container, L["Macros"] or "Macros", GSE.Static.Icons.Macros)
@@ -161,9 +181,10 @@ local function showMacro(editframe, node, container, selected)
         GSE.UpgradeMacro(element, node.name)
     end
 
-    selected = tonumber(selected) or 1
+    -- `index` nil: the Configuration page. A number: that version's page.
+    local onConfig = index == nil
+    local selected = tonumber(index) or 1
     if element and not element.Versions[selected] then selected = 1 end
-    editframe.macroSelected = selected
     local version = element and element.Versions[selected]
     local managed = element and element.Managed or false
     editframe.activeMacroName = node.name
@@ -172,9 +193,9 @@ local function showMacro(editframe, node, container, selected)
     local function commit()
         if element then GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = element}) end
     end
-    local function redraw(newSelected)
+    local function redraw()
         if container.ReleaseChildren then container:ReleaseChildren() end
-        showMacro(editframe, node, container, newSelected or editframe.macroSelected)
+        showMacro(editframe, node, container, index and selected)
         editframe.loaded = true
         if container.DoLayout then container:DoLayout() end
         if editframe.scroller and editframe.scroller.DoLayout then editframe.scroller:DoLayout() end
@@ -182,6 +203,164 @@ local function showMacro(editframe, node, container, selected)
         if editframe.DoLayout then editframe:DoLayout() end
     end
 
+    -- The macro's text: the version being edited, or a sealed macro's WoW text.
+    local function drawMacroText()
+        if managed then
+            local managedMacro = UI:Create("MultiLineEditBox")
+            managedMacro:SetLabel(L["Macro"])
+            ConfigureMacroFieldLabel(managedMacro)
+            SetMultiLineLabelGap(managedMacro, 2)
+            SetMultiLineContentPadding(managedMacro, 2)
+            local authored = version.managedMacro or version.text or ""
+            -- A version's ranked casts compile as written (see "Spell ranks" in translator.lua).
+            local managedtext = DecodeMacroEditorText(GSE.WithSpellRanks(version.Ranks, GSE.CompileMacroText,
+                authored, Statics.TranslatorMode.Current))
+            managedMacro:SetText(managedtext)
+            managedMacro:SetNumLines(7)
+            managedMacro:SetFullWidth(true)
+            SetMacroTextCounter(managedMacro, managedtext)
+
+            -- Compile the authored version to its spell-name form and queue the
+            -- in-game macro update. Split out of OnTextChanged so it can run either
+            -- live (real-time parsing on) or once on focus-loss / accept (real-time
+            -- parsing off). The authored macro (managedMacro, the ID form) is always
+            -- stored in OnTextChanged regardless of this setting, so nothing the
+            -- user types is ever lost; only the derived compile + macro refresh are
+            -- deferred.
+            local function commitManagedMacroCompile(displayText)
+                version.text = DecodeMacroEditorText(GSE.CompileMacroText(displayText, Statics.TranslatorMode.String))
+                commit()
+            end
+
+            managedMacro:SetCallback(
+                "OnTextChanged",
+                function(self, _, text)
+                    SetMacroTextCounter(managedMacro, text)
+                    editframe:SetStatusText(L["Save pending for "] .. node.name)
+                    -- Always persist the authored macro so nothing is lost.
+                    version.managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
+                    -- Stored as IDs; the version remembers which casts had a rank
+                    -- written (see "Spell ranks" in translator.lua).
+                    version.Ranks = GSE.GetRankedSpellIDs(text, version.Ranks, version.managedMacro)
+                    if GSE.ShouldTranslateLive() then
+                        -- Live: compile + queue the in-game macro update on every change.
+                        commitManagedMacroCompile(text)
+                    end
+                    -- When not live, the compile + macro refresh run on focus-loss /
+                    -- accept (handlers below), keeping typing responsive.
+                end
+            )
+
+            managedMacro:SetCallback(
+                "OnEditFocusLost",
+                function()
+                    -- Opening the Tab line builder takes focus off the box, so this
+                    -- fires at the START of a build. Compiling then would queue an
+                    -- in-game macro update per pick off half-built text.
+                    --
+                    -- Unlike Editor.lua's guard, this cannot simply wait for "the
+                    -- next real focus loss": the box does not necessarily regain
+                    -- focus when the menu closes, and what is deferred here is the
+                    -- compiled macro WoW actually fires, not a repaint. So retry
+                    -- once the session's deadline passes. The session zeroes the
+                    -- deadline on a terminal pick, so the usual path is one short
+                    -- hop, and re-reading GetText() at that point picks up
+                    -- everything the builder wrote.
+                    local eb = managedMacro.editBox or managedMacro.editbox
+                    local until_ = (eb and eb.gseTabSessionUntil) or 0
+                    if until_ > GetTime() then
+                        C_Timer.After((until_ - GetTime()) + 0.1, function()
+                            if (eb.gseTabSessionUntil or 0) > GetTime() then return end
+                            commitManagedMacroCompile(managedMacro:GetText())
+                        end)
+                        return
+                    end
+                    -- Always reconcile on focus-loss so the compiled macro is current
+                    -- regardless of mode/combat (a harmless repeat when live already ran).
+                    commitManagedMacroCompile(managedMacro:GetText())
+                end
+            )
+
+            managedMacro:SetCallback(
+                "OnEnterPressed",
+                function(self, _, text)
+                    commitManagedMacroCompile(text)
+                end
+            )
+
+            -- Tab line builder. Pass the WIDGET, not its editbox -- the builder
+            -- resolves widget.editBox. Variables are offered here and not on the
+            -- unmanaged page below: a managed macro's text is compiled through
+            -- GSE.CompileMacroText, which evaluates a leading "=".
+            if GSE.OnEditorMacroTab then
+                GSE.OnEditorMacroTab(managedMacro, editframe.frame, {variables = true})
+            end
+
+            -- Match the unmanaged page exactly: show the accept button and drop the
+            -- trailing Spacer (the unmanaged page has neither a "Template" label nor a
+            -- spacer, so its "Used by Sequences" panel sits one row higher).
+            managedMacro:DisableButton(false)
+            -- Push the Macro box down 3px (negative y = down) for a little breathing
+            -- room below Help Information.
+            if managedMacro.SetFlowOffset then managedMacro:SetFlowOffset(0, -3) end
+            container:AddChild(managedMacro)
+        else
+            local macro = UI:Create("MultiLineEditBox")
+            macro:SetLabel(L["Macro"])
+            ConfigureMacroFieldLabel(macro)
+            SetMultiLineLabelGap(macro, 2)
+            SetMultiLineContentPadding(macro, 2)
+            macro:SetText(DecodeMacroEditorText((version and version.text) or node.text or ""))
+            macro:SetNumLines(7)
+            macro:SetFullWidth(true)
+            SetMacroTextCounter(macro)
+            macro:SetCallback("OnTextChanged", function(self, _, text)
+                SetMacroTextCounter(macro, text)
+            end)
+            macro:SetCallback(
+                "OnEnterPressed",
+                function(self, _, text)
+                    editframe:SetStatusText(L["Save pending for "] .. node.name)
+                    local stored = StoreMacroEditorText(text, Statics.TranslatorMode.String)
+                    if version then
+                        version.text = stored
+                        commit()
+                    else
+                        -- Sealed: only the WoW macro itself can be changed.
+                        node.text = stored
+                        GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = node})
+                    end
+                end
+            )
+            -- Same builder as the managed page, minus GSE variables: this text goes
+            -- to the in-game macro as written, so a "=GSE.V[...]()" line would never
+            -- be evaluated.
+            if GSE.OnEditorMacroTab then
+                GSE.OnEditorMacroTab(macro, editframe.frame)
+            end
+            macro:DisableButton(false)
+            -- Push the Macro box down 3px (negative y = down) to match the managed page.
+            if macro.SetFlowOffset then macro:SetFlowOffset(0, -3) end
+            container:AddChild(macro)
+        end
+
+    end
+
+    if not onConfig then
+        -- A version's page, as on a sequence: its label and Delete Version,
+        -- then its text. Versions are chosen and added in the tree.
+        if element and GSE.GUI.DrawElementVersionHeader then
+            GSE.GUI.DrawElementVersionHeader(editframe, container, element, selected, commit, function(shown)
+                if editframe.ManageTree then editframe.ManageTree() end
+                GSE.GUI.SelectEditorTreePath(editframe, editframe.macroElementPath .. "\001" .. shown)
+            end)
+        end
+        drawMacroText()
+        return selected
+    end
+
+    -- The Configuration page: the macro, where it loads, which version runs
+    -- where, and what uses it.
     local manageGSE = UI:Create("CheckBox")
     manageGSE:SetType("radio")
     manageGSE:SetLabel(L["Manage Macro with GSE"])
@@ -328,196 +507,6 @@ local function showMacro(editframe, node, container, selected)
     if element then container:AddChild(manageGSE) end
     container:AddChild(headerGroup)
 
-    local scopeDropdown
-    if element then
-        -- Scope: which class or spec loads it. It still runs by its WoW name.
-        if GSE.GUI.DrawElementScope then
-            scopeDropdown = GSE.GUI.DrawElementScope(editframe, container, element,
-                GSE.SuggestElementScope and GSE.SuggestElementScope("macro", node.name),
-                function() commit(); redraw() end)
-        end
-        if GSE.GUI.DrawElementCollections then
-            GSE.GUI.DrawElementCollections(container, "macro", node.name)
-        end
-
-        -- Which version this page edits.
-        if GSE.GUI.DrawElementVersionBar then
-            GSE.GUI.DrawElementVersionBar(editframe, container, element, selected, redraw, commit)
-        end
-    end
-
-    if managed then
-        local managedMacro = UI:Create("MultiLineEditBox")
-        managedMacro:SetLabel(L["Macro"])
-        ConfigureMacroFieldLabel(managedMacro)
-        SetMultiLineLabelGap(managedMacro, 2)
-        SetMultiLineContentPadding(managedMacro, 2)
-        local authored = version.managedMacro or version.text or ""
-        -- A version's ranked casts compile as written (see "Spell ranks" in translator.lua).
-        local managedtext = DecodeMacroEditorText(GSE.WithSpellRanks(version.Ranks, GSE.CompileMacroText,
-            authored, Statics.TranslatorMode.Current))
-        managedMacro:SetText(managedtext)
-        managedMacro:SetNumLines(7)
-        managedMacro:SetFullWidth(true)
-        SetMacroTextCounter(managedMacro, managedtext)
-
-        -- Compile the authored version to its spell-name form and queue the
-        -- in-game macro update. Split out of OnTextChanged so it can run either
-        -- live (real-time parsing on) or once on focus-loss / accept (real-time
-        -- parsing off). The authored macro (managedMacro, the ID form) is always
-        -- stored in OnTextChanged regardless of this setting, so nothing the
-        -- user types is ever lost; only the derived compile + macro refresh are
-        -- deferred.
-        local function commitManagedMacroCompile(displayText)
-            version.text = DecodeMacroEditorText(GSE.CompileMacroText(displayText, Statics.TranslatorMode.String))
-            commit()
-        end
-
-        managedMacro:SetCallback(
-            "OnTextChanged",
-            function(self, _, text)
-                SetMacroTextCounter(managedMacro, text)
-                editframe:SetStatusText(L["Save pending for "] .. node.name)
-                -- Always persist the authored macro so nothing is lost.
-                version.managedMacro = StoreMacroEditorText(text, Statics.TranslatorMode.ID)
-                -- Stored as IDs; the version remembers which casts had a rank
-                -- written (see "Spell ranks" in translator.lua).
-                version.Ranks = GSE.GetRankedSpellIDs(text, version.Ranks, version.managedMacro)
-                if GSE.ShouldTranslateLive() then
-                    -- Live: compile + queue the in-game macro update on every change.
-                    commitManagedMacroCompile(text)
-                end
-                -- When not live, the compile + macro refresh run on focus-loss /
-                -- accept (handlers below), keeping typing responsive.
-            end
-        )
-
-        managedMacro:SetCallback(
-            "OnEditFocusLost",
-            function()
-                -- Opening the Tab line builder takes focus off the box, so this
-                -- fires at the START of a build. Compiling then would queue an
-                -- in-game macro update per pick off half-built text.
-                --
-                -- Unlike Editor.lua's guard, this cannot simply wait for "the
-                -- next real focus loss": the box does not necessarily regain
-                -- focus when the menu closes, and what is deferred here is the
-                -- compiled macro WoW actually fires, not a repaint. So retry
-                -- once the session's deadline passes. The session zeroes the
-                -- deadline on a terminal pick, so the usual path is one short
-                -- hop, and re-reading GetText() at that point picks up
-                -- everything the builder wrote.
-                local eb = managedMacro.editBox or managedMacro.editbox
-                local until_ = (eb and eb.gseTabSessionUntil) or 0
-                if until_ > GetTime() then
-                    C_Timer.After((until_ - GetTime()) + 0.1, function()
-                        if (eb.gseTabSessionUntil or 0) > GetTime() then return end
-                        commitManagedMacroCompile(managedMacro:GetText())
-                    end)
-                    return
-                end
-                -- Always reconcile on focus-loss so the compiled macro is current
-                -- regardless of mode/combat (a harmless repeat when live already ran).
-                commitManagedMacroCompile(managedMacro:GetText())
-            end
-        )
-
-        managedMacro:SetCallback(
-            "OnEnterPressed",
-            function(self, _, text)
-                commitManagedMacroCompile(text)
-            end
-        )
-
-        -- Tab line builder. Pass the WIDGET, not its editbox -- the builder
-        -- resolves widget.editBox. Variables are offered here and not on the
-        -- unmanaged page below: a managed macro's text is compiled through
-        -- GSE.CompileMacroText, which evaluates a leading "=".
-        if GSE.OnEditorMacroTab then
-            GSE.OnEditorMacroTab(managedMacro, editframe.frame, {variables = true})
-        end
-
-        -- Match the unmanaged page exactly: show the accept button and drop the
-        -- trailing Spacer (the unmanaged page has neither a "Template" label nor a
-        -- spacer, so its "Used by Sequences" panel sits one row higher).
-        managedMacro:DisableButton(false)
-        -- Push the Macro box down 3px (negative y = down) for a little breathing
-        -- room below Help Information.
-        if managedMacro.SetFlowOffset then managedMacro:SetFlowOffset(0, -3) end
-        container:AddChild(managedMacro)
-    else
-        local macro = UI:Create("MultiLineEditBox")
-        macro:SetLabel(L["Macro"])
-        ConfigureMacroFieldLabel(macro)
-        SetMultiLineLabelGap(macro, 2)
-        SetMultiLineContentPadding(macro, 2)
-        macro:SetText(DecodeMacroEditorText((version and version.text) or node.text or ""))
-        macro:SetNumLines(7)
-        macro:SetFullWidth(true)
-        SetMacroTextCounter(macro)
-        macro:SetCallback("OnTextChanged", function(self, _, text)
-            SetMacroTextCounter(macro, text)
-        end)
-        macro:SetCallback(
-            "OnEnterPressed",
-            function(self, _, text)
-                editframe:SetStatusText(L["Save pending for "] .. node.name)
-                local stored = StoreMacroEditorText(text, Statics.TranslatorMode.String)
-                if version then
-                    version.text = stored
-                    commit()
-                else
-                    -- Sealed: only the WoW macro itself can be changed.
-                    node.text = stored
-                    GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = node})
-                end
-            end
-        )
-        -- Same builder as the managed page, minus GSE variables: this text goes
-        -- to the in-game macro as written, so a "=GSE.V[...]()" line would never
-        -- be evaluated.
-        if GSE.OnEditorMacroTab then
-            GSE.OnEditorMacroTab(macro, editframe.frame)
-        end
-        macro:DisableButton(false)
-        -- Push the Macro box down 3px (negative y = down) to match the managed page.
-        if macro.SetFlowOffset then macro:SetFlowOffset(0, -3) end
-        container:AddChild(macro)
-    end
-
-    -- Which version runs where: Default and the context overrides.
-    if element and GSE.GUI.DrawElementVersionConfig then
-        -- 4 of space above the Configuration heading.
-        local configGap = UI:Create("Spacer")
-        configGap:SetHeight(4)
-        container:AddChild(configGap)
-        local configHeading = UI:Create("Heading")
-        configHeading:SetText(L["Configuration"])
-        configHeading:SetFullWidth(true)
-        if configHeading.SetJustifyH then configHeading:SetJustifyH("CENTER") end
-        container:AddChild(configHeading)
-        local configHeadingGap = UI:Create("Spacer")
-        configHeadingGap:SetHeight(8)
-        container:AddChild(configHeadingGap)
-        GSE.GUI.DrawElementVersionConfig(editframe, container, element, commit, scopeDropdown)
-    end
-
-    -- "Used by Sequences" panel at the bottom of every macro page — lists the
-    -- sequences that embed this macro. Same styled table as the variable page.
-    if GSE.GUI.CreateDependencyWindow and GSE.GetMacroDependents then
-        local heading = (L["Used by Sequences"] or "Used by Sequences") .. ":"
-        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
-        local rows = {}
-        for _, entry in ipairs(GSE.GetMacroDependents(node.name)) do
-            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
-            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
-            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
-            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
-        end
-        -- Full width, flush with the Configuration rows above it.
-        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
-    end
-
     manageGSE:SetCallback(
         "OnValueChanged",
         function(self, _, value)
@@ -541,6 +530,46 @@ local function showMacro(editframe, node, container, selected)
             C_Timer.After(0.01, function() redraw() end)
         end
     )
+
+    local scopeDropdown
+    if element then
+        -- Scope: which class or spec loads it. It still runs by its WoW name.
+        if GSE.GUI.DrawElementScope then
+            scopeDropdown = GSE.GUI.DrawElementScope(editframe, container, element,
+                GSE.SuggestElementScope and GSE.SuggestElementScope("macro", node.name),
+                function() commit(); redraw() end)
+        end
+        if GSE.GUI.DrawElementCollections then
+            GSE.GUI.DrawElementCollections(container, "macro", node.name)
+        end
+    end
+
+    -- A sealed macro has no versions: its text is shown here.
+    if not element then drawMacroText() end
+
+    -- Which version runs where: Default and the context overrides.
+    if element and GSE.GUI.DrawElementVersionConfig then
+        local configGap = UI:Create("Spacer")
+        configGap:SetHeight(8)
+        container:AddChild(configGap)
+        GSE.GUI.DrawElementVersionConfig(editframe, container, element, commit, scopeDropdown)
+    end
+
+    -- "Used by Sequences" panel at the bottom of every macro page — lists the
+    -- sequences that embed this macro. Same styled table as the variable page.
+    if GSE.GUI.CreateDependencyWindow and GSE.GetMacroDependents then
+        local heading = (L["Used by Sequences"] or "Used by Sequences") .. ":"
+        local fmt     = GSE.GUI.FormatDependencyTimestamp or function() return "" end
+        local rows = {}
+        for _, entry in ipairs(GSE.GetMacroDependents(node.name)) do
+            local seq     = GSE.Library and GSE.Library[entry.classid] and GSE.Library[entry.classid][entry.id]
+            local author  = seq and (seq.Author or (seq.MetaData and seq.MetaData.Author)) or ""
+            local updated = seq and fmt(seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)) or ""
+            rows[#rows+1] = { name = entry.name, author = author, updated = updated }
+        end
+        -- Full width, flush with the Configuration rows above it.
+        GSE.GUI.CreateDependencyWindow(container, heading, rows, { hideAuthor = false, hideType = true })
+    end
 end
 
 -- The macro's Notes - Help page: its Help Link, and Help Information
@@ -584,18 +613,38 @@ function GSE.GUI.SetupMacro(editframe)
         showMacroNotes(editframe, node, container, height)
     end
     editframe.showMacro = function(node, container)
-        -- Opened from the tree: start on the version that runs now.
-        local stored = GSE.Store("macro")
-        local charKey = GSE.CharacterMacroBucketKey()
-        local element = (node.value > GSE.GetMaxAccountMacros())
-            and (stored[charKey] or {})[node.name] or stored[node.name]
-        local selected = 1
-        if type(element) == "table" and type(element.Versions) == "table" then
-            selected = GSE.GetActiveVersion(element.MetaData)
-        end
-        showMacro(editframe, node, container, selected)
+        showMacro(editframe, node, container)
     end
-    editframe.buildMacroMenu = buildMacroMenu
+    -- elementPath: the macro's node in the tree, for selecting a version.
+    editframe.showMacroVersion = function(node, container, index, elementPath)
+        editframe.macroElementPath = elementPath
+        return showMacro(editframe, node, container, index)
+    end
+    editframe.macroVersions = macroVersions
+    -- New Version: a copy of the Default version, at the end. Returns its
+    -- index, or nil for a sealed macro.
+    editframe.newMacroVersion = function(name, slot, icon, text)
+        local stored = GSE.Store("macro")
+        if slot > GSE.GetMaxAccountMacros() then
+            local charKey = GSE.CharacterMacroBucketKey()
+            stored[charKey] = stored[charKey] or {}
+            stored = stored[charKey]
+        end
+        local element = stored[name]
+        if type(element) == "table" and type(element.GSEProtected) == "string" then return nil end
+        if not GSE.IsStoredMacroNode(element) then
+            element = GSE.NewMacroNode(name, icon, text, slot)
+            stored[name] = element
+        end
+        GSE.UpgradeMacro(element, name)
+        local default = tonumber(element.MetaData.Default) or 1
+        local copy = GSE.CloneSequence(element.Versions[default] or element.Versions[1] or {})
+        copy.Label = nil
+        table.insert(element.Versions, copy)
+        GSE.EnqueueOOC({["action"] = "updatemacro", ["node"] = element})
+        return #element.Versions
+    end
+    editframe.buildMacroMenu = function() return buildMacroMenu(editframe) end
 end
 end
 table.insert(ns.deferred, setup)

@@ -1795,87 +1795,72 @@ function GSE.GUI.DrawElementCollections(container, kind, ref, classid)
     container:AddChild(inlineFieldRow(T("From collections"), text, ELEMENT_LABEL_WIDTH))
 end
 
---- The version bar: choose which version to edit, label it, copy it into a new
---- one, or delete it. `onSelect(index)` redraws the editor on that version;
---- `onChange()`, when given, runs after the versions themselves change.
-function GSE.GUI.DrawElementVersionBar(editframe, container, element, selected, onSelect, onChange)
-    element.Versions = element.Versions or {{}}
+--- The top of a variable's or macro's version page, as on a sequence's: the
+--- version's label and Delete Version. Versions are chosen and added in the
+--- tree. `onChange()` runs after the label or the versions change;
+--- `onDeleted(index)` after a delete, with the version to show now.
+function GSE.GUI.DrawElementVersionHeader(editframe, container, element, index, onChange, onDeleted)
     local row = UI:Create("SimpleGroup")
     row:SetLayout("Flow")
     row:SetFullWidth(true)
     if row.SetFlowGap then row:SetFlowGap(8) end
     if row.SetFlowVAlign then row:SetFlowVAlign("BOTTOM") end
 
-    local pick = UI:Create("Dropdown")
-    pick:SetLabel(T("Version"))
-    pick:SetWidth(180)
-    if pick.SetDropdownStyle then pick:SetDropdownStyle(true) end
-    pick:SetList(elementVersionList(element))
-    pick:SetValue(tostring(selected))
-    pick:SetCallback("OnValueChanged", function(_, _, key) onSelect(tonumber(key) or 1) end)
-
+    local version = element.Versions[index]
     local label = UI:Create("EditBox")
-    label:SetLabel(T("Version Label"))
-    label:SetWidth(200)
+    label:SetLabel(T("Version") .. " " .. T("Name"))
+    label:SetWidth(250)
     label:DisableButton(true)
-    label:SetText(element.Versions[selected] and element.Versions[selected].Label or "")
+    label:SetText(editframe.BuildVersionLabel(tostring(index), version.Label, true))
     label:SetCallback("OnTextChanged", function(_, _, text)
-        if element.Versions[selected] then
-            element.Versions[selected].Label = (text ~= "") and text or nil
-        end
+        version.Label = (text ~= "") and text or nil
     end)
-    label:SetCallback("OnEditFocusLost", function() if onChange then onChange() end end)
-    -- 6 right, to even the space either side of the box: the dropdown's art
-    -- runs to its frame's edge, the box's sits inset in its own and the
-    -- button's art inset again, so the gaps read ~6 and ~17 (measured off an
-    -- in-game screenshot). The offset moves only the box, so both become ~11.
-    if label.SetFlowOffset then label:SetFlowOffset(6, 0) end
-
-    local add = UI:Create("Button")
-    add:SetText(T("New") .. " " .. T("Version"))
-    add:SetWidth(130)
-    add:SetCallback("OnClick", function()
-        table.insert(element.Versions, GSE.CloneSequence(element.Versions[selected] or {}))
-        element.Versions[#element.Versions].Label = nil
+    label:SetCallback("OnEditFocusLost", function()
         if onChange then onChange() end
-        onSelect(#element.Versions)
+        -- The tree shows the label too.
+        if editframe.ManageTree then editframe.ManageTree() end
     end)
-    add:SetCallback("OnEnter", function()
-        GSE.CreateToolTip(T("New") .. " " .. T("Version"), T("Copy the selected version into a new one."), editframe)
-    end)
-    add:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
     local del = UI:Create("Button")
     del:SetText(T("Delete Version"))
-    del:SetWidth(130)
+    del:SetWidth(150)
     del:SetDisabled(#element.Versions < 2)
     del:SetCallback("OnClick", function()
         if #element.Versions < 2 then return end
         -- Refused, not repointed, while anything selects it -- as for a sequence.
-        local blocking = GSE.VersionReferencesInUse(element.MetaData, selected)
+        local blocking = GSE.VersionReferencesInUse(element.MetaData, index)
         if #blocking > 0 then
             editframe:SetStatusText(string.format(T("Version %d is still selected for: %s"),
-                selected, table.concat(blocking, ", ")))
+                index, table.concat(blocking, ", ")))
             return
         end
-        GSE.ShiftVersionReferencesAfterDelete(element.MetaData, selected)
-        table.remove(element.Versions, selected)
-        if onChange then onChange() end
-        onSelect(math.min(selected, #element.Versions))
+        GSE.UI.ShowConfirmDialog({
+            owner       = editframe,
+            title       = T("Delete Version"),
+            message     = T("Are you sure you want to Delete")
+                .. "\n\n|cFFFFFFFF" .. tostring(element.MetaData.Name or "")
+                .. " \226\128\148 " .. T("Version") .. " " .. tostring(index) .. "|r\n\n"
+                .. "|cFFFF3030" .. T("This Action Cannot be Undone!") .. "|r",
+            width       = 360,
+            height      = 190,
+            confirmText = T("Delete"),
+            cancelText  = T("Cancel"),
+            onConfirm   = function()
+                GSE.ShiftVersionReferencesAfterDelete(element.MetaData, index)
+                table.remove(element.Versions, index)
+                if onChange then onChange() end
+                onDeleted(math.min(index, #element.Versions))
+            end,
+        })
     end)
+    del:SetCallback("OnEnter", function()
+        GSE.CreateToolTip(T("Delete Version"), T("Delete this version."), editframe)
+    end)
+    del:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
 
-    -- The row aligns frame bottoms. The label box's frame is 48 high (label
-    -- above, box 13 down, 22 high), so its box centres 24 above the bottom; the
-    -- 24-high dropdown and buttons centre 12 above it. Raising those 12 lines
-    -- all four up and keeps the label at the top of the row.
-    -- 2 short of that in practice (tuned in game): the drawn art sits high in
-    -- each frame.
-    for _, w in ipairs({pick, add, del}) do
-        if w.SetFlowOffset then w:SetFlowOffset(0, 10) end
-    end
-    row:AddChild(pick)
+    -- The row aligns frame bottoms; the label box's frame runs 12 below its box.
+    if del.SetFlowOffset then del:SetFlowOffset(0, 10) end
     row:AddChild(label)
-    row:AddChild(add)
     row:AddChild(del)
     container:AddChild(row)
 end
