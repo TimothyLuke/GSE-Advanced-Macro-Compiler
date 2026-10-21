@@ -2129,6 +2129,105 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
         GSE.SkyridingOptionsCategory =
             Settings.RegisterVerticalLayoutSubcategory(troubleOptions, L["Skyriding / Vehicle Keybinds"])
     end
+    -- GSE Action Bar (GSE_Actionbar): its switch and its settings, which are
+    -- greyed out while it is off. All here rather than in the bar, which is
+    -- LoadOnDemand and so not loaded while it is off. A change lays the bars
+    -- out again once they are loaded (GSE.ActionBarRefresh).
+    if GSE.ActionBarInstalled() then
+        local actionBarOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["GSE Action Bar"])
+        local BAR_SIZE, BAR_COUNT = 12, 2
+        local function refresh()
+            if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end
+        end
+        local enableInit
+        do
+            local function GetValue()
+                return GSE.ActionBarEnabled()
+            end
+            local function SetValue(value)
+                if (value and true or false) == GSE.ActionBarEnabled() then return end
+                GSE.SetActionBarEnabled(value)
+            end
+            local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarEnabled",
+                Settings.VarType.Boolean, L["Enable the GSE Action Bar"], false, GetValue, SetValue)
+            enableInit = Settings.CreateCheckbox(actionBarOptions, setting,
+                L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under AddOns. Put a sequence on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."])
+        end
+        -- Greyed out while the bar is off.
+        local function underSwitch(init)
+            if init and init.SetParentInitializer and enableInit then
+                init:SetParentInitializer(enableInit, GSE.ActionBarEnabled)
+            end
+        end
+        local layout = SettingsPanel:GetLayout(actionBarOptions)
+        local function header(name)
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate",
+                { name = name, tooltip = name }))
+        end
+        local function checkbox(id, key, label, tooltip)
+            local function GetValue() return GSE.ActionBarOptions()[key] == true end
+            local function SetValue(value)
+                GSE.ActionBarOptions()[key] = value and true or false
+                refresh()
+            end
+            local setting = Settings.RegisterProxySetting(actionBarOptions, id, Settings.VarType.Boolean, label,
+                GSE.ActionBarOptions()[key] == true, GetValue, SetValue)
+            underSwitch(Settings.CreateCheckbox(actionBarOptions, setting, tooltip))
+        end
+        -- A slider on a settings table read fresh each time (a bar's, or the bars').
+        local function slider(id, read, key, label, low, high, step, default, tooltip, format)
+            local function GetValue() return tonumber(read()[key]) or default end
+            local function SetValue(value)
+                read()[key] = value
+                refresh()
+            end
+            local setting = Settings.RegisterProxySetting(actionBarOptions, id, Settings.VarType.Number, label,
+                default, GetValue, SetValue)
+            local options = Settings.CreateSliderOptions(low, high, step)
+            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
+                return string.format(format or "%d", value)
+            end)
+            underSwitch(Settings.CreateSlider(actionBarOptions, setting, options, tooltip))
+        end
+
+        header(L["All bars"])
+        checkbox("gseActionBarLocked", "Locked", L["Lock the bars"],
+            L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
+        checkbox("gseActionBarShowKeys", "ShowKeys", L["Show keys"],
+            L["Show on each button the key WoW's Key Bindings give it."])
+        checkbox("gseActionBarShowEmpty", "ShowEmpty", L["Show empty buttons"],
+            L["Show buttons with no sequence on them. They always show while a sequence is being dragged."])
+        slider("gseActionBarSpacing", GSE.ActionBarOptions, "Spacing", L["Button spacing"], 0, 20, 1, 4,
+            L["The gap between buttons."])
+
+        for b = 1, BAR_COUNT do
+            local first = (b - 1) * BAR_SIZE + 1
+            local function bar() return GSE.ActionBarOptions().Bars[b] end
+            header(string.format(L["Bar %d -- buttons %d to %d"], b, first, first + BAR_SIZE - 1))
+            do
+                local function GetValue() return bar().Visibility or "SHOW" end
+                local function SetValue(value)
+                    bar().Visibility = value
+                    refresh()
+                end
+                local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarVisibility" .. b,
+                    Settings.VarType.String, L["Show the bar"], bar().Visibility or "SHOW", GetValue, SetValue)
+                local function GetOptions()
+                    local container = Settings.CreateControlTextContainer()
+                    container:Add("SHOW", L["Always"])
+                    container:Add("MOUSEOVER", L["On mouseover"])
+                    container:Add("HIDE", L["Never"])
+                    return container:GetData()
+                end
+                underSwitch(Settings.CreateDropdown(actionBarOptions, setting, GetOptions,
+                    L["A bar that is not shown still works: its buttons' keys run their sequences. It shows while a sequence is being dragged, to drop it on."]))
+            end
+            slider("gseActionBarPerRow" .. b, bar, "PerRow", L["Buttons per row"], 1, BAR_SIZE, 1, BAR_SIZE,
+                L["How many buttons each row of the bar holds."])
+            slider("gseActionBarScale" .. b, bar, "Scale", L["Scale"], 0.5, 2, 0.05, 1,
+                L["The size of the bar."], "%.2f")
+        end
+    end
     --@debug@
     local debugOptions = GSE.Developer and Settings.RegisterVerticalLayoutSubcategory(troubleOptions, "Developer Debug") or nil
     --@end-debug@

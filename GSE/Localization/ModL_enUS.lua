@@ -879,24 +879,23 @@ L["Pause Sequences While Ctrl Is Held"] = true
 L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."] = true
 
 L["WhatsNew"] =
-[[|cFFFFFFFFGS|r|cFF00FFFFE|r 3.3.10
+[[|cFFFFFFFFGS|r|cFF00FFFFE|r |cFFFFD100The GSE Action Bar|r
 
-|cFFFFD100GSE.tools — The GSE Platform|r
-GSE now has a home on the web at |cFF00BFFFgse.tools|r. Browse, share, and discover sequences, variables, and macros created by the community. Sequences you mark as |cFF00FFFFpublic|r on the platform are visible to everyone — no account required to view them.
+|cFFFFD100Why GSE keybinds are changing|r
+WoW's controller update changed the APIs that GSE's keybinds have used since The War Within. On |cFF00FFFFWoW Forever|r and from |cFF00FFFFRetail 12.1.7|r, WoW ignores a key GSE binds to a sequence by itself. WoW now wants every key to go to a fixed button that an addon declares, the way action bars and action bar addons do.
 
-|cFFFFD100GSE Companion App|r
-The |cFF00BFFFGSE Companion|r is a desktop app that connects your in-game GSE to the platform. It:
- - |cFFFFD100Syncs|r your sequences, variables, and macros to your gse.tools account automatically.
- - |cFFFFD100Installs|r content from the platform directly into your WoW client — browse on gse.tools, click Install, and |cFF00BFFF/reload|r.
- - |cFFFFD100Receives updates|r when authors publish new versions of sequences you have installed.
- - Works with Retail, Classic, and PTR clients.
+|cFFFFD100The GSE Action Bar|r
+GSE now comes with an optional action bar of its own: two bars of twelve buttons, |cFF00BFFFGSEButton1|r to |cFF00BFFFGSEButton24|r. Their keys are set in WoW's |cFF00BFFFOptions > Keybindings|r, under AddOns, with every other keybind. Put a sequence on a button in |cFF00BFFFButton Bindings|r, by right-clicking the button, or by dragging the sequence from the editor onto it -- the same as any other action bar button.
 
-Download the Companion at |cFF00BFFFgse.tools|r. Once installed, a small bridge addon (|cFFFFFFFFGSE Companion Bridge|r) appears in your addon list — keep it enabled.
+|cFFFFD100Moving your keybinds|r
+On |cFF00FFFFRetail 12.1.7|r on, if you had GSE keybinds, the GSE Action Bar has been turned on for you, |cFFFFD100hidden|r. Each key now sits on a GSE button in WoW's Keybindings, and that button runs the sequence the key ran, for each spec and talent loadout. A reload finishes the move. Nothing new shows on screen.
 
-|cFFFFD100Platform Import Queue|r
-When the Companion delivers content, the |cFF00BFFFImport|r dialog opens automatically on login showing what is available. If you close the dialog without importing, a reminder appears in chat with instructions to reopen it via |cFF00BFFF/gse import|r.
+On the other versions of WoW your GSE keybinds still work, and moving them is up to you: turn on the GSE Action Bar in |cFF00BFFFGSE Options > GSE Action Bar|r and they move the same way. Once Retail reaches 12.1.7 that is no longer optional there.
 
-Authors who enable |cFF00BFFFAuto-Accept|r in GSE Options will have incoming updates imported silently on login.
+|cFFFFD100Showing, moving and turning it off|r
+Show either bar, show it on mouseover, move it, size it, or turn the bar off in |cFF00BFFFGSE Options > GSE Action Bar|r. A hidden bar still works -- its keys run their sequences -- and shows while you drag a sequence, so you can drop it on a button. Masque can skin the buttons.
+
+You do not have to use it. Any action bar or action bar addon works: right-click a button, or drag a sequence onto it.
 
 ]]
 
@@ -1083,7 +1082,38 @@ L["Shared Profile"] = true
 L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."] = true
 L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."] = true
 L["Use Shared"] = true
-L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."] = true
+L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."] = true
+-- GSE Action Bar (GSE_Actionbar)
+L["GSE Action Bar"] = true
+L["Enable the GSE Action Bar"] = true
+L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under AddOns. Put a sequence on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."] = true
+L["GSE Action Bar %d"] = true
+L["GSE Button %d"] = true
+L["Bar %d"] = true
+L["Drag a sequence here, or right-click to choose one. Set its key in WoW's Key Bindings, under AddOns."] = true
+L["Moved %d GSE keybinds onto the GSE Action Bar. Their keys are set in WoW's Key Bindings, under AddOns."] = true
+L["The GSE Action Bar has no free button for these keys, so they were not moved: %s"] = true
+L["All bars"] = true
+L["Lock the bars"] = true
+L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."] = true
+L["Show keys"] = true
+L["Show on each button the key WoW's Key Bindings give it."] = true
+L["Show empty buttons"] = true
+L["Show buttons with no sequence on them. They always show while a sequence is being dragged."] = true
+L["Button spacing"] = true
+L["The gap between buttons."] = true
+L["Bar %d -- buttons %d to %d"] = true
+L["Show the bar"] = true
+L["Always"] = true
+L["On mouseover"] = true
+L["Never"] = true
+L["A bar that is not shown still works: its buttons' keys run their sequences. It shows while a sequence is being dragged, to drop it on."] = true
+L["Buttons per row"] = true
+L["How many buttons each row of the bar holds."] = true
+L["Scale"] = true
+L["The size of the bar."] = true
+L["The GSE Action Bar could not be loaded: %s"] = true
+L["GSE Button %d (Bar %d)"] = true
 L["A macro named %s already exists."] = true
 L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
 L["The version used where no other version has been configured."] = true

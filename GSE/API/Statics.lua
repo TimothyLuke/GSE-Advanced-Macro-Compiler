@@ -85,6 +85,8 @@ Statics.CleanStrings = {
 Statics.GSEString = "|cFFFFFFFFGS|r|cFF00FFFFE|r"
 Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GSE-CoreLoaded"
+-- The GSE Action Bar module: shipped with GSE, off until turned on.
+Statics.ActionBarAddOn = "GSE_Actionbar"
 
 Statics.SystemVariables = {
     ["GCD"] = function()
@@ -706,6 +708,11 @@ Statics.Messages.COLLECTION_IMPORTED = "GSE_COLLECTION_IMPORTED"
 -- The action bar overrides were reloaded: one added, removed, or a spec or
 -- loadout change. Sent by GSE.ReloadOverrides.
 Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED = "GSE_ACTIONBAR_OVERRIDES_UPDATED"
+--- A sequence is being dragged towards an action button, and the drag ended.
+--- Sent by GSE.BeginSequenceDrag and when the drag ends. The GSE Action Bar
+--- shows itself for the drop.
+Statics.Messages.SEQUENCE_DRAG_STARTED = "GSE_SEQUENCE_DRAG_STARTED"
+Statics.Messages.SEQUENCE_DRAG_ENDED = "GSE_SEQUENCE_DRAG_ENDED"
 
 -- Lookup set: keys in this set are internal messages -> use RegisterMessage/UnregisterMessage
 -- All other keys in VariableEventList are WoW events → use RegisterEvent/UnregisterEvent

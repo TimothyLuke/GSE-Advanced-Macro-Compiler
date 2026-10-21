@@ -2275,8 +2275,8 @@ function GSE:GSSlash(input)
         local spec = tostring(params[2])
         local sequence = tostring(params[3])
         local physicalkey = tostring(params[4])
-        if GSE.IsForever then
-            GSE.Print(L["Keybinding is not available on WoW Forever. Put the sequence on an action bar button instead (Button Bindings)."])
+        if not GSE.KeybindingsEnabled() then
+            GSE.Print(L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."])
         elseif spec and sequence and physicalkey then
             -- Into the binds in force for that spec: the shared profile's, or
             -- this character's own (Profiles.lua).
@@ -2497,7 +2497,8 @@ do
         if not existingSequence then
             -- Only show the picker on genuinely empty slots.
             -- CPB_ (ConsolePort) buttons are controller-mapped, not slot-based; skip the action check.
-            if string.sub(self:GetName() or "", 1, 4) ~= "CPB_" then
+            -- The GSE Action Bar's buttons hold no slot either.
+            if string.sub(self:GetName() or "", 1, 4) ~= "CPB_" and not self.gseActionBarButton then
                 local action = self.action or self:GetAttribute("action")
                 if not action or action == 0 then return end
                 if HasAction(action) then return end
@@ -2580,6 +2581,9 @@ do
             addSequenceButtons(rootDescription:CreateButton(string.format(L["%s only"], loadoutName)), "loadout")
         end)
     end
+
+    -- The GSE Action Bar hooks its own buttons with the same menu.
+    GSE.ActionButtonMenuHandler = gseEmptyButtonHandler
 
     -- Standard Blizzard action bars hook via the global function
     --

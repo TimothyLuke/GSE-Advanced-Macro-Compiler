@@ -126,6 +126,7 @@ globals = {
     "GSE_GUI_Initialize",
     "GSE_LDB_Initialize",
     "GSE_QoL_Initialize",
+    "GSE_Actionbar_Initialize",
     -- GSE
     "GSE2",
     "GSEGUI",
@@ -489,6 +490,7 @@ globals = {
     "GetClassInfo",
     "GetTalentTierInfo",
     "SaveBindings",
+    "GetCurrentBindingSet",
     "SetBinding",
     "QueryCastSequence",
     "IsUsableSpell",

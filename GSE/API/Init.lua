@@ -135,6 +135,14 @@ function GSE.TOCFlavour(toc)
     return "exp" .. tocMajor
 end
 
+-- WoW's controller update -- Forever first, then Retail at 12.1.7 -- stopped
+-- honouring the keybinds GSE made for itself with SetBindingClick, which no
+-- Bindings.xml declares. There a sequence reaches a key only through an action
+-- button: any bar's (Button Bindings), or the GSE Action Bar's, whose buttons
+-- are declared bindings (GSE_Actionbar). GSE.KeybindingsEnabled reads this.
+local _, _, _, tocVersion = GetBuildInfo()
+GSE.DirectKeybindsRetired = GSE.IsForever or (tonumber(tocVersion) or 0) >= 120107
+
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
     -- If it contains alpha or beta replace with the current version.  This will prevent notifying about test builds.
@@ -276,7 +284,7 @@ GSE.DebugProfile("init")
 -- ---------------------------------------------------------------------------
 -- Submodule init dispatch
 --
--- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL) cannot reach
+-- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL, GSE_Actionbar) cannot reach
 -- this addon's private namespace at parse-time. Each one exposes a single
 -- global `<name>_Initialize` function that takes the GSE table and runs the
 -- submodule's deferred setup. Reinit guards live inside each submodule.
@@ -287,6 +295,8 @@ local SUBMODULES = {
     GSE_GUI = true,
     GSE_LDB = true,
     GSE_QoL = true,
+    -- LoadOnDemand: GSE loads it while it is turned on (Events.lua, loadActionBar).
+    GSE_Actionbar = true,
     GSE_Companion = true,
 }
 

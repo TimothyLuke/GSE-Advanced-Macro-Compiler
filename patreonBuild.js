@@ -218,6 +218,7 @@ async.waterfall(
     async.apply(updateToc, "GSE_LDB", "GSE_LDB"),
     async.apply(updateToc, "GSE_Utils", "GSE_Utils"),
     async.apply(updateToc, "GSE_Options", "GSE_Options"),
+    async.apply(updateToc, "GSE_Actionbar", "GSE_Actionbar"),
     deleteExistingZips,
     addExtras,
     syncQoLVersionFromGSE,
