@@ -28,4 +28,5 @@
 # Bindings.xml is read by WoW itself: it declares a binding per button.
 Bootstrap.lua
 Migration.lua
+Actions.lua
 ActionBar.lua

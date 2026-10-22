@@ -10,11 +10,12 @@ local Statics = GSE.Static
 --
 -- Two bars of twelve buttons, GSEButton1-24, each a binding WoW knows about
 -- (Bindings.xml), so its key is set, kept and conflict-checked in WoW's own
--- Key Bindings like any action bar's. A button runs the sequence its Button
--- Binding names -- set in the editor's Button Bindings, by right-clicking the
--- button, or by dropping a sequence on it -- through the same override every
--- other bar's buttons get (Events.lua), so it follows the spec and talent
--- loadout the same way.
+-- Key Bindings like any action bar's. A button holds a spell, item, macro and
+-- so on like any bar's (Actions.lua), or runs the sequence its Button Binding
+-- names -- set in the editor's Button Bindings, by right-clicking the button,
+-- or by dropping a sequence on it -- through the same override every other
+-- bar's buttons get (Events.lua), so it follows the spec and talent loadout
+-- the same way.
 --
 -- Every setting is out of combat: the buttons are secure, so WoW will not let
 -- them be shown, hidden, moved or resized in combat. Alpha is the exception,
@@ -73,9 +74,6 @@ local function updateKeys()
     end
 end
 
-local function hasSequence(button)
-    return button:GetAttribute("gse-button") ~= nil
-end
 
 -- Size, rows and place of one bar, and which of its buttons show.
 local function layoutBar(b)
@@ -93,7 +91,7 @@ local function layoutBar(b)
         local column, row = (slot - 1) % perRow, math.floor((slot - 1) / perRow)
         button:ClearAllPoints()
         button:SetPoint("TOPLEFT", bar, "TOPLEFT", column * (BUTTON_SIZE + spacing), -row * (BUTTON_SIZE + spacing))
-        button:SetShown(dragging or options.ShowEmpty or hasSequence(button))
+        button:SetShown(dragging or options.ShowEmpty or ns.HasContent(button))
     end
 end
 
@@ -136,6 +134,7 @@ function ns.Refresh()
         bars[b].mover:SetShown(not ns.Options().Locked)
     end
     updateKeys()
+    ns.ApplyActions()
 end
 
 -- Unlocked, each bar has a handle over it to drag it by. Its place is kept
@@ -169,10 +168,10 @@ end
 
 -- An empty button says what it is for.
 local function emptyTooltip(button)
-    if hasSequence(button) or InCombatLockdown() then return end
+    if ns.HasContent(button) or InCombatLockdown() then return end
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
     GameTooltip:SetText(string.format(L["GSE Button %d"], button.gseIndex))
-    GameTooltip:AddLine(L["Drag a sequence here, or right-click to choose one. Set its key in WoW's Key Bindings, under GSE."], 1, 1, 1, true)
+    GameTooltip:AddLine(L["Drag a spell, item, macro or sequence here, or right-click to choose a sequence. Set its key in WoW's Key Bindings, under GSE."], 1, 1, 1, true)
     GameTooltip:Show()
 end
 
@@ -217,15 +216,20 @@ for index = 1, ns.BUTTON_COUNT do
     if GSE.ActionButtonMenuHandler then button:HookScript("OnClick", GSE.ActionButtonMenuHandler) end
     button:HookScript("OnEnter", emptyTooltip)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    ns.SetupActionButton(button)
     if bars[barOf(index)].masque then bars[barOf(index)].masque:AddButton(button, nil, "Action") end
     buttons[index] = button
 end
+ns.buttons = buttons
 
 -- Every event that changes what the bars show.
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_REGEN_ENABLED")
 events:RegisterEvent("UPDATE_BINDINGS")
+-- WoW's own signal that the cursor picked up something an action bar takes.
+events:RegisterEvent("ACTIONBAR_SHOWGRID")
+events:RegisterEvent("ACTIONBAR_HIDEGRID")
 
 -- The keybinds move onto the bar once per character; early in a login WoW
 -- cannot yet say which spec is which, so it tries again for a while.
@@ -243,6 +247,16 @@ end
 events:SetScript("OnEvent", function(_, event)
     if event == "UPDATE_BINDINGS" then
         updateKeys()
+        return
+    end
+    -- A spell, item or macro on the cursor: every bar shows to drop it on, as
+    -- for a sequence.
+    if event == "ACTIONBAR_SHOWGRID" or event == "ACTIONBAR_HIDEGRID" then
+        local showing = event == "ACTIONBAR_SHOWGRID"
+        if showing and not GSE.ActionBarActive() then return end
+        if dragging == showing then return end
+        dragging = showing
+        ns.Refresh()
         return
     end
     if event == "PLAYER_ENTERING_WORLD" then migrate() end

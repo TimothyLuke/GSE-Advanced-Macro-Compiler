@@ -2151,7 +2151,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarEnabled",
                 Settings.VarType.Boolean, L["Enable the GSE Action Bar"], false, GetValue, SetValue)
             enableInit = Settings.CreateCheckbox(actionBarOptions, setting,
-                L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. Put a sequence on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."])
+                L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."])
         end
         -- Greyed out while the bar is off.
         local function underSwitch(init)

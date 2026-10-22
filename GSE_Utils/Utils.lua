@@ -2493,6 +2493,10 @@ do
         end
 
         local existingSequence = self:GetAttribute("gse-button")
+        -- A GSE Action Bar button holding a spell, item or macro is not empty.
+        if self.gseActionBarButton and GSE.ActionBarButtonHasAction and GSE.ActionBarButtonHasAction(self) then
+            return
+        end
 
         if not existingSequence then
             -- Only show the picker on genuinely empty slots.

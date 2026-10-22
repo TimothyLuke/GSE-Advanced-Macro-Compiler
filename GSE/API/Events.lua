@@ -792,6 +792,11 @@ local function overrideActionButton(savedBind, force)
     if _G[Button].gseActionBarButton and not GSE.ActionBarActive() then
         return
     end
+    -- A spell, item or macro on a GSE Action Bar button wins, as an action in
+    -- its slot does on any other bar; the sequence is back once it is taken off.
+    if _G[Button].gseActionBarButton and GSE.ActionBarButtonHasAction and GSE.ActionBarButtonHasAction(_G[Button]) then
+        return
+    end
     -- The bind holds the sequence's id, which names its secure button. Nothing
     -- to run means nothing to override.
     local Sequence = GSE.StoredSequenceId(savedBind.Sequence)
@@ -826,7 +831,19 @@ local function overrideActionButton(savedBind, force)
     -- of falling through to the third-party slot/page logic, which is invalid for
     -- Dominos buttons (the action slot is a flat secure attribute, not paged).
     local isDominosButton = _G[Button].SetShowGridInsecure ~= nil
-    if isDominosButton or string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
+    if _G[Button].gseActionBarButton then
+        -- The GSE Action Bar: no action slot, so no bar swap to watch for --
+        -- the button only ever clicks its sequence.
+        if not InCombatLockdown() then
+            secureArmGSEButton(_G[Button], Sequence)
+        end
+        hookButtonIconUpdates(Button)
+        addGSEWatermark(Button)
+        scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
+        GSE.ButtonOverrides[Button] = Sequence
+        repaintGSEOverrideButton(_G[Button])
+        repaintGSEOverrideButton(_G[Button], true)
+    elseif isDominosButton or string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
         -- Dominos and ButtonForge use ActionBarButtonTemplate / SecureActionButtonTemplate;
         -- action slot is a secure attribute only, not a page/slot hierarchy.
         -- Use simplified WrapScript (no GetActionInfo lookup).
@@ -1137,6 +1154,12 @@ end
 -- bails if the button was re-armed in the same LoadOverrides pass.
 local function refreshClearedOverrideIcon(button)
     if not button or not button.GetAttribute then return end
+    -- A GSE Action Bar button has no slot to repaint from: it goes back to
+    -- the action it holds, or to empty.
+    if button.gseActionBarButton then
+        if GSE.ActionBarButtonCleared then GSE.ActionBarButtonCleared(button) end
+        return
+    end
     C_Timer.After(0, function()
         if not button or not button.GetAttribute then return end
         if button:GetAttribute("gse-button") then return end -- re-armed: keep its GSE icon
@@ -1235,9 +1258,13 @@ local function LoadOverrides(force)
                 -- environment (issue #1931); gse-button is a non-secure string so
                 -- clearing it insecurely is harmless.
                 secureDisarmGSEButton(_G[k])
-                SecureHandlerUnwrapScript(_G[k], "OnClick")
-                SecureHandlerUnwrapScript(_G[k], "OnEnter")
-                SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+                -- The GSE Action Bar's buttons were never wrapped; the wrap
+                -- they do have is the bar's own (Actions.lua).
+                if not _G[k].gseActionBarButton then
+                    SecureHandlerUnwrapScript(_G[k], "OnClick")
+                    SecureHandlerUnwrapScript(_G[k], "OnEnter")
+                    SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+                end
                 removeGSEWatermark(k)
             end
         end
@@ -1661,7 +1688,9 @@ function GSE.FinishSequenceDrag()
     -- so only an empty slot, or one GSE already overrides, takes a sequence.
     if not target:GetAttribute("gse-button") then
         local slot = getButtonEffectiveSlot(target)
-        if slot and HasAction(slot) then
+        local holdsAction = target.gseActionBarButton and GSE.ActionBarButtonHasAction
+            and GSE.ActionBarButtonHasAction(target)
+        if holdsAction or (slot and HasAction(slot)) then
             GSE.Print(L["That action button already holds something. Clear it first, then drop the sequence on it."])
             return
         end
