@@ -7,7 +7,7 @@ GSE/Lib
 App/node_modules/
 node_modules/
 GSE_Utils/Lib
-GSE_Actionbar/Libs
+GSE_Actionbar/Lib
 .DS_Store
 /.claude
 /.vscode

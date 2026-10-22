@@ -139,10 +139,11 @@ describe("GSE Action Bar in Edit Mode", function()
 
   it("loads LibEditMode on Retail and Forever only, before the bar", function()
     local toc = readSource("GSE_Actionbar/GSE_Actionbar.toc")
-    local lib = toc:find("Libs\\LibEditMode\\embed.xml [AllowLoadGameType standard, camelot]\n", 1, true)
+    local lib = toc:find("Lib\\LibEditMode\\embed.xml [AllowLoadGameType standard, camelot]\n", 1, true)
     assert.truthy(lib)
     assert.truthy(lib < toc:find("\nBootstrap.lua\n", 1, true))
     assert.truthy(toc:find("\nActionBar.lua\nEditMode.lua\n", 1, true))
-    assert.truthy(readSource(".pkgmeta"):find("GSE/GSE_Actionbar/Libs/LibEditMode:", 1, true))
+    -- Not in git, as GSE's other libraries: the packager fetches it.
+    assert.truthy(readSource(".pkgmeta"):find("GSE/GSE_Actionbar/Lib/LibEditMode:", 1, true))
   end)
 end)

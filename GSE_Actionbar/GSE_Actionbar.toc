@@ -26,7 +26,7 @@
 
 # LibEditMode puts the bars in WoW's Edit Mode, on the clients that have it:
 # Retail (standard) and Forever (camelot). Elsewhere it is not loaded.
-Libs\LibEditMode\embed.xml [AllowLoadGameType standard, camelot]
+Lib\LibEditMode\embed.xml [AllowLoadGameType standard, camelot]
 # Bootstrap exposes _G.GSE_Actionbar_Initialize that main GSE calls on ADDON_LOADED.
 # Bindings.xml is read by WoW itself: it declares a binding per button.
 Bootstrap.lua
