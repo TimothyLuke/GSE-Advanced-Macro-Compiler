@@ -38,6 +38,7 @@ globals = {
     "PickupCompanion",
     "C_EquipmentSet",
     "GetCursorInfo",
+    "EditModeManagerFrame",
     "IsMouseButtonDown",
     "NumberFontNormalSmallGray",
     "NumberFontNormal",

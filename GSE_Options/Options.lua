@@ -2160,9 +2160,9 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             end
         end
         local layout = SettingsPanel:GetLayout(actionBarOptions)
-        local function header(name)
+        local function header(name, tooltip)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate",
-                { name = name, tooltip = name }))
+                { name = name, tooltip = tooltip or name }))
         end
         local function checkbox(id, key, label, tooltip)
             local function GetValue() return GSE.ActionBarOptions()[key] == true end
@@ -2191,8 +2191,14 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
         end
 
         header(L["All bars"])
-        checkbox("gseActionBarLocked", "Locked", L["Lock the bars"],
-            L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
+        -- Where the client has Edit Mode the bars are placed there (GSE_Actionbar/EditMode.lua).
+        if GSE.ActionBarUsesEditMode() then
+            header(L["Place the bars in Edit Mode"],
+                L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."])
+        else
+            checkbox("gseActionBarLocked", "Locked", L["Lock the bars"],
+                L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
+        end
         checkbox("gseActionBarShowKeys", "ShowKeys", L["Show keys"],
             L["Show on each button the key WoW's Key Bindings give it."])
         checkbox("gseActionBarShowEmpty", "ShowEmpty", L["Show empty buttons"],

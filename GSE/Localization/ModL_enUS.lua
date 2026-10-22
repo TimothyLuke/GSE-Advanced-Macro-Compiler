@@ -1097,6 +1097,8 @@ L["The GSE Action Bar has no free button for these keys, so they were not moved:
 L["All bars"] = true
 L["Lock the bars"] = true
 L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."] = true
+L["Place the bars in Edit Mode"] = true
+L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."] = true
 L["Show keys"] = true
 L["Show on each button the key WoW's Key Bindings give it."] = true
 L["Show empty buttons"] = true

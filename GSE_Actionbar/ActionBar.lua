@@ -34,6 +34,7 @@ local DEFAULT_POINTS = {
 
 local bars, buttons = {}, {}
 local dragging = false -- a sequence is being dragged: every bar shows for the drop
+local editing = false -- WoW's Edit Mode is open: every bar shows to be placed
 local pendingLayout = false -- a change waited for combat to end
 
 local Masque = LibStub and LibStub("Masque", true)
@@ -85,14 +86,17 @@ local function layoutBar(b)
     bar:SetScale(math.max(0.5, math.min(2, tonumber(settings.Scale) or 1)))
     bar:SetSize(perRow * buttonSize + (perRow - 1) * spacing, rows * buttonSize + (rows - 1) * spacing)
     bar:ClearAllPoints()
-    local point = type(settings.Point) == "table" and settings.Point or DEFAULT_POINTS[b]
+    -- In Edit Mode's layout, where it has one (EditMode.lua); else where it
+    -- was dragged to, or where it starts.
+    local point = ns.EditModePoint and ns.EditModePoint(b)
+        or type(settings.Point) == "table" and settings.Point or DEFAULT_POINTS[b]
     bar:SetPoint(point[1], UIParent, point[3], point[4], point[5])
     for slot = 1, ns.BAR_SIZE do
         local button = buttons[(b - 1) * ns.BAR_SIZE + slot]
         local column, row = (slot - 1) % perRow, math.floor((slot - 1) / perRow)
         button:ClearAllPoints()
         button:SetPoint("TOPLEFT", bar, "TOPLEFT", column * (buttonSize + spacing), -row * (buttonSize + spacing))
-        button:SetShown(dragging or options.ShowEmpty or ns.HasContent(button))
+        button:SetShown(dragging or editing or options.ShowEmpty or ns.HasContent(button))
     end
 end
 
@@ -100,7 +104,7 @@ end
 -- this much works in combat too.
 local function barAlpha(b)
     local visibility = ns.Options().Bars[b].Visibility
-    if dragging or visibility == "SHOW" then return 1 end
+    if dragging or editing or visibility == "SHOW" then return 1 end
     if visibility == "MOUSEOVER" and bars[b]:IsMouseOver() then return 1 end
     return 0
 end
@@ -132,7 +136,8 @@ function ns.Refresh()
         bars[b]:Show()
         layoutBar(b)
         applyVisibility(b)
-        bars[b].mover:SetShown(not ns.Options().Locked)
+        -- Where the client has Edit Mode, it places the bars instead (EditMode.lua).
+        bars[b].mover:SetShown(not ns.Options().Locked and not ns.editMode)
     end
     updateKeys()
     ns.ApplyActions()
@@ -224,6 +229,14 @@ for index = 1, ns.BUTTON_COUNT do
     buttons[index] = button
 end
 ns.buttons = buttons
+ns.bars, ns.DEFAULT_POINTS = bars, DEFAULT_POINTS
+
+--- WoW's Edit Mode opened or closed (EditMode.lua): open, every bar and
+--- button shows, to see what is being placed.
+function ns.SetEditing(open)
+    editing = open
+    ns.Refresh()
+end
 
 -- Every event that changes what the bars show.
 local events = CreateFrame("Frame")

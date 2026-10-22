@@ -306,6 +306,13 @@ function GSE.ActionBarActive()
     return GSE.ActionBarEnabled() and C_AddOns.IsAddOnLoaded(Statics.ActionBarAddOn) == true
 end
 
+--- Are the GSE Action Bar's bars placed and sized in WoW's Edit Mode? On
+--- Retail and Forever, the clients the bar loads LibEditMode for (its TOC);
+--- elsewhere they are unlocked and dragged from GSE's options.
+function GSE.ActionBarUsesEditMode()
+    return GSE.GameMode >= 12 and EditModeManagerFrame ~= nil
+end
+
 --- Is the GSE Action Bar installed at all, on or off?
 function GSE.ActionBarInstalled()
     if C_AddOns.DoesAddOnExist then return C_AddOns.DoesAddOnExist(Statics.ActionBarAddOn) end

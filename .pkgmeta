@@ -12,6 +12,9 @@ externals:
   GSE/Lib/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
   GSE/Lib/LibDBCompartment: https://github.com/Meorawr/LibDBCompartment.git
   GSE/Lib/WagoAnalytics: https://github.com/wagoio/WagoAnalyticsShim.git
+  GSE/GSE_Actionbar/Libs/LibEditMode:
+    url: https://github.com/p3lim-wow/LibEditMode.git
+    tag: 18
 
 move-folders:
   GSE/GSE/Lib/LibSharedMedia-3.0: GSE/GSE_Utils/Lib/LibSharedMedia-3.0
