@@ -196,8 +196,11 @@ for b = 1, BAR_COUNT do
 end
 
 for index = 1, ns.BUTTON_COUNT do
+    -- The secure template last, as WoW's own bars have it: ActionButtonTemplate
+    -- brings the flyout's OnClick, and whichever template comes later sets the
+    -- script. Listed first, the secure click was replaced and nothing ran.
     local button = CreateFrame("CheckButton", ns.ButtonName(index), bars[barOf(index)],
-        "SecureActionButtonTemplate, ActionButtonTemplate")
+        "ActionButtonTemplate, SecureActionButtonTemplate")
     -- No SetID: an ID is an action slot to GSE's overrides, which would then
     -- yield the button to whatever sits in that slot of WoW's own bar.
     button.gseIndex = index

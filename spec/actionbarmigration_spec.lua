@@ -217,6 +217,11 @@ describe("GSE Action Bar buttons", function()
     assert.truthy(guard and guard < events:find("btn:GetAttribute(\"action\")", s, true))
   end)
 
+  it("keep the secure click: its template comes after ActionButtonTemplate's flyout OnClick", function()
+    local src = readSource("GSE_Actionbar/ActionBar.lua")
+    assert.truthy(src:find('"ActionButtonTemplate, SecureActionButtonTemplate"', 1, true))
+  end)
+
   it("are listed under GSE in WoW's Key Bindings", function()
     local xml = readSource("GSE_Actionbar/Bindings.xml")
     local _, count = xml:gsub('category="BINDING_HEADER_GSE"', "")
