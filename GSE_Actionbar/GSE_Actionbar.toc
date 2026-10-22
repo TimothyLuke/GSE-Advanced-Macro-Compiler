@@ -1,0 +1,32 @@
+﻿## Interface: 11509, 16001, 20506, 50504, 120100, 120105, 120107
+
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Action Bar|r
+## Notes: Two bars of GSE buttons whose keys are set in WoW's Key Bindings
+## Author: TimothyLuke
+## Version: @project-version@
+## Dependencies: GSE_Utils GSE_Options
+## OptionalDeps: Masque
+# GSE loads it (C_AddOns.LoadAddOn) while the player has it on in GSE's
+# options (GSEOptions.ActionBarEnabled), so turning it on needs no reload.
+## LoadOnDemand: 1
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Group: GSE
+
+
+# Bootstrap exposes _G.GSE_Actionbar_Initialize that main GSE calls on ADDON_LOADED.
+# Bindings.xml is read by WoW itself: it declares a binding per button.
+Bootstrap.lua
+Migration.lua
+Actions.lua
+ActionBar.lua

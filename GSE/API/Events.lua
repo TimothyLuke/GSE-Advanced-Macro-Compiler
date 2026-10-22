@@ -259,6 +259,8 @@ local function gseMacroButton(macroName)
 end
 
 local function getButtonEffectiveSlot(btn)
+    -- The GSE Action Bar's buttons have no action slot behind them.
+    if btn.gseActionBarButton then return nil end
     local action = tonumber(btn:GetAttribute("action"))
     if action and action > 0 then return action end
     -- Blizzard native action buttons resolve their paged/bonus-bar slot in C and
@@ -785,6 +787,16 @@ local function overrideActionButton(savedBind, force)
     if not _G[Button] then
         return
     end
+    -- The GSE Action Bar turned off this session: its buttons stay loaded
+    -- (WoW cannot unload them) but run nothing.
+    if _G[Button].gseActionBarButton and not GSE.ActionBarActive() then
+        return
+    end
+    -- A spell, item or macro on a GSE Action Bar button wins, as an action in
+    -- its slot does on any other bar; the sequence is back once it is taken off.
+    if _G[Button].gseActionBarButton and GSE.ActionBarButtonHasAction and GSE.ActionBarButtonHasAction(_G[Button]) then
+        return
+    end
     -- The bind holds the sequence's id, which names its secure button. Nothing
     -- to run means nothing to override.
     local Sequence = GSE.StoredSequenceId(savedBind.Sequence)
@@ -819,7 +831,19 @@ local function overrideActionButton(savedBind, force)
     -- of falling through to the third-party slot/page logic, which is invalid for
     -- Dominos buttons (the action slot is a flat secure attribute, not paged).
     local isDominosButton = _G[Button].SetShowGridInsecure ~= nil
-    if isDominosButton or string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
+    if _G[Button].gseActionBarButton then
+        -- The GSE Action Bar: no action slot, so no bar swap to watch for --
+        -- the button only ever clicks its sequence.
+        if not InCombatLockdown() then
+            secureArmGSEButton(_G[Button], Sequence)
+        end
+        hookButtonIconUpdates(Button)
+        addGSEWatermark(Button)
+        scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
+        GSE.ButtonOverrides[Button] = Sequence
+        repaintGSEOverrideButton(_G[Button])
+        repaintGSEOverrideButton(_G[Button], true)
+    elseif isDominosButton or string.sub(Button, 1, 7) == "Dominos" or string.sub(Button, 1, 11) == "ButtonForge" then
         -- Dominos and ButtonForge use ActionBarButtonTemplate / SecureActionButtonTemplate;
         -- action slot is a secure attribute only, not a page/slot hierarchy.
         -- Use simplified WrapScript (no GetActionInfo lookup).
@@ -1130,6 +1154,12 @@ end
 -- bails if the button was re-armed in the same LoadOverrides pass.
 local function refreshClearedOverrideIcon(button)
     if not button or not button.GetAttribute then return end
+    -- A GSE Action Bar button has no slot to repaint from: it goes back to
+    -- the action it holds, or to empty.
+    if button.gseActionBarButton then
+        if GSE.ActionBarButtonCleared then GSE.ActionBarButtonCleared(button) end
+        return
+    end
     C_Timer.After(0, function()
         if not button or not button.GetAttribute then return end
         if button:GetAttribute("gse-button") then return end -- re-armed: keep its GSE icon
@@ -1228,9 +1258,13 @@ local function LoadOverrides(force)
                 -- environment (issue #1931); gse-button is a non-secure string so
                 -- clearing it insecurely is harmless.
                 secureDisarmGSEButton(_G[k])
-                SecureHandlerUnwrapScript(_G[k], "OnClick")
-                SecureHandlerUnwrapScript(_G[k], "OnEnter")
-                SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+                -- The GSE Action Bar's buttons were never wrapped; the wrap
+                -- they do have is the bar's own (Actions.lua).
+                if not _G[k].gseActionBarButton then
+                    SecureHandlerUnwrapScript(_G[k], "OnClick")
+                    SecureHandlerUnwrapScript(_G[k], "OnEnter")
+                    SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+                end
                 removeGSEWatermark(k)
             end
         end
@@ -1314,6 +1348,8 @@ local function normalizeBindKey(key)
     end
     return (key:gsub("MiddleButton", "BUTTON3"):gsub("Button4", "BUTTON4"):gsub("Button5", "BUTTON5"))
 end
+-- The GSE Action Bar binds the same stored keys to its buttons.
+GSE.NormalizeBindKey = normalizeBindKey
 
 function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C) then
@@ -1344,8 +1380,9 @@ function LoadKeyBindings(payload)
             ClearOverrideBindings(keybindingframe)
         end
     end
-    -- Keybinding switched off (WoW Forever, #2109): released above, bind nothing.
-    if GSE.IsForever then return end
+    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE Action
+    -- Bar carries the keys): released above, bind nothing.
+    if not GSE.KeybindingsEnabled() then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
     -- spec's binds are the shared profile's, or this character's own.
@@ -1485,6 +1522,7 @@ local function isOverrideTargetUnsafe(frame)
     if type(name) ~= "string" or name == "" then return false end
     if GSE.SequencesExec and GSE.SequencesExec[name] then return false end -- a GSE sequence button
     if string.sub(name, 1, 4) == "CPB_" then return true end -- ConsolePort: controller-mapped, no slot
+    if frame.gseActionBarButton then return true end -- the GSE Action Bar: no slot either
     if frame.action ~= nil or frame._state_action ~= nil or frame.UpdateAction then return true end
     return frame.GetAttribute and frame:GetAttribute("action") ~= nil or false
 end
@@ -1583,7 +1621,9 @@ local function ensureDragFrames()
 end
 
 local function endDrag()
+    local ended = drag ~= nil
     drag = nil
+    if ended then GSE:SendMessage(Statics.Messages.SEQUENCE_DRAG_ENDED) end
     if dragIcon then
         dragIcon:UnregisterAllEvents()
         dragIcon:Hide()
@@ -1618,6 +1658,9 @@ function GSE.BeginSequenceDrag(sequenceId)
     pcall(dragIcon.RegisterEvent, dragIcon, "GLOBAL_MOUSE_UP")
     dragIcon:RegisterEvent("PLAYER_REGEN_DISABLED")
     dragIcon:Show()
+    -- Before the buttons are gathered below, so a bar that hides itself (the
+    -- GSE Action Bar) can show for the drop.
+    GSE:SendMessage(Statics.Messages.SEQUENCE_DRAG_STARTED, sequenceId)
     -- Every action button shown now; the drag tests these for the mouse. It
     -- runs on the next frame so the icon shows first.
     C_Timer.After(0, function()
@@ -1645,7 +1688,9 @@ function GSE.FinishSequenceDrag()
     -- so only an empty slot, or one GSE already overrides, takes a sequence.
     if not target:GetAttribute("gse-button") then
         local slot = getButtonEffectiveSlot(target)
-        if slot and HasAction(slot) then
+        local holdsAction = target.gseActionBarButton and GSE.ActionBarButtonHasAction
+            and GSE.ActionBarButtonHasAction(target)
+        if holdsAction or (slot and HasAction(slot)) then
             GSE.Print(L["That action button already holds something. Clear it first, then drop the sequence on it."])
             return
         end
@@ -1718,6 +1763,74 @@ function GSE.ClearKeyBinding(key)
     return true
 end
 
+-- Where WoW no longer honours GSE's own keybinds (Retail 12.1.7 on; Forever
+-- never had any to move), a character with some gets the GSE Action Bar
+-- turned on, once per account,
+-- with both bars hidden: its keybinds move onto the bar's buttons
+-- (GSE_Actionbar/Migration.lua) and keep working, and nothing new shows until
+-- the player chooses to show it. There is no reload: GSE loads the bar itself (loadActionBar). Turned off again
+-- afterwards, it stays off. Everywhere else
+-- the keybinds still work, and moving them is the player's choice: the switch
+-- in GSE's options.
+local function enableActionBarForKeybinds()
+    if not GSE.DirectKeybindsRetired or GSE.IsForever then return end
+    if GSE.ActionBarActive() or type(GSE_C) ~= "table" or GSEOptions.ActionBarAutoEnabled then return end
+    if not GSE.ActionBarInstalled() then return end
+    local hasKeys = false
+    for _, spec in ipairs(GSE.BindingSpecs()) do
+        for key in pairs(GSE.SpecKeyBinds(spec.key, false) or {}) do
+            if key ~= "LoadOuts" then hasKeys = true end
+        end
+        for _, binds in pairs(GSE.SpecLoadoutKeyBinds(spec.key, false) or {}) do
+            if type(binds) == "table" and next(binds) then hasKeys = true end
+        end
+    end
+    if not hasKeys then return end
+    GSEOptions.ActionBarAutoEnabled = true
+    -- The bar's starting state: hidden, its keys working. Only where the
+    -- player has never turned the bar on or off, so nothing they chose is
+    -- undone.
+    if GSEOptions.ActionBarEnabled == nil then
+        for _, bar in pairs(GSE.ActionBarOptions().Bars) do bar.Visibility = "HIDE" end
+    end
+    -- What's New explains it (GSE.ShowUpdateNotes, below).
+    GSEOptions.ActionBarEnabled = true
+end
+
+-- Load the GSE Action Bar while it is turned on. It is LoadOnDemand, so it
+-- loads now, and its setup runs before this returns (ADDON_LOADED), so its
+-- buttons exist when the Button Bindings go on. Their keys are WoW's own
+-- (Bindings.xml); GSE binds nothing for them. Its buttons are secure, so in
+-- combat it waits for combat to end (PLAYER_REGEN_ENABLED).
+local actionBarWaiting = false
+local function loadActionBar()
+    if InCombatLockdown() then
+        actionBarWaiting = true
+        return
+    end
+    actionBarWaiting = false
+    if GSE.ActionBarEnabled() and not C_AddOns.IsAddOnLoaded(Statics.ActionBarAddOn) then
+        local loaded, reason = C_AddOns.LoadAddOn(Statics.ActionBarAddOn)
+        if not loaded then
+            GSE.Print(string.format(L["The GSE Action Bar could not be loaded: %s"], tostring(reason)))
+            return
+        end
+    end
+    -- Loaded before (on now, or turned off this session): it shows or hides
+    -- itself to match.
+    if GSE.ActionBarApply then GSE.ActionBarApply() end
+end
+
+--- The GSE Action Bar was turned on or off (GSE.SetActionBarEnabled): load or
+--- show it, or hide it, and put the Button Bindings on again, which arms or
+--- disarms its buttons. No key binding changes: the buttons' keys are WoW's
+--- own, set in its Key Bindings.
+function GSE.StartActionBar()
+    loadActionBar()
+    if InCombatLockdown() then return end
+    GSE.ReloadOverrides()
+end
+
 function GSE:PLAYER_ENTERING_WORLD()
     GSE.PrintAvailable = true
     GSE.PerformPrint()
@@ -1732,9 +1845,12 @@ function GSE:PLAYER_ENTERING_WORLD()
     if GSE.BackfillLastUpdated then
         GSE.BackfillLastUpdated()
     end
+    enableActionBarForKeybinds()
     LoadKeyBindings(true)
     GSE.PerformReloadSequences(true)
     hookActionButtonUpdate()
+    -- The GSE Action Bar's buttons have to exist before Button Bindings go on.
+    loadActionBar()
     LoadOverrides()
     GSE.ManageMacros()
     scheduleGSEOverrideIconRepaint()
@@ -1935,6 +2051,8 @@ end
 function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     GSE:UnregisterEvent("PLAYER_REGEN_ENABLED")
     GSE.ResetButtons()
+    -- The GSE Action Bar waited for combat to end to load (loadActionBar).
+    if actionBarWaiting then GSE.StartActionBar() end
     LoadOverrides()
     GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 end

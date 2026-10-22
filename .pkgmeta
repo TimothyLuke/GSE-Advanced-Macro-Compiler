@@ -23,6 +23,7 @@ move-folders:
   GSE/GSE_Utils: GSE_Utils
   GSE/GSE_QoL: GSE_QoL
   GSE/GSE_Options: GSE_Options
+  GSE/GSE_Actionbar: GSE_Actionbar
  
 enable-nolib-creation: no
 

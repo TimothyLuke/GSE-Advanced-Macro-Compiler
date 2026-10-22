@@ -293,6 +293,82 @@ function GSE.ClearCommonKeyBinds()
     GSE.Print("Common Keybinding combinations cleared for this character.")
 end
 
+--- Is the GSE Action Bar turned on (GSE's options)? It is off until the
+--- player turns it on, or GSE does to move keybinds (Events.lua).
+function GSE.ActionBarEnabled()
+    return type(GSEOptions) == "table" and GSEOptions.ActionBarEnabled == true
+end
+
+--- Is the GSE Action Bar (GSE_Actionbar) on and running? WoW cannot unload an
+--- addon, so one turned off this session stays loaded with its buttons
+--- disarmed until the next login, when GSE does not load it.
+function GSE.ActionBarActive()
+    return GSE.ActionBarEnabled() and C_AddOns.IsAddOnLoaded(Statics.ActionBarAddOn) == true
+end
+
+--- Is the GSE Action Bar installed at all, on or off?
+function GSE.ActionBarInstalled()
+    if C_AddOns.DoesAddOnExist then return C_AddOns.DoesAddOnExist(Statics.ActionBarAddOn) end
+    local _, _, _, _, reason = C_AddOns.GetAddOnInfo(Statics.ActionBarAddOn)
+    return reason ~= "MISSING"
+end
+
+-- What the GSE Action Bar is set to, account-wide: GSEOptions.ActionBar, with
+-- anything missing filled in. Visibility is SHOW, MOUSEOVER or HIDE; a hidden
+-- bar's keys still work. Here rather than in the bar, which is LoadOnDemand,
+-- because GSE's options show these while it is off too.
+local ACTION_BAR_DEFAULTS = {
+    Locked = true,
+    ShowKeys = true,
+    ShowEmpty = true,
+    Spacing = 4,
+    -- key -> the button GSE moved it onto (GSE_Actionbar/Migration.lua), so
+    -- every character of the account puts a key on the same button.
+    KeyButtons = {},
+    Bars = {
+        [1] = { Visibility = "SHOW", Scale = 1, PerRow = 12 },
+        [2] = { Visibility = "HIDE", Scale = 1, PerRow = 12 },
+    },
+}
+
+local function fillDefaults(target, defaults)
+    for k, v in pairs(defaults) do
+        if type(v) == "table" then
+            if type(target[k]) ~= "table" then target[k] = {} end
+            fillDefaults(target[k], v)
+        elseif target[k] == nil then
+            target[k] = v
+        end
+    end
+end
+
+function GSE.ActionBarOptions()
+    if type(GSEOptions.ActionBar) ~= "table" then GSEOptions.ActionBar = {} end
+    fillDefaults(GSEOptions.ActionBar, ACTION_BAR_DEFAULTS)
+    return GSEOptions.ActionBar
+end
+
+--- Turn the GSE Action Bar on or off, for the whole account, at once: on loads
+--- it, off disarms its buttons and hides it (GSE.StartActionBar, Events.lua).
+function GSE.SetActionBarEnabled(enabled)
+    GSEOptions.ActionBarEnabled = enabled and true or false
+    GSE.StartActionBar()
+    -- Off where WoW still honours GSE's own keybinds: they take over again,
+    -- and GSE binds them at login, so ask for one.
+    if not enabled and not GSE.DirectKeybindsRetired then
+        GSE.GUICall("GUIConfirmReloadUI")
+    end
+end
+
+--- Does GSE bind keys to sequences itself (the Keybindings pages, /gse bind)?
+--- Not where WoW ignores those binds (GSE.DirectKeybindsRetired), and not with
+--- the GSE Action Bar turned on: its buttons' keys are WoW's own, and the keys
+--- GSE bound before were moved onto them. The setting, not whether the bar
+--- has loaded yet, so the answer is the same before it loads at login.
+function GSE.KeybindingsEnabled()
+    return not GSE.DirectKeybindsRetired and not GSE.ActionBarEnabled()
+end
+
 --- Obtain the Click Rate from GSE Options or from the characters internal options
 function GSE.GetClickRate()
     local clickRate = GSEOptions.msClickRate and GSEOptions.msClickRate or 250

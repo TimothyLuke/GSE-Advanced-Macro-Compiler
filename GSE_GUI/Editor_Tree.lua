@@ -1212,10 +1212,11 @@ end
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
     if not unique then return end
 
-    -- Keybinding switched off (WoW Forever, #2109): no chooser and no keybind
-    -- pages -- the Bindings node, and a keybind page restored from a past
-    -- session, land on the current spec's Button Bindings.
-    if GSE.IsForever and (#unique == 1 or unique[2] == "KB") then
+    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE
+    -- Action Bar carries the keys): no chooser and no keybind pages -- the
+    -- Bindings node, and a keybind page restored from a past session, land on
+    -- the current spec's Button Bindings.
+    if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
         if editframe.treeContainer and editframe.treeContainer.SelectByValue then
             editframe.forceTreeSelection = true
             editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
