@@ -39,10 +39,8 @@ local function barOf(index)
     return math.floor((index - 1) / ns.BAR_SIZE) + 1
 end
 
--- What WoW's Key Bindings call the category and each button (Bindings.xml).
--- WoW names a category by the global its name gives, or by the name itself;
--- "GSE" would give GSE's own table.
-_G["BINDING_HEADER_GSE"] = "GSE"
+-- What WoW's Key Bindings call each button (Bindings.xml). The category's
+-- name, BINDING_HEADER_GSE, is GSE's (Statics.lua).
 for index = 1, ns.BUTTON_COUNT do
     _G["BINDING_NAME_" .. ns.BindingCommand(index)] = string.format(L["GSE Button %d (Bar %d)"], index, barOf(index))
 end

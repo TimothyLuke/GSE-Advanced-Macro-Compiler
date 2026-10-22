@@ -226,6 +226,8 @@ describe("GSE Action Bar buttons", function()
     local xml = readSource("GSE_Actionbar/Bindings.xml")
     local _, count = xml:gsub('category="BINDING_HEADER_GSE"', "")
     assert.are.equal(24, count)
-    assert.truthy(readSource("GSE_Actionbar/ActionBar.lua"):find('_G["BINDING_HEADER_GSE"] = "GSE"', 1, true))
+    -- Set by GSE, which loads first: WoW reads it as the bar loads, before the
+    -- bar's deferred setup runs.
+    assert.truthy(readSource("GSE/API/Statics.lua"):find('_G["BINDING_HEADER_GSE"] = Statics.GSEString', 1, true))
   end)
 end)

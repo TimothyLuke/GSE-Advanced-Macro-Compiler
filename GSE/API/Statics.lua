@@ -87,6 +87,10 @@ Statics.StringReset = "|r"
 Statics.CoreLoadedMessage = "GSE-CoreLoaded"
 -- The GSE Action Bar module: shipped with GSE, off until turned on.
 Statics.ActionBarAddOn = "GSE_Actionbar"
+-- What WoW's Key Bindings call the GSE Action Bar's category (its
+-- Bindings.xml). WoW reads it as the bar loads, before the bar's own code has
+-- run, so GSE sets it.
+_G["BINDING_HEADER_GSE"] = Statics.GSEString
 
 Statics.SystemVariables = {
     ["GCD"] = function()
