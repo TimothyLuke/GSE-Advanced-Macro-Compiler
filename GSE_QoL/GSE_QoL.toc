@@ -1,4 +1,4 @@
-﻿## Interface: 11509, 16001, 20506, 50504, 120100, 120105, 120107
+﻿## Interface: 11509, 16001, 20506, 50504, 120105, 120107
 
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Quality of Life Updates|r
 ## Notes: GSE Quality of Life
