@@ -38,8 +38,10 @@ local function barOf(index)
     return math.floor((index - 1) / ns.BAR_SIZE) + 1
 end
 
--- What WoW's Key Bindings call the header and each button (Bindings.xml).
-_G["BINDING_HEADER_GSEACTIONBAR"] = L["GSE Action Bar"]
+-- What WoW's Key Bindings call the category and each button (Bindings.xml).
+-- WoW names a category by the global its name gives, or by the name itself;
+-- "GSE" would give GSE's own table.
+_G["BINDING_HEADER_GSE"] = "GSE"
 for index = 1, ns.BUTTON_COUNT do
     _G["BINDING_NAME_" .. ns.BindingCommand(index)] = string.format(L["GSE Button %d (Bar %d)"], index, barOf(index))
 end
@@ -169,8 +171,8 @@ end
 local function emptyTooltip(button)
     if hasSequence(button) or InCombatLockdown() then return end
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-    GameTooltip:SetText(string.format(L["GSE Button %d"], button:GetID()))
-    GameTooltip:AddLine(L["Drag a sequence here, or right-click to choose one. Set its key in WoW's Key Bindings, under AddOns."], 1, 1, 1, true)
+    GameTooltip:SetText(string.format(L["GSE Button %d"], button.gseIndex))
+    GameTooltip:AddLine(L["Drag a sequence here, or right-click to choose one. Set its key in WoW's Key Bindings, under GSE."], 1, 1, 1, true)
     GameTooltip:Show()
 end
 
@@ -196,10 +198,13 @@ end
 for index = 1, ns.BUTTON_COUNT do
     local button = CreateFrame("CheckButton", ns.ButtonName(index), bars[barOf(index)],
         "SecureActionButtonTemplate, ActionButtonTemplate")
-    button:SetID(index)
+    -- No SetID: an ID is an action slot to GSE's overrides, which would then
+    -- yield the button to whatever sits in that slot of WoW's own bar.
+    button.gseIndex = index
     button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
     -- Marks it for the drag and the right-click menu, which otherwise want a
-    -- button with an action slot.
+    -- button with an action slot, and for the overrides, which never look for
+    -- one behind it.
     button.gseActionBarButton = true
     -- Both edges: the button acts on the one ActionButtonUseKeyDown names (no
     -- useOnKeyDown of its own) and hands a single click on to the sequence.

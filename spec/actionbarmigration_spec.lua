@@ -197,3 +197,30 @@ describe("GSE keybinds", function()
     assert.is_true(GSE.KeybindingsEnabled())
   end)
 end)
+
+-- The bar's buttons have no action slot. Given an ID, GSE's overrides read it
+-- as slot N of WoW's own bar, yielded the button to whatever sat there, showed
+-- that slot's icon and ran nothing.
+describe("GSE Action Bar buttons", function()
+  local function readSource(path)
+    local fh = assert(io.open(path, "r"))
+    local src = fh:read("*a")
+    fh:close()
+    return (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
+  end
+
+  it("take no ID, and the overrides look for no slot behind them", function()
+    assert.is_nil(readSource("GSE_Actionbar/ActionBar.lua"):find("SetID(", 1, true))
+    local events = readSource("GSE/API/Events.lua")
+    local s = assert(events:find("local function getButtonEffectiveSlot(btn)", 1, true))
+    local guard = events:find("if btn.gseActionBarButton then return nil end", s, true)
+    assert.truthy(guard and guard < events:find("btn:GetAttribute(\"action\")", s, true))
+  end)
+
+  it("are listed under GSE in WoW's Key Bindings", function()
+    local xml = readSource("GSE_Actionbar/Bindings.xml")
+    local _, count = xml:gsub('category="BINDING_HEADER_GSE"', "")
+    assert.are.equal(24, count)
+    assert.truthy(readSource("GSE_Actionbar/ActionBar.lua"):find('_G["BINDING_HEADER_GSE"] = "GSE"', 1, true))
+  end)
+end)

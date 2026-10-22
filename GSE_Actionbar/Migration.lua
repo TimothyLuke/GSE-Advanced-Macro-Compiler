@@ -116,7 +116,7 @@ function ns.MigrateKeybinds()
     GSE_C.Updates.actionBarKeys = true
 
     if moved > 0 then
-        GSE.Print(string.format(L["Moved %d GSE keybinds onto the GSE Action Bar. Their keys are set in WoW's Key Bindings, under AddOns."], moved))
+        GSE.Print(string.format(L["Moved %d GSE keybinds onto the GSE Action Bar. Their keys are set in WoW's Key Bindings, under GSE."], moved))
     end
     local left = {}
     for key in pairs(skipped) do left[#left + 1] = key end

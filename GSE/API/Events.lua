@@ -259,6 +259,8 @@ local function gseMacroButton(macroName)
 end
 
 local function getButtonEffectiveSlot(btn)
+    -- The GSE Action Bar's buttons have no action slot behind them.
+    if btn.gseActionBarButton then return nil end
     local action = tonumber(btn:GetAttribute("action"))
     if action and action > 0 then return action end
     -- Blizzard native action buttons resolve their paged/bonus-bar slot in C and

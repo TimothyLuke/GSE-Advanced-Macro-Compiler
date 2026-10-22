@@ -2,28 +2,28 @@
 	<!-- One binding per GSE Action Bar button: a click on GSEButton<n>, made by
 	     ActionBar.lua. Buttons 1-12 are the first bar, 13-24 the second; as
 	     many entries as BUTTON_COUNT there. -->
-	<Binding name="CLICK GSEButton1:LeftButton" header="GSEACTIONBAR" category="ADDONS"/>
-	<Binding name="CLICK GSEButton2:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton3:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton4:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton5:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton6:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton7:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton8:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton9:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton10:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton11:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton12:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton13:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton14:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton15:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton16:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton17:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton18:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton19:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton20:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton21:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton22:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton23:LeftButton" category="ADDONS"/>
-	<Binding name="CLICK GSEButton24:LeftButton" category="ADDONS"/>
+	<Binding name="CLICK GSEButton1:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton2:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton3:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton4:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton5:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton6:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton7:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton8:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton9:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton10:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton11:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton12:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton13:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton14:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton15:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton16:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton17:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton18:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton19:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton20:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton21:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton22:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton23:LeftButton" category="BINDING_HEADER_GSE"/>
+	<Binding name="CLICK GSEButton24:LeftButton" category="BINDING_HEADER_GSE"/>
 </Bindings>
