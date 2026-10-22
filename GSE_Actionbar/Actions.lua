@@ -19,6 +19,7 @@ ns.deferred = ns.deferred or {}
 -- (SECURE_ACTIONS, SecureTemplates.lua).
 local ATTRIBUTES = {
     spell = "spell",
+    mount = "spell",
     item = "item",
     toy = "toy",
     macro = "macro",
@@ -33,18 +34,15 @@ function ns.ActionFromCursor(kind, info1, info2, info3, info4)
         local id = tonumber(info4) or tonumber(info3)
         return id and { kind = "spell", id = id } or nil
     elseif kind == "mount" then
-        -- A mount is cast by its summon spell.
-        if not (C_MountJournal and C_MountJournal.GetMountInfoByID) then return nil end
-        for _, mountID in ipairs({ info1, info2 }) do
-            local _, spellID = C_MountJournal.GetMountInfoByID(tonumber(mountID) or 0)
-            if spellID then return { kind = "spell", id = spellID } end
-        end
-        return nil
+        -- The mount journal's id (as Blizzard's icon picker reads it).
+        local id = tonumber(info1)
+        return id and { kind = "mount", id = id } or nil
     elseif kind == "companion" then
-        -- Mounts and pets on clients that keep them as companions.
+        -- Mounts and pets on clients that keep them as companions: kept by
+        -- their summon spell, cast as a mount is.
         if not GetCompanionInfo then return nil end
         local _, _, spellID = GetCompanionInfo(info2, info1)
-        return spellID and { kind = "spell", id = spellID } or nil
+        return spellID and { kind = "mount", spell = spellID } or nil
     elseif kind == "item" or kind == "toy" then
         local id = tonumber(info1)
         if not id then return nil end
@@ -63,11 +61,33 @@ function ns.ActionFromCursor(kind, info1, info2, info3, info4)
     return nil
 end
 
+-- A mount's summon spell.
+local function mountSpell(action)
+    if action.spell then return action.spell end
+    if not (C_MountJournal and C_MountJournal.GetMountInfoByID) then return nil end
+    local _, spellID = C_MountJournal.GetMountInfoByID(action.id)
+    return spellID
+end
+
+local function spellName(id)
+    if C_Spell and C_Spell.GetSpellName then return C_Spell.GetSpellName(id) end
+    return GetSpellInfo and (GetSpellInfo(id))
+end
+
 --- The secure type, attribute and value that cast an action.
 function ns.ActionAttributes(action)
     local attribute = action and ATTRIBUTES[action.kind]
     if not attribute then return nil end
     if action.kind == "item" then return "item", attribute, "item:" .. action.id end
+    if action.kind == "mount" then
+        -- By name: a summon spell is not in the spellbook, and SECURE_ACTIONS
+        -- casts a number with CastSpellByID, which does nothing for it; a
+        -- name goes through CastSpellByName, as /cast does.
+        local spellID = mountSpell(action)
+        local name = spellID and spellName(spellID)
+        if not name then return nil end
+        return "spell", attribute, name
+    end
     return action.kind, attribute, action.id or action.name
 end
 
@@ -117,6 +137,7 @@ end
 -- The spell and item behind an action, for its cooldown, count and so on.
 local function targetsOf(action)
     if action.kind == "spell" then return currentSpell(action.id), nil end
+    if action.kind == "mount" then return mountSpell(action), nil end
     if action.kind == "item" or action.kind == "toy" then return nil, action.id end
     if action.kind == "macro" then return macroTarget(action.name) end
     return nil, nil
@@ -124,6 +145,14 @@ end
 
 local function iconOf(action)
     if action.kind == "spell" then return spellTexture(currentSpell(action.id)) end
+    if action.kind == "mount" then
+        if action.id and C_MountJournal then
+            local _, _, icon = C_MountJournal.GetMountInfoByID(action.id)
+            if icon then return icon end
+        end
+        local spellID = mountSpell(action)
+        return spellID and spellTexture(spellID)
+    end
     if action.kind == "item" then return itemIcon(action.id) end
     if action.kind == "toy" then
         local icon
@@ -146,6 +175,20 @@ end
 function ns.PickupAction(action)
     if action.kind == "spell" then
         if C_Spell and C_Spell.PickupSpell then C_Spell.PickupSpell(action.id) else PickupSpell(action.id) end
+    elseif action.kind == "mount" then
+        -- The journal picks a mount up by where it is listed, not by its id.
+        if action.id and C_MountJournal and C_MountJournal.GetNumDisplayedMounts then
+            for index = 1, C_MountJournal.GetNumDisplayedMounts() do
+                if C_MountJournal.GetDisplayedMountID(index) == action.id then
+                    C_MountJournal.Pickup(index)
+                    return
+                end
+            end
+        end
+        local spellID = mountSpell(action)
+        if spellID then
+            if C_Spell and C_Spell.PickupSpell then C_Spell.PickupSpell(spellID) else PickupSpell(spellID) end
+        end
     elseif action.kind == "item" then
         if C_Item and C_Item.PickupItem then C_Item.PickupItem(action.id) else PickupItem(action.id) end
     elseif action.kind == "toy" then
@@ -367,6 +410,8 @@ local function actionTooltip(button)
     local shown = pcall(function()
         if action.kind == "spell" then
             GameTooltip:SetSpellByID(currentSpell(action.id))
+        elseif action.kind == "mount" then
+            GameTooltip:SetSpellByID(mountSpell(action))
         elseif action.kind == "toy" and GameTooltip.SetToyByItemID then
             GameTooltip:SetToyByItemID(action.id)
         elseif action.kind == "item" or action.kind == "toy" then

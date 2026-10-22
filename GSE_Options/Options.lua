@@ -2134,7 +2134,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
     -- LoadOnDemand and so not loaded while it is off. A change lays the bars
     -- out again once they are loaded (GSE.ActionBarRefresh).
     if GSE.ActionBarInstalled() then
-        local actionBarOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["GSE Action Bar"])
+        local actionBarOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Action Bar"])
         local BAR_SIZE, BAR_COUNT = 12, 2
         local function refresh()
             if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end

@@ -22,7 +22,10 @@ local Statics = GSE.Static
 -- which is how a hidden bar hides -- shown at no alpha with the mouse off, so
 -- its keys still work -- and how Mouseover shows one.
 
-local BUTTON_SIZE = 36
+-- The button template's own size (45 on Retail, 36 on the classics), read
+-- off the first button: its art is laid out for that size, and a button made
+-- smaller leaves the icon short of the frame. A bar's Scale sizes it.
+local buttonSize = 36
 local BAR_COUNT = ns.BUTTON_COUNT / ns.BAR_SIZE
 local DEFAULT_POINTS = {
     [1] = { "BOTTOM", "UIParent", "BOTTOM", 0, 230 },
@@ -80,7 +83,7 @@ local function layoutBar(b)
     local spacing = tonumber(options.Spacing) or 4
     local rows = math.ceil(ns.BAR_SIZE / perRow)
     bar:SetScale(math.max(0.5, math.min(2, tonumber(settings.Scale) or 1)))
-    bar:SetSize(perRow * BUTTON_SIZE + (perRow - 1) * spacing, rows * BUTTON_SIZE + (rows - 1) * spacing)
+    bar:SetSize(perRow * buttonSize + (perRow - 1) * spacing, rows * buttonSize + (rows - 1) * spacing)
     bar:ClearAllPoints()
     local point = type(settings.Point) == "table" and settings.Point or DEFAULT_POINTS[b]
     bar:SetPoint(point[1], UIParent, point[3], point[4], point[5])
@@ -88,7 +91,7 @@ local function layoutBar(b)
         local button = buttons[(b - 1) * ns.BAR_SIZE + slot]
         local column, row = (slot - 1) % perRow, math.floor((slot - 1) / perRow)
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", bar, "TOPLEFT", column * (BUTTON_SIZE + spacing), -row * (BUTTON_SIZE + spacing))
+        button:SetPoint("TOPLEFT", bar, "TOPLEFT", column * (buttonSize + spacing), -row * (buttonSize + spacing))
         button:SetShown(dragging or options.ShowEmpty or ns.HasContent(button))
     end
 end
@@ -201,7 +204,7 @@ for index = 1, ns.BUTTON_COUNT do
     -- No SetID: an ID is an action slot to GSE's overrides, which would then
     -- yield the button to whatever sits in that slot of WoW's own bar.
     button.gseIndex = index
-    button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
+    if index == 1 and (button:GetWidth() or 0) > 0 then buttonSize = button:GetWidth() end
     -- Marks it for the drag and the right-click menu, which otherwise want a
     -- button with an action slot, and for the overrides, which never look for
     -- one behind it.
@@ -211,10 +214,12 @@ for index = 1, ns.BUTTON_COUNT do
     button:RegisterForClicks("AnyUp", "AnyDown")
     -- A right click is the menu (GSE.ActionButtonMenuHandler), never a cast.
     button:SetAttribute("type2", "")
+    -- Before any hook on OnClick: it wraps OnClick, and wrapping sets the
+    -- script, which drops the hooks already on it -- the menu's among them.
+    ns.SetupActionButton(button)
     if GSE.ActionButtonMenuHandler then button:HookScript("OnClick", GSE.ActionButtonMenuHandler) end
     button:HookScript("OnEnter", emptyTooltip)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
-    ns.SetupActionButton(button)
     if bars[barOf(index)].masque then bars[barOf(index)].masque:AddButton(button, nil, "Action") end
     buttons[index] = button
 end

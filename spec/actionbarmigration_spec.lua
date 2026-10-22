@@ -222,6 +222,13 @@ describe("GSE Action Bar buttons", function()
     assert.truthy(src:find('"ActionButtonTemplate, SecureActionButtonTemplate"', 1, true))
   end)
 
+  it("wrap OnClick before the right-click menu hooks it: wrapping sets the script and drops earlier hooks", function()
+    local src = readSource("GSE_Actionbar/ActionBar.lua")
+    local wrap = src:find("ns.SetupActionButton(button)", 1, true)
+    local menu = src:find('button:HookScript("OnClick", GSE.ActionButtonMenuHandler)', 1, true)
+    assert.truthy(wrap and menu and wrap < menu)
+  end)
+
   it("are listed under GSE in WoW's Key Bindings", function()
     local xml = readSource("GSE_Actionbar/Bindings.xml")
     local _, count = xml:gsub('category="BINDING_HEADER_GSE"', "")

@@ -890,10 +890,10 @@ GSE now comes with an optional action bar of its own: two bars of twelve buttons
 |cFFFFD100Moving your keybinds|r
 On |cFF00FFFFRetail 12.1.7|r on, if you had GSE keybinds, the GSE Action Bar has been turned on for you, |cFFFFD100hidden|r. Each key now sits on a GSE button in WoW's Keybindings, and that button runs the sequence the key ran, for each spec and talent loadout. A reload finishes the move. Nothing new shows on screen.
 
-On the other versions of WoW your GSE keybinds still work, and moving them is up to you: turn on the GSE Action Bar in |cFF00BFFFGSE Options > GSE Action Bar|r and they move the same way. Once Retail reaches 12.1.7 that is no longer optional there.
+On the other versions of WoW your GSE keybinds still work, and moving them is up to you: turn on the GSE Action Bar in |cFF00BFFFGSE Options > Action Bar|r and they move the same way. Once Retail reaches 12.1.7 that is no longer optional there.
 
 |cFFFFD100Showing, moving and turning it off|r
-Show either bar, show it on mouseover, move it, size it, or turn the bar off in |cFF00BFFFGSE Options > GSE Action Bar|r. A hidden bar still works -- its keys run their sequences -- and shows while you drag a sequence, so you can drop it on a button. Masque can skin the buttons.
+Show either bar, show it on mouseover, move it, size it, or turn the bar off in |cFF00BFFFGSE Options > Action Bar|r. A hidden bar still works -- its keys run their sequences -- and shows while you drag a sequence, so you can drop it on a button. Masque can skin the buttons.
 
 You do not have to use it. Any action bar or action bar addon works: right-click a button, or drag a sequence onto it.
 
@@ -1085,6 +1085,7 @@ L["Use Shared"] = true
 L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."] = true
 -- GSE Action Bar (GSE_Actionbar)
 L["GSE Action Bar"] = true
+L["Action Bar"] = true
 L["Enable the GSE Action Bar"] = true
 L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."] = true
 L["GSE Action Bar %d"] = true

@@ -25,9 +25,17 @@ describe("GSE Action Bar actions", function()
     assert.are.same({ kind = "spell", id = 200 }, ns.ActionFromCursor("spell", 12, "spell", 200))
   end)
 
-  it("keeps a mount or companion as the spell that summons it", function()
-    assert.are.same({ kind = "spell", id = 458 }, ns.ActionFromCursor("mount", 7))
-    assert.are.same({ kind = "spell", id = 6777 }, ns.ActionFromCursor("companion", 1, "MOUNT"))
+  it("keeps a mount by its journal id, or a companion by the spell that summons it", function()
+    assert.are.same({ kind = "mount", id = 7 }, ns.ActionFromCursor("mount", 7))
+    assert.are.same({ kind = "mount", spell = 6777 }, ns.ActionFromCursor("companion", 1, "MOUNT"))
+  end)
+
+  it("casts a mount by its summon spell's name, which CastSpellByID cannot", function()
+    local saved = _G.C_Spell
+    _G.C_Spell = { GetSpellName = function(id) return ({ [458] = "Brown Horse", [6777] = "Gray Ram" })[id] end }
+    assert.are.same({ "spell", "spell", "Brown Horse" }, { ns.ActionAttributes({ kind = "mount", id = 7 }) })
+    assert.are.same({ "spell", "spell", "Gray Ram" }, { ns.ActionAttributes({ kind = "mount", spell = 6777 }) })
+    _G.C_Spell = saved
   end)
 
   it("tells a toy from an item", function()
