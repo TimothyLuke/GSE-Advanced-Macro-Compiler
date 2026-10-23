@@ -770,9 +770,27 @@ end
 -- are live in this loadout too.  Read-only here: Override copies one into the
 -- loadout's own rows, to change for this loadout only.
 -- entries: { {first = text, firstWidth = px, seq = id, onOverride = fn} }
-local function inheritedSection(editframe, container, entries)
+-- opts (all optional), for a page laying the rows out its own way:
+--   seqJustify: the sequence text's justify, "CENTER" unless given. Set
+--     before the text: the game keeps a text's layout from when it was set
+--     (measured on the Button Bindings page: justify read LEFT, text still
+--     drawn centred).
+--   seqWidth: the sequence text's width (KB_COL_SEQ), so it is no longer
+--     than the dropdown above.
+--   seqInset: the text's inset from its box's left edge, in pixels (0).
+--   topGap: space above the section's caption, in pixels (none).
+local function inheritedSection(editframe, container, entries, opts)
+    opts = opts or {}
+    local seqJustify, seqWidth, seqInset = opts.seqJustify, opts.seqWidth or KB_COL_SEQ, opts.seqInset
     container:ReleaseChildren()
-    if #entries == 0 then return end
+    local built = {} -- {row = widget, cells = {name, button, sequence frames}}, for a caller lining them up
+    if #entries == 0 then return built end
+    if opts.topGap then
+        local gap = UI:Create("Spacer")
+        gap:SetFullWidth(true)
+        gap:SetHeight(opts.topGap)
+        container:AddChild(gap)
+    end
     local caption = UI:Create("Label")
     caption:SetFullWidth(true)
     caption:SetJustifyH("CENTER")
@@ -793,25 +811,41 @@ local function inheritedSection(editframe, container, entries)
         first:SetJustifyV("MIDDLE")
         first:SetText(KB_INHERITED_COLOUR .. fitTail(first.text, entry.first, entry.firstWidth - 8) .. Statics.StringReset)
         local seq = UI:Create("Label")
-        seq:SetWidth(KB_COL_SEQ)
-        seq:SetJustifyH("CENTER")
+        seq:SetWidth(seqWidth)
+        seq:SetJustifyH(seqJustify or "CENTER")
         seq:SetJustifyV("MIDDLE")
-        seq:SetText(KB_INHERITED_COLOUR .. fitText(seq.text, sequenceLabel(entry.seq), KB_COL_SEQ - 8)
+        if seqInset and seqInset ~= 0 and seq.text then
+            -- The box stays put; only its text moves in. Pooled: the label's
+            -- text goes back to filling the box when the label is released.
+            seq.text:ClearAllPoints()
+            seq.text:SetPoint("TOPLEFT", seqInset, 0)
+            seq.text:SetPoint("BOTTOMRIGHT")
+            seq:SetCallback("OnRelease", function(widget)
+                widget.text:ClearAllPoints()
+                widget.text:SetPoint("TOPLEFT")
+                widget.text:SetPoint("BOTTOMRIGHT")
+            end)
+        end
+        seq:SetText(KB_INHERITED_COLOUR .. fitText(seq.text, sequenceLabel(entry.seq), seqWidth - 8 - (seqInset or 0))
             .. Statics.StringReset)
         local override = UI:Create("Button")
-        override:SetText(L["Override"])
-        override:SetWidth(100)
+        override:SetText(L["Copy to Loadout"])
+        -- As wide as its label needs, never under the old 100.
+        local labelWidth = override.text and override.text.GetStringWidth and override.text:GetStringWidth() or 0
+        override:SetWidth(math.max(100, math.ceil(labelWidth) + 24))
         override:SetCallback("OnClick", entry.onOverride)
         override:SetCallback("OnEnter", function()
-            GSE.CreateToolTip(L["Override"], L["Copy this into the loadout's own rows, to change it for this loadout only."],
+            GSE.CreateToolTip(L["Copy to Loadout"], L["Copy this into the loadout's own rows, to change it for this loadout only."],
                 editframe)
         end)
         override:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
         row:AddChild(first)
-        row:AddChild(seq)
         row:AddChild(override)
+        row:AddChild(seq)
         container:AddChild(row)
+        built[#built + 1] = {row = row, cells = {first.frame, override.frame, seq.frame}, seq = seq}
     end
+    return built
 end
 
 -- A loadout page's row list takes an inherited one: the lone blank row the
@@ -1752,6 +1786,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- edge (dropdownFieldEdge).  The heading cells are a chain too, shifted
     -- by whatever the first row measured so they stay over their columns.
     local rowChains, headingFrames = {}, {}
+    local inheritedRows = {} -- a loadout page's greyed rows (inheritedSection)
     -- Per-column heading offset from the measured centre, negative = left.
     -- Part of the target, not an extra slide, so the measured pass still
     -- converges instead of re-applying it on every run.
@@ -1780,52 +1815,98 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- short of its frame, everything after it slides left by the measured
     -- slack.  Positions update as points are set, so the walk reads real
     -- values and a second run finds nothing to move.
+    -- One row; true once it is placed. Runs right after each layout of the
+    -- row (row.afterLayout), in the same frame, so a resize never draws the
+    -- loose row first; and from tightenRows. A second run finds nothing.
+    local function tightenChain(chain)
+        -- Skip until the layout has actually placed the row (under
+        -- UI:SuspendLayout the frames have no points yet).
+        if not (chain.frames[1].GetLeft and chain.frames[1]:GetLeft()) then return false end
+        local carried = 0
+        for i = 1, #chain.frames - 1 do
+            local edge = chain.edges[i]
+            local nextFrame = chain.frames[i + 1]
+            if edge and edge.frame and edge.frame.GetRight and nextFrame.GetLeft then
+                local visibleRight, nextLeft = edge.frame:GetRight(), nextFrame:GetLeft()
+                if visibleRight and nextLeft then
+                    local slack = nextLeft - (visibleRight + (edge.pad or 0) + KB_ICON_GAP)
+                    if slack > 0.5 then
+                        for j = i + 1, #chain.frames do slideLeft(chain.frames[j], slack) end
+                        carried = carried + slack
+                    end
+                end
+            end
+        end
+        -- The row shrank by `carried`; give half back so the tightened
+        -- row is centred where the loose one was.
+        if carried > 0.5 then
+            for _, frame in ipairs(chain.frames) do slideLeft(frame, -carried / 2) end
+        end
+        if chain.mark and chain.removeFrame then
+            chain.mark:ClearAllPoints()
+            chain.mark:SetPoint("LEFT", chain.removeFrame, "RIGHT", KB_ICON_GAP, 0)
+            -- The layout centred the row without the marker; centre
+            -- it with the marker, so the marker takes room from the
+            -- left margin instead of running off the right edge. A
+            -- row wider than its frame starts at the frame's left.
+            local left = chain.frames[1]:GetLeft()
+            local right = chain.removeFrame:GetRight()
+            local rowLeft, rowRight = chain.row:GetLeft(), chain.row:GetRight()
+            if left and right and rowLeft and rowRight then
+                right = right + KB_ICON_GAP + chain.mark:GetWidth()
+                local by = (left + right) / 2 - (rowLeft + rowRight) / 2
+                if right - left > rowRight - rowLeft then by = left - rowLeft end
+                for _, frame in ipairs(chain.frames) do slideLeft(frame, by) end
+            end
+        end
+        return true
+    end
+    -- Headings: centre each over the VISIBLE box of its column's control
+    -- on the first row -- frame left to the arrow's right edge -- not
+    -- over the frame, which the native dropdown never fills.
+    local function slideHeadings(first)
+        if not first then return end
+        for i, headingFrame in ipairs(headingFrames) do
+            local control, edge = first.frames[i], first.edges[i]
+            if control and headingFrame.GetCenter and control.GetLeft then
+                local left = control:GetLeft()
+                local right = edge and edge.frame and edge.frame.GetRight and edge.frame:GetRight()
+                right = right and (right + (edge.pad or 0)) or (control.GetRight and control:GetRight())
+                local have = headingFrame:GetCenter()
+                if left and right and have then
+                    slideLeft(headingFrame, have - ((left + right) / 2 + (headingNudge[i] or 0)))
+                end
+            end
+        end
+    end
+    -- A greyed row lined up with the first row's columns: its button name
+    -- under the button, Copy to Loadout under the Main Key and Backup Key
+    -- cells together, its sequence left-aligned at the sequence dropdown's
+    -- left edge.
+    local function alignInherited(entry)
+        local f = rowChains[1] and rowChains[1].frames
+        if not f then return end
+        local function centreOf(a, z)
+            local l, r = a and a.GetLeft and a:GetLeft(), z and z.GetRight and z:GetRight()
+            return l and r and (l + r) / 2
+        end
+        local targets = {centreOf(f[2], f[2]), centreOf(f[3], f[4])}
+        for i = 1, 2 do
+            local frame = entry.cells[i]
+            local have, want = frame.GetCenter and frame:GetCenter(), targets[i]
+            if have and want then slideLeft(frame, have - want) end
+        end
+        local seqFrame, seqLeft = entry.cells[3], f[5] and f[5].GetLeft and f[5]:GetLeft()
+        local have = seqFrame and seqFrame.GetLeft and seqFrame:GetLeft()
+        if have and seqLeft then slideLeft(seqFrame, have - seqLeft) end
+    end
     local function tightenRows()
         local first
         for _, chain in ipairs(rowChains) do
-            -- Skip until the layout has actually placed the row (under
-            -- UI:SuspendLayout the frames have no points yet).
-            if chain.frames[1].GetLeft and chain.frames[1]:GetLeft() then
-                local carried = 0
-                for i = 1, #chain.frames - 1 do
-                    local edge = chain.edges[i]
-                    local nextFrame = chain.frames[i + 1]
-                    if edge and edge.frame and edge.frame.GetRight and nextFrame.GetLeft then
-                        local visibleRight, nextLeft = edge.frame:GetRight(), nextFrame:GetLeft()
-                        if visibleRight and nextLeft then
-                            local slack = nextLeft - (visibleRight + (edge.pad or 0) + KB_ICON_GAP)
-                            if slack > 0.5 then
-                                for j = i + 1, #chain.frames do slideLeft(chain.frames[j], slack) end
-                                carried = carried + slack
-                            end
-                        end
-                    end
-                end
-                -- The row shrank by `carried`; give half back so the tightened
-                -- row is centred where the loose one was.
-                if carried > 0.5 then
-                    for _, frame in ipairs(chain.frames) do slideLeft(frame, -carried / 2) end
-                end
-                first = first or chain
-            end
+            if tightenChain(chain) then first = first or chain end
         end
-        -- Headings: centre each over the VISIBLE box of its column's control
-        -- on the first row -- frame left to the arrow's right edge -- not
-        -- over the frame, which the native dropdown never fills.
-        if first then
-            for i, headingFrame in ipairs(headingFrames) do
-                local control, edge = first.frames[i], first.edges[i]
-                if control and headingFrame.GetCenter and control.GetLeft then
-                    local left = control:GetLeft()
-                    local right = edge and edge.frame and edge.frame.GetRight and edge.frame:GetRight()
-                    right = right and (right + (edge.pad or 0)) or (control.GetRight and control:GetRight())
-                    local have = headingFrame:GetCenter()
-                    if left and right and have then
-                        slideLeft(headingFrame, have - ((left + right) / 2 + (headingNudge[i] or 0)))
-                    end
-                end
-            end
-        end
+        slideHeadings(first)
+        for _, entry in ipairs(inheritedRows) do alignInherited(entry) end
     end
 
     local function loadRows()
@@ -2303,15 +2384,29 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local chain = {frames = {}, edges = {}}
         for i, name in ipairs(columnLayout()) do
             local cell = cells[name]
-            chain.frames[i] = cell.frame
-            if name == "sequence" or name == "state" then
-                local edgeFrame, pad = dropdownFieldEdge(cell)
-                chain.edges[i] = {frame = edgeFrame, pad = pad}
+            if name == "mark" then
+                -- The loadout marker sits just right of the X, on the row's
+                -- own line. As a flowed cell it made the row wider than the
+                -- pane, so the layout wrapped it under the row; pinned to the
+                -- right it never wraps, and tightenRows anchors it to the X.
+                cell.flowRightAlign = true
+                chain.mark, chain.removeFrame, chain.row = cell.frame, remove.frame, row.frame
+            else
+                chain.frames[i] = cell.frame
+                if name == "sequence" or name == "state" then
+                    local edgeFrame, pad = dropdownFieldEdge(cell)
+                    chain.edges[i] = {frame = edgeFrame, pad = pad}
+                end
             end
             row:AddChild(cell)
         end
         rowChains[#rowChains + 1] = chain
         row:SetHeight(KB_ROW_HEIGHT)
+        -- A resize lays the row out again, undoing the tightening: redo it
+        -- in the same layout pass (the first row carries the headings).
+        row.afterLayout = function()
+            if tightenChain(chain) and rowChains[1] == chain then slideHeadings(chain) end
+        end
         return row
     end
 
@@ -2347,7 +2442,12 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                     redraw()
                 end}
             end
-            inheritedSection(editframe, inheritedContainer, entries)
+            inheritedRows = inheritedSection(editframe, inheritedContainer, entries,
+                {seqJustify = "LEFT", seqWidth = AO_COL_SEQ, seqInset = 10, topGap = KB_ROW_HEIGHT})
+            -- Laid out after the rows on a resize: line up in the same pass.
+            for _, entry in ipairs(inheritedRows) do
+                entry.row.afterLayout = function() alignInherited(entry) end
+            end
             inheritedContainer:DoLayout()
         end
         -- Once now, once after the editor's suspended layout has really run.
@@ -2371,11 +2471,21 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if specname then
         headerText = headerText .. "  -  " .. iconText(specicon, classColour .. specname .. Statics.StringReset, 22)
     end
+    -- Sized to its text, so the centred row centres it: a label as wide as
+    -- every column together is wider than the pane, and the layout then
+    -- starts it at the left edge, off centre (the loadout line below is
+    -- sized the same way).
+    local function fitToText(label, text)
+        label:SetWidth(AO_ROW_WIDTH)
+        label:SetText(text)
+        local fs = label.text or label.label
+        local textWidth = fs and fs.GetStringWidth and fs:GetStringWidth() or 0
+        if textWidth > 0 then label:SetWidth(math.ceil(textWidth) + 6) end
+    end
     local headerLabel = UI:Create("Heading")
-    headerLabel:SetWidth(AO_ROW_WIDTH)
     headerLabel:SetJustifyH("CENTER")
     headerLabel:SetJustifyV("MIDDLE")
-    headerLabel:SetText(headerText)
+    fitToText(headerLabel, headerText)
 
     local loadoutName, loadoutArt = "« " .. L["All Talent Loadouts"] .. " »", nil
     if loadout then
@@ -2411,10 +2521,9 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             tonumber(loadout) == activeLoadoutForSpec(tonumber(specialization))))
         loadoutRow:AddChild(loadoutLabel)
     else
-        loadoutLabel:SetWidth(AO_ROW_WIDTH)
         -- No icon on the all-loadouts header: the guillemets already say it is
         -- a scope, and the generic talent icon read as a loadout of its own.
-        loadoutLabel:SetText(heroIconText(loadoutArt, nil, loadoutText, 20))
+        fitToText(loadoutLabel, heroIconText(loadoutArt, nil, loadoutText, 20))
         loadoutRow = centeredRow(loadoutLabel)
     end
 

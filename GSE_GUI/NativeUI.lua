@@ -1596,6 +1596,9 @@ doLayout = function(container)
     else
         layoutList(container)
     end
+    -- A caller's fix-up that must follow every layout of this container
+    -- (Editor_Keybind's row tightening). Wiped on release like any field.
+    if container.afterLayout then container.afterLayout(container) end
 end
 
 local baseMethods = {}
