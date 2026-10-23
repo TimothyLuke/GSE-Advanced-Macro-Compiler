@@ -762,12 +762,24 @@ local function applyMirrorLook(b, size)
     -- The bar button's crop, not its picture: that changes as the sequence
     -- steps, and this icon always shows the first step's.
     icon.texture:SetTexCoord(b.icon:GetTexCoord())
-    if icon.mask and b.IconMask then
+    -- The mask the bar button is showing.  Forever's gamepad buttons hide
+    -- IconMask for one of their own, round or square (CircleMask, SquareMask:
+    -- Blizzard_GamepadActionBars, ActionBarButton.lua); copying the hidden
+    -- IconMask cut the icon to a small rounded square inside the round frame.
+    local barMask
+    for _, key in ipairs({"CircleMask", "SquareMask", "IconMask"}) do
+        local candidate = b[key]
+        if candidate and candidate.IsShown and candidate:IsShown() then
+            barMask = candidate
+            break
+        end
+    end
+    if icon.mask and barMask then
         -- A mask only takes its shape: no colour, blend or coords to copy.
-        local maskAtlas = b.IconMask.GetAtlas and b.IconMask:GetAtlas()
-        local maskFile = not maskAtlas and b.IconMask.GetTexture and b.IconMask:GetTexture()
+        local maskAtlas = barMask.GetAtlas and barMask:GetAtlas()
+        local maskFile = not maskAtlas and barMask.GetTexture and barMask:GetTexture()
         if maskAtlas then icon.mask:SetAtlas(maskAtlas) elseif maskFile then icon.mask:SetTexture(maskFile) end
-        placeLike(icon.mask, b.IconMask, b, scale)
+        placeLike(icon.mask, barMask, b, scale)
         setIconMask(true)
     else
         setIconMask(false)
@@ -823,6 +835,47 @@ local function setDragIconSize(size)
     GSE.PlaceGSEWatermark(icon.watermark, icon, scale)
 end
 
+-- Every icon the sequence's blocks offer, in every version, in order, as
+-- {name, iconID} -- each block's Select Icon choices (GSE.GetActionIconCandidates).
+local iconProbe
+local function sequenceIconChoices(sequence)
+    local choices, seen = {}, {}
+    -- One picture arrives as a file ID, a numeric string or a texture path;
+    -- compare by the file ID the texture resolves to.
+    iconProbe = iconProbe or UIParent:CreateTexture()
+    local function add(info)
+        local icon = type(info) == "table" and info.iconID
+        if not icon or GSE.IsFallbackIcon(icon) then return end
+        icon = tonumber(icon) or icon
+        iconProbe:SetTexture(icon)
+        local key = (iconProbe.GetTextureFileID and iconProbe:GetTextureFileID()) or icon
+        if not seen[key] then
+            seen[key] = true
+            choices[#choices + 1] = {name = info.name or "", iconID = icon}
+        end
+    end
+    local function walk(actions)
+        if type(actions) ~= "table" then return end
+        for _, action in ipairs(actions) do
+            if type(action) == "table" then
+                if action.type == "spell" or action.type == "macro" then
+                    for _, info in ipairs(GSE.GetActionIconCandidates(action)) do add(info) end
+                end
+                walk(action)
+            end
+        end
+    end
+    for _, version in ipairs(type(sequence) == "table" and sequence.Versions or {}) do
+        if type(version) == "table" then walk(version.Actions) end
+    end
+    return choices
+end
+
+-- The icon the drag icon shows: the player's base icon, else the first step's.
+local function dragIconTexture(id)
+    return GSE.GetSequenceBaseIcon(id) or GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark
+end
+
 local function attachSequenceDragIcon(editframe, hostRow)
     if not sequenceDragIcon then
         sequenceDragIcon = CreateFrame("Button", nil, UIParent)
@@ -872,6 +925,34 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 end
             end)
         end)
+        -- Right-click: pick the sequence's base icon -- what its button shows
+        -- at rest -- from the icons it uses, or any icon at all.
+        sequenceDragIcon:RegisterForClicks("RightButtonUp")
+        sequenceDragIcon:SetScript("OnClick", function(self, button)
+            local frame = self.editframe
+            local id = frame and frame.SequenceID
+            if button ~= "RightButton" or not id then return end
+            local function pick(icon)
+                GSE.SetSequenceBaseIcon(id, icon)
+                self.texture:SetTexture(dragIconTexture(id))
+                -- The caption says first step; it is not that any more.
+                if self.caption then self.caption:Hide() end
+                if self.lastSize then setDragIconSize(self.lastSize) end
+            end
+            -- The editor's own icon menu, as on a block's icon, each spell's
+            -- icon and name.
+            GSE.OpenContextMenu(self, function(_, root)
+                root:CreateTitle(L["Select Base Icon"])
+                for _, v in ipairs(sequenceIconChoices(frame.Sequence)) do
+                    root:CreateButton("|T" .. v.iconID .. ":0|t " .. v.name, function() pick(v.iconID) end)
+                end
+                -- Any icon at all, through GSE QoL's picker, as on a block's menu.
+                if GSE.ShowIconPicker then
+                    root:CreateDivider()
+                    root:CreateButton(L["Choose any icon..."], function() GSE.ShowIconPicker(pick) end)
+                end
+            end)
+        end)
         sequenceDragIcon:RegisterForDrag("LeftButton")
         sequenceDragIcon:SetScript("OnDragStart", function(self)
             if self.sequenceId then GSE.BeginSequenceDrag(self.sequenceId) end
@@ -889,7 +970,8 @@ local function attachSequenceDragIcon(editframe, hostRow)
             end
             GSE.CreateToolTip(L["Put on an Action Button"], (self.sequenceId
                 and L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."]
-                or L["Only a saved sequence for this character's class can be put on an action button."]),
+                or L["Only a saved sequence for this character's class can be put on an action button."])
+                .. "\n\n" .. L["Right Click to choose No Combat Base Icon"],
                 self.editframe)
         end)
         sequenceDragIcon:SetScript("OnLeave", function(self)
@@ -906,7 +988,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
     local live = id and _G[id] and GSE.SequencesExec and GSE.SequencesExec[id] and true or false
     sequenceDragIcon.sequenceId = live and id or nil
     sequenceDragIcon.editframe = editframe
-    sequenceDragIcon.texture:SetTexture(live and GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark)
+    sequenceDragIcon.texture:SetTexture(live and dragIconTexture(id) or Statics.Icons.GSE_Logo_Dark)
     sequenceDragIcon.texture:SetDesaturated(not live)
     sequenceDragIcon:SetParent(hostRow.frame)
     sequenceDragIcon:SetFrameLevel(hostRow.frame:GetFrameLevel() + 5)
@@ -960,7 +1042,8 @@ local function centreSequenceDragIcon(slot)
     local caption = sequenceDragIcon.caption
     caption:ClearAllPoints()
     caption:SetPoint("TOP", badge, "BOTTOM", 0, -DRAG_BELOW_GAP)
-    caption:SetShown(live)
+    -- It says "first step": not when the player has picked a base icon.
+    caption:SetShown(live and not GSE.GetSequenceBaseIcon(sequenceDragIcon.sequenceId))
     sequenceDragIcon.belowRoom = live
         and (DRAG_BELOW_GAP * 2 + badge:GetHeight() + math.ceil(caption:GetStringHeight())) or 0
     sequenceDragArea:SetParent(slot.frame:GetParent())
@@ -1359,7 +1442,7 @@ local function addRenderedNotesPanel(container, label, text, options)
     wrapper:AddChild(box)
     container:AddChild(wrapper)
 
-    return wrapper
+    return wrapper, box
 end
 
 local function drawMetadataTab(editframe, container)
@@ -1580,11 +1663,18 @@ end
 -- read-only panel's label and gap take HELP_PANEL_LABEL_HEIGHT above its box.
 local HELP_PANEL_LABEL_HEIGHT = 22
 local HELP_MIN_LINES = 6
+-- Returns the widget drawn and a function that gives it a new height, for the
+-- page to follow the window as it is resized.
 local function addHelpInformationBox(editframe, container, height, opts)
     if opts.readOnly then
-        GSE.GUI.CreateReadOnlyNotesPanel(container, T("Help Information"), opts.readOnly,
-            {height = math.max(HELP_MIN_LINES * 16 + 28, height) - HELP_PANEL_LABEL_HEIGHT, editframe = editframe})
-        return
+        local function boxHeight(h) return math.max(HELP_MIN_LINES * 16 + 28, h) - HELP_PANEL_LABEL_HEIGHT end
+        local wrapper, box = GSE.GUI.CreateReadOnlyNotesPanel(container, T("Help Information"), opts.readOnly,
+            {height = boxHeight(height), editframe = editframe})
+        return wrapper, function(h)
+            box:SetHeight(boxHeight(h))
+            if box.DoLayout then box:DoLayout() end
+            if wrapper.DoLayout then wrapper:DoLayout() end
+        end
     end
     local meta, key = opts.meta, opts.key
     local helpeditbox = UI:Create("MultiLineEditBox")
@@ -1594,7 +1684,8 @@ local function addHelpInformationBox(editframe, container, height, opts)
     if helpeditbox.label and helpeditbox.label.SetFont then
         helpeditbox.label:SetFont(GameFontNormalSmall:GetFont())
     end
-    helpeditbox:SetNumLines(math.max(HELP_MIN_LINES, math.floor((height - 28) / 16)))
+    local function fit(h) helpeditbox:SetNumLines(math.max(HELP_MIN_LINES, math.floor((h - 28) / 16))) end
+    fit(height)
     helpeditbox:SetFullWidth(true)
     helpeditbox:DisableButton(true)
     helpeditbox:SetText(meta[key] or "")
@@ -1609,6 +1700,7 @@ local function addHelpInformationBox(editframe, container, height, opts)
         helpeditbox:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
     end
     container:AddChild(helpeditbox)
+    return helpeditbox, fit
 end
 
 -- Widest header label in its font (GameFontNormalSmall), so no label wraps.
@@ -1669,9 +1761,9 @@ GUIDrawMetadataEditor = function(editframe, container)
     drawMetadataTab(editframe, container)
 end
 
--- Under the Help Link row: the 8 spacer and the list gaps, plus a little so
--- the box never quite reaches the scroll edge.
-local NOTES_PAGE_CHROME = 8 + 3 * 2 + 8
+-- Under the Help Link row: the 8 spacer and the list gaps, plus 18 so the box
+-- stops clear of the pane's bottom edge (at 8 it sat right on it).
+local NOTES_PAGE_CHROME = 8 + 3 * 2 + 18
 
 --- The Notes - Help page of a sequence, variable or macro: the Help Link, then
 --- Help Information filling the rest of the pane, so long notes read as a page
@@ -1682,13 +1774,61 @@ local NOTES_PAGE_CHROME = 8 + 3 * 2 + 8
 ---   linkTip   the Help Link tooltip; helpTip the Help Information one
 ---   onCommit  run after an edit, for an element written back as it changes
 ---   height    the room this page has, from its first row down
+-- The page is laid out for the pane's height when it is drawn, so after the
+-- window was resized the box kept the old size: too tall, its bottom ran under
+-- the footer.  One hook per editor: while a Notes - Help page shows, its box
+-- is given the pane's new height on the next frame of every size change, so
+-- it follows the window as it is dragged.  editframe.notesFit is the page's
+-- own fitter, dropped when its box is released.
+local function fitNotesOnResize(editframe)
+    if editframe.notesResizeHooked or not (editframe.frame and editframe.frame.HookScript) then return end
+    editframe.notesResizeHooked = true
+    local queued = false
+    editframe.frame:HookScript("OnSizeChanged", function()
+        if queued or not editframe.notesFit then return end
+        queued = true
+        C_Timer.After(0, function()
+            queued = false
+            if editframe.notesFit then editframe.notesFit() end
+        end)
+    end)
+end
+
 function GSE.GUI.DrawNotesPage(editframe, container, opts)
+    fitNotesOnResize(editframe)
     addHelpLinkEditor(editframe, headerFieldRow(container, T("Help Link"), headerLabelWidth()),
         HEADER_FIELD_WIDTH, opts.meta, opts.linkTip, opts.onCommit)
     addMetadataSpacer(container, 8)
     local height = (opts.height or 0) - HEADER_ROW_HEIGHT - NOTES_PAGE_CHROME
     if height <= 0 then height = NOTES_RENDERED_HEIGHT + HELP_PANEL_LABEL_HEIGHT end
-    addHelpInformationBox(editframe, container, height, opts)
+    local widget, fit = addHelpInformationBox(editframe, container, height, opts)
+    -- The pane grows and shrinks by exactly what the window does, so the room
+    -- now is the room drawn plus the window's change since.  (Reading the
+    -- pane's own height here gave a different figure from the one the page
+    -- was drawn with, and the box jumped short the moment a resize began.)
+    local drawnAt = editframe.frame and editframe.frame.GetHeight and editframe.frame:GetHeight()
+    editframe.notesFit = nil
+    if not widget then return end
+    -- The box fills the pane and scrolls its own text: one scroll bar, the
+    -- box's.  The pane's comes back when the page goes (OnRelease, below).
+    local outer = editframe.scrollContainer
+    if outer and outer.SetScrollBarEnabled then
+        outer:SetScrollBarEnabled(false)
+        if outer.SetScroll then outer:SetScroll(0) end
+    end
+    local notesFit
+    widget:SetCallback("OnRelease", function()
+        if notesFit and editframe.notesFit == notesFit then editframe.notesFit = nil end
+        if outer and outer.SetScrollBarEnabled then outer:SetScrollBarEnabled(true) end
+    end)
+    if not (fit and drawnAt and opts.height and opts.height > 0) then return end
+    notesFit = function()
+        local room = height + (editframe.frame:GetHeight() - drawnAt)
+        if room <= 0 then return end
+        fit(room)
+        if container.DoLayout then container:DoLayout() end
+    end
+    editframe.notesFit = notesFit
 end
 
 -- A sequence's Notes - Help page: it edits Help, read-only when GSE.Tools

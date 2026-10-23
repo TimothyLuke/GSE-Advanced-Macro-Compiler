@@ -252,6 +252,12 @@ showLevel = function(level, description, anchor)
     end
     p.content:SetHeight(math.max(y, 1))
     p:SetSize(WIDTH, math.min(math.max(y, ROW), ROW * MAX_ROWS) + 12)
+    -- The template always draws its scroll bar.  Only when the rows run past
+    -- the cap; otherwise the rows take the strip it stood in.
+    local overflow = y > ROW * MAX_ROWS
+    if p.scroll.ScrollBar then p.scroll.ScrollBar:SetShown(overflow) end
+    p.scroll:SetPoint("BOTTOMRIGHT", overflow and -26 or -6, 6)
+    p.content:SetWidth(WIDTH - (overflow and 32 or 12))
     p:ClearAllPoints()
     if level == 1 then
         p:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -2)

@@ -35,6 +35,8 @@ local DEFAULT_POINTS = {
 local bars, buttons = {}, {}
 local dragging = false -- a sequence is being dragged: every bar shows for the drop
 local editing = false -- WoW's Edit Mode is open: every bar shows to be placed
+local keybinding = false -- WoW's Quick Keybind mode is on: every button shows to be bound
+local inCombat = InCombatLockdown() -- for the In Combat / Out of Combat bars
 local pendingLayout = false -- a change waited for combat to end
 
 local Masque = LibStub and LibStub("Masque", true)
@@ -43,10 +45,11 @@ local function barOf(index)
     return math.floor((index - 1) / ns.BAR_SIZE) + 1
 end
 
--- What WoW's Key Bindings call each button (Bindings.xml). The category's
--- name, BINDING_HEADER_GSE, is GSE's (Statics.lua).
+-- What WoW's Key Bindings call each button (Bindings.xml). The sections,
+-- one per bar as the stock bars have, are named in Statics.lua.
 for index = 1, ns.BUTTON_COUNT do
-    _G["BINDING_NAME_" .. ns.BindingCommand(index)] = string.format(L["GSE Button %d (Bar %d)"], index, barOf(index))
+    _G["BINDING_NAME_" .. ns.BindingCommand(index)] = string.format(L["GSE Action Bar %d Button %d"],
+        barOf(index), (index - 1) % ns.BAR_SIZE + 1)
 end
 
 --- The buttons' names, for the editor's Button Bindings -- none while the
@@ -77,14 +80,20 @@ local function updateKeys()
 end
 
 
--- Size, rows and place of one bar, and which of its buttons show.
+-- Size, rows and place of one bar, and which of its buttons show. Icons is
+-- how many of its twelve buttons it has; PerRow how many sit side by side
+-- before the next line starts -- a row, or a column when it is vertical.
 local function layoutBar(b)
     local bar, settings, options = bars[b], ns.Options().Bars[b], ns.Options()
-    local perRow = math.max(1, math.min(ns.BAR_SIZE, tonumber(settings.PerRow) or ns.BAR_SIZE))
+    local count = math.max(1, math.min(ns.BAR_SIZE, tonumber(settings.Icons) or ns.BAR_SIZE))
+    local perRow = math.max(1, math.min(count, tonumber(settings.PerRow) or ns.BAR_SIZE))
+    local vertical = settings.Orientation == "VERTICAL"
     local spacing = tonumber(options.Spacing) or 4
-    local rows = math.ceil(ns.BAR_SIZE / perRow)
+    local rows = math.ceil(count / perRow)
+    local across, down = perRow, rows
+    if vertical then across, down = rows, perRow end
     bar:SetScale(math.max(0.5, math.min(2, tonumber(settings.Scale) or 1)))
-    bar:SetSize(perRow * buttonSize + (perRow - 1) * spacing, rows * buttonSize + (rows - 1) * spacing)
+    bar:SetSize(across * buttonSize + (across - 1) * spacing, down * buttonSize + (down - 1) * spacing)
     bar:ClearAllPoints()
     -- In Edit Mode's layout, where it has one (EditMode.lua); else where it
     -- was dragged to, or where it starts.
@@ -94,9 +103,11 @@ local function layoutBar(b)
     for slot = 1, ns.BAR_SIZE do
         local button = buttons[(b - 1) * ns.BAR_SIZE + slot]
         local column, row = (slot - 1) % perRow, math.floor((slot - 1) / perRow)
+        if vertical then column, row = row, column end
         button:ClearAllPoints()
         button:SetPoint("TOPLEFT", bar, "TOPLEFT", column * (buttonSize + spacing), -row * (buttonSize + spacing))
-        button:SetShown(dragging or editing or options.ShowEmpty or ns.HasContent(button))
+        button:SetShown(slot <= count
+            and (dragging or editing or keybinding or options.ShowEmpty or ns.HasContent(button)))
     end
 end
 
@@ -104,7 +115,9 @@ end
 -- this much works in combat too.
 local function barAlpha(b)
     local visibility = ns.Options().Bars[b].Visibility
-    if dragging or editing or visibility == "SHOW" then return 1 end
+    if dragging or editing or keybinding or visibility == "SHOW" then return 1 end
+    if visibility == "INCOMBAT" then return inCombat and 1 or 0 end
+    if visibility == "OUTOFCOMBAT" then return inCombat and 0 or 1 end
     if visibility == "MOUSEOVER" and bars[b]:IsMouseOver() then return 1 end
     return 0
 end
@@ -113,7 +126,7 @@ local function applyVisibility(b)
     local bar = bars[b]
     bar:SetAlpha(barAlpha(b))
     if InCombatLockdown() then return end
-    local mouse = dragging or ns.Options().Bars[b].Visibility ~= "HIDE"
+    local mouse = dragging or keybinding or ns.Options().Bars[b].Visibility ~= "HIDE"
     for slot = 1, ns.BAR_SIZE do
         buttons[(b - 1) * ns.BAR_SIZE + slot]:EnableMouse(mouse)
     end
@@ -210,6 +223,16 @@ for index = 1, ns.BUTTON_COUNT do
     -- yield the button to whatever sits in that slot of WoW's own bar.
     button.gseIndex = index
     if index == 1 and (button:GetWidth() or 0) > 0 then buttonSize = button:GetWidth() end
+    -- The cooldown's number sits centred on the button, whatever its frame
+    -- is anchored to.
+    local countdown = button.cooldown and button.cooldown.GetCountdownFontString
+        and button.cooldown:GetCountdownFontString()
+    if countdown then
+        countdown:ClearAllPoints()
+        countdown:SetPoint("CENTER", button, "CENTER", 0, 0)
+        if countdown.SetJustifyH then countdown:SetJustifyH("CENTER") end
+        if countdown.SetJustifyV then countdown:SetJustifyV("MIDDLE") end
+    end
     -- Marks it for the drag and the right-click menu, which otherwise want a
     -- button with an action slot, and for the overrides, which never look for
     -- one behind it.
@@ -226,6 +249,22 @@ for index = 1, ns.BUTTON_COUNT do
     button:HookScript("OnEnter", emptyTooltip)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
     if bars[barOf(index)].masque then bars[barOf(index)].masque:AddButton(button, nil, "Action") end
+    -- WoW's Quick Keybind mode binds the hovered button to the next key, as
+    -- on its own bars. Its mixin, not its template: the template brings an
+    -- OnClick, which would replace the secure click.
+    if _G.QuickKeybindButtonTemplateMixin and _G.KeybindFrames_InQuickKeybindMode then
+        Mixin(button, _G.QuickKeybindButtonTemplateMixin)
+        button.commandName = ns.BindingCommand(index)
+        local highlight = button:CreateTexture(nil, "OVERLAY")
+        highlight:SetAllPoints()
+        highlight:SetAtlas("UI-HUD-ActionBar-IconFrame-Mouseover")
+        highlight:SetBlendMode("ADD")
+        highlight:SetAlpha(0.4)
+        highlight:Hide()
+        button.QuickKeybindHighlightTexture = highlight
+        button:HookScript("OnEnter", button.QuickKeybindButtonOnEnter)
+        button:HookScript("OnLeave", button.QuickKeybindButtonOnLeave)
+    end
     buttons[index] = button
 end
 ns.buttons = buttons
@@ -238,10 +277,25 @@ function ns.SetEditing(open)
     ns.Refresh()
 end
 
+-- Quick Keybind mode on or off: every button shows, lit, while it is on.
+-- Followed on the window itself: WoW announces only that the mode ended.
+if _G.QuickKeybindFrame and _G.QuickKeybindButtonTemplateMixin then
+    local function setKeybinding(on)
+        keybinding = on
+        for _, button in ipairs(buttons) do
+            if button.DoModeChange then button:DoModeChange(on) end
+        end
+        ns.Refresh()
+    end
+    _G.QuickKeybindFrame:HookScript("OnShow", function() setKeybinding(true) end)
+    _G.QuickKeybindFrame:HookScript("OnHide", function() setKeybinding(false) end)
+end
+
 -- Every event that changes what the bars show.
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_REGEN_ENABLED")
+events:RegisterEvent("PLAYER_REGEN_DISABLED")
 events:RegisterEvent("UPDATE_BINDINGS")
 -- WoW's own signal that the cursor picked up something an action bar takes.
 events:RegisterEvent("ACTIONBAR_SHOWGRID")
@@ -261,6 +315,13 @@ local function migrate()
 end
 
 events:SetScript("OnEvent", function(_, event)
+    -- In Combat / Out of Combat bars change by alpha, which combat allows.
+    if event == "PLAYER_REGEN_DISABLED" then
+        inCombat = true
+        for b = 1, BAR_COUNT do bars[b]:SetAlpha(barAlpha(b)) end
+        return
+    end
+    if event == "PLAYER_REGEN_ENABLED" then inCombat = false end
     if event == "UPDATE_BINDINGS" then
         updateKeys()
         return

@@ -338,6 +338,15 @@ local function getCurrentGSEAction(seq)
 end
 
 local function getGSESequenceIcon(seq)
+    -- A base icon the player picked shows while the sequence is at rest (its
+    -- first step, first time through); running, the step icons show as before.
+    local base = GSE.GetSequenceBaseIcon(seq)
+    if base then
+        local frame = _G[seq]
+        local step = frame and frame:GetAttribute("step") or 1
+        local iteration = frame and frame:GetAttribute("iteration") or 1
+        if step <= 1 and iteration <= 1 then return base end
+    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -418,6 +427,547 @@ local function setOverrideButtonForcedShown(buttonOrName, shown)
     end
 end
 
+-- An override slot holds no action, so the bar draws no cooldown on it. The
+-- swipe is for the spell whose icon the button shows. That icon can be a
+-- block's own icon or the player's base icon rather than the spell the step
+-- resolves to, so the spell is found by its icon among every spell the
+-- sequence names (all branches). No spell there has that icon (an item, a
+-- picked picture): no swipe.
+local overrideSpell = setmetatable({}, {__mode = "k"})
+local isSecretValue = _G.issecretvalue or function() return false end
+local function addClauseSpells(map, clauses)
+    for _, clause in ipairs(clauses) do
+        local target = GSE.GetMacroClauseTarget(clause)
+        if target ~= "" then
+            local current = GSE.GetCurrentSpellID and GSE.GetCurrentSpellID(target) or target
+            local info = GSE.GetSpellInfo(current) or GSE.GetSpellInfo(tonumber(target) or target)
+            if info and info.spellID and info.iconID and not map[info.iconID] then map[info.iconID] = info.spellID end
+        end
+    end
+end
+local function buildIconSpells(executionseq)
+    local map, seen = {}, {}
+    for _, action in pairs(executionseq) do
+        local text = type(action) == "table" and action.macrotext
+        -- A block of one plain spell compiles to a spell action, no macro text.
+        local spell = type(action) == "table" and action.type == "spell" and action.spell
+        if type(spell) == "string" and not seen[spell] then
+            seen[spell] = true
+            addClauseSpells(map, {GSE.UnEscapeString(spell)})
+        end
+        if type(text) == "string" and not seen[text] then
+            seen[text] = true
+            -- Line by line: a bare command ("/startattack") must not swallow
+            -- the line after it.
+            for line in string.gmatch(text, "[^\r\n]+") do
+                local cmd, rest = string.match(line, "^%s*/(%a+)[ \t]+(.+)")
+                cmd = cmd and string.lower(cmd)
+                for _, branch in ipairs(cmd and GSE.split(rest, ";") or {}) do
+                    if cmd == "castsequence" then
+                        addClauseSpells(map, GSE.SplitCastSequence(branch))
+                    elseif cmd == "cast" or cmd == "use" or cmd == "spell" then
+                        addClauseSpells(map, {branch})
+                    end
+                end
+            end
+        end
+    end
+    return map
+end
+local sequenceIconSpells = {} -- [seq] = {exec = compiled steps, built = time, map = {[texture] = spellID}}
+local function spellForIcon(seq, texture)
+    local executionseq = seq and GSE.SequencesExec and GSE.SequencesExec[seq]
+    if not (executionseq and texture) or isSecretValue(texture) then return nil end
+    local entry = sequenceIconSpells[seq]
+    -- Rebuilt when the sequence is recompiled, and on a miss at most every 5s
+    -- (a spell not known yet at login, a talent swap).
+    if not entry or entry.exec ~= executionseq or (not entry.map[texture] and GetTime() - entry.built > 5) then
+        local ok, map = pcall(buildIconSpells, executionseq)
+        entry = {exec = executionseq, built = GetTime(), map = ok and map or {}}
+        sequenceIconSpells[seq] = entry
+    end
+    return entry.map[texture]
+end
+local function spellInRange(spellID, unit)
+    if C_Spell and C_Spell.IsSpellInRange then return C_Spell.IsSpellInRange(spellID, unit) end
+    local info = IsSpellInRange and GSE.GetSpellInfo(spellID)
+    local answer = info and info.name and IsSpellInRange(info.name, unit)
+    if answer ~= nil then return answer == 1 end
+end
+-- The LibActionButton library that owns a button (Bartender, ElvUI, NDui and
+-- ConsolePort each ship their own copy), or nil for a Blizzard-style button.
+local labLibFor = setmetatable({}, {__mode = "k"})
+local function labLib(button)
+    local lib = labLibFor[button]
+    if lib == nil then
+        lib = false
+        for name, candidate in pairs(LibStub and LibStub.libs or {}) do
+            if type(name) == "string" and string.find(name, "^LibActionButton") and type(candidate) == "table"
+                and type(candidate.buttonRegistry) == "table" and candidate.buttonRegistry[button] then
+                lib = candidate
+                break
+            end
+        end
+        labLibFor[button] = lib
+    end
+    return lib or nil
+end
+-- Whether the override, not a real action, is what the button shows now.
+local function overrideShowing(button)
+    if not button:GetAttribute("gse-button") then return false end
+    if labLib(button) then
+        return button._state_type == "custom"
+            and button:GetAttribute("gse-lab-state-" .. tostring(button:GetAttribute("state"))) and true or false
+    end
+    return not GSE.ActionBarSlotHasForeignAction(button)
+end
+-- A LibActionButton bar draws cooldown, range colour and proc glow itself, in
+-- the player's own settings, from what each button answers for its spell. An
+-- override is a "custom" state, which answers nothing, so while one shows the
+-- button answers for the spell whose icon shows; any other state gets the
+-- library's own answer.
+local GLOW_PROBE_ID = -1 -- no real spell: lets the library be told to glow one button
+local glowProbe = {}
+local LAB_ANSWERS = {
+    GetSpellId = function(spellID) return spellID end,
+    GetCooldownInfo = function(spellID) return GSE.GetSpellCooldown(spellID) end,
+    GetCooldownDuration = function(spellID)
+        return C_Spell and C_Spell.GetSpellCooldownDuration and C_Spell.GetSpellCooldownDuration(spellID) or nil
+    end,
+    IsUnitInRange = function(spellID, unit) return spellInRange(spellID, unit or "target") end,
+    IsUsable = function(spellID)
+        if C_Spell and C_Spell.IsSpellUsable then return C_Spell.IsSpellUsable(spellID) end
+        if IsUsableSpell then return IsUsableSpell(spellID) end
+    end,
+    GetDisplayCount = function(spellID)
+        if C_Spell and C_Spell.GetSpellDisplayCount then return C_Spell.GetSpellDisplayCount(spellID) end
+        return nil
+    end,
+    GetCount = function(spellID)
+        local get = C_Spell and C_Spell.GetSpellCastCount or _G.GetSpellCastCount or _G.GetSpellCount
+        return get and get(spellID) or 0
+    end,
+    IsConsumableOrStackable = function(spellID)
+        local is = C_Spell and C_Spell.IsConsumableSpell or IsConsumableSpell
+        return is and is(spellID) or nil
+    end,
+    GetChargeInfo = function(spellID)
+        return C_Spell and C_Spell.GetSpellCharges and C_Spell.GetSpellCharges(spellID) or nil
+    end,
+}
+local labAnswering = setmetatable({}, {__mode = "k"})
+local function hookLABAnswers(button)
+    if not button or labAnswering[button] or not labLib(button) then return end
+    labAnswering[button] = true
+    for method, answer in pairs(LAB_ANSWERS) do
+        button[method] = function(self, ...)
+            if method == "GetSpellId" and glowProbe[self] then return GLOW_PROBE_ID end
+            local spellID = overrideShowing(self) and overrideSpell[self]
+            if spellID then return answer(spellID, ...) end
+            local kind = getmetatable(self)
+            local own = kind and type(kind.__index) == "table" and kind.__index[method]
+            if own then return own(self, ...) end
+        end
+    end
+end
+-- The library's own show/hide for one button: its glow event with a spell id
+-- only that button answers to.
+local function labGlow(button, lib, lit)
+    local handler = lib.eventFrame and lib.eventFrame.GetScript and lib.eventFrame:GetScript("OnEvent")
+    if not handler then return end
+    glowProbe[button] = true
+    pcall(handler, lib.eventFrame,
+        lit and "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" or "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", GLOW_PROBE_ID)
+    glowProbe[button] = nil
+end
+-- That spell's cooldown (the global cooldown included, as on a spell button)
+-- on the button's own cooldown frame. Where WoW has duration objects (Retail;
+-- its cooldown values can be secret in combat, which SetCooldown refuses from
+-- an addon) the object goes to the frame; elsewhere the plain start and
+-- duration.
+-- shortcut: no charge or loss-of-control swipe, add if a sequence needs them.
+local function setSpellCooldown(cooldown, spellID)
+    if C_Spell and C_Spell.GetSpellCooldownDuration and cooldown.SetCooldownFromDurationObject then
+        local duration = C_Spell.GetSpellCooldownDuration(spellID)
+        if duration then
+            cooldown:SetCooldownFromDurationObject(duration)
+        else
+            cooldown:Clear()
+        end
+    else
+        local info = GSE.GetSpellCooldown(spellID)
+        if info and info.startTime and info.duration then
+            cooldown:SetCooldown(info.startTime, info.duration, info.modRate)
+        else
+            cooldown:Clear()
+        end
+    end
+end
+local applyingCooldown -- our own SetCooldown/Clear, not the bar's
+local function applyOverrideCooldown(button)
+    local cooldown = button and button.cooldown
+    if not (cooldown and cooldown.SetCooldown and cooldown.Clear) then return end
+    -- A real action on the slot wins: its cooldown is the bar's to draw.
+    if not overrideShowing(button) then return end
+    local spellID = overrideSpell[button]
+    applyingCooldown = true
+    if spellID then
+        pcall(setSpellCooldown, cooldown, spellID)
+    else
+        cooldown:Clear()
+    end
+    applyingCooldown = nil
+end
+-- The count on the icon for the spell it shows -- its charges, or the stacks
+-- it costs -- as WoW's own buttons draw it: C_Spell.GetSpellDisplayCount,
+-- the flyout buttons' call (an action slot's count reads the slot, which an
+-- override has none of); older clients, the cast count else the charges. A
+-- LibActionButton bar draws its own from the answers above. In combat the
+-- client can keep the count secret; the text takes a secret string as it is.
+local function spellCountText(spellID)
+    if C_Spell and C_Spell.GetSpellDisplayCount then return C_Spell.GetSpellDisplayCount(spellID) end
+    local get = _G.GetSpellCastCount or _G.GetSpellCount
+    local count = get and get(spellID) or 0
+    if count > 0 then return count end
+    local current, max
+    if C_Spell and C_Spell.GetSpellCharges then
+        local charges = C_Spell.GetSpellCharges(spellID)
+        if charges then current, max = charges.currentCharges, charges.maxCharges end
+    elseif GetSpellCharges then
+        current, max = GetSpellCharges(spellID)
+    end
+    if max and max > 1 then return current end
+    return ""
+end
+local applyingCount -- our own SetText, not the bar's
+local function applyOverrideCount(button)
+    if not (button and button.GetAttribute) or labLib(button) then return end
+    local name = button.GetName and button:GetName()
+    local count = button.Count or (name and _G[name .. "Count"])
+    if not (count and count.SetText) or not overrideShowing(button) then return end
+    local spellID = overrideSpell[button]
+    applyingCount = true
+    if spellID then
+        local ok, text = pcall(spellCountText, spellID)
+        count:SetText(ok and text or "")
+    else
+        count:SetText("")
+    end
+    applyingCount = nil
+end
+-- The bar writes an empty slot's count ("") on its own updates; put ours
+-- back in the same call.
+local countHooked = setmetatable({}, {__mode = "k"})
+local function hookCountKeep(button)
+    local name = button and button.GetName and button:GetName()
+    local count = button and (button.Count or (name and _G[name .. "Count"]))
+    if not (count and count.SetText and not countHooked[count]) then return end
+    countHooked[count] = true
+    hooksecurefunc(count, "SetText", function()
+        if not applyingCount then applyOverrideCount(button) end
+    end)
+end
+-- The proc glow while the spell whose icon shows is lit up by a proc
+-- (C_SpellActivationOverlay). On a LibActionButton bar the library shows its
+-- own (labGlow). Elsewhere the bar's own alert manager, so it looks and is
+-- skinned like every other button's: an override slot holds no action, so the
+-- bar takes the alert down on its own updates and it is put back with no
+-- birth animation. (The bar reads the manager's state only at the end of its
+-- Update, after its protected writes.)
+local overrideGlowing = setmetatable({}, {__mode = "k"})
+local applyingGlow -- our own ShowAlert/HideAlert, not the bar's
+local applyOverrideUsable -- below: the icon's tint follows its spell
+-- The proc glow's art, as Blizzard picks it for its own buttons (its
+-- CheckAndSetArtStyle, which skips a button with no bar): with the assisted
+-- highlight on -- or its reduce-highlights option, while an assisted-combat
+-- button exists -- a rotation spell's proc is the thin ring, so the blue
+-- ring beside it stays readable. Its rule reads the button's action slot;
+-- an override has none, so the spell its icon shows stands in.
+local function styleOverrideAlert(button)
+    local alert = button and button.SpellActivationAlert
+    local manager = _G.AssistedCombatManager
+    if not (alert and alert.ProcAltGlow and alert.ProcStartFlipbook and alert.ProcLoopFlipbook
+        and manager and manager.IsRotationSpell and manager.IsAssistedHighlightActive) then return end
+    local spellID, thin = overrideSpell[button], false
+    if spellID then
+        local reduce = manager:IsAssistedHighlightActive()
+        if not reduce and _G.CVarCallbackRegistry and C_ActionBar and C_ActionBar.HasAssistedCombatActionButtons then
+            reduce = _G.CVarCallbackRegistry:GetCVarValueBool("assistedCombatReduceHighlights")
+                and C_ActionBar.HasAssistedCombatActionButtons()
+        end
+        if reduce then thin = manager:IsRotationSpell(spellID) and true or false end
+    end
+    alert.ProcStartFlipbook:SetShown(not thin)
+    alert.ProcLoopFlipbook:SetShown(not thin)
+    alert.ProcAltGlow:SetShown(thin)
+end
+local function applyOverrideGlow(button, reassert)
+    local overlay = _G.C_SpellActivationOverlay
+    if not (button and button.GetAttribute and overlay and overlay.IsSpellOverlayed) then return end
+    local lib, alerts = labLib(button), _G.ActionButtonSpellAlertManager
+    if not lib and not (alerts and alerts.ShowAlert and alerts.HideAlert) then return end
+    local showing = overrideShowing(button)
+    local spellID, lit = overrideSpell[button], false
+    if spellID and showing then
+        lit = overlay.IsSpellOverlayed(spellID)
+        if isSecretValue(lit) then return end
+        lit = lit and true or false
+    end
+    if lit == (overrideGlowing[button] or false) and not (lit and reassert) then return end
+    overrideGlowing[button] = lit or nil
+    applyingGlow = true
+    if lib then
+        if lit or showing then labGlow(button, lib, lit) end
+    elseif lit then
+        pcall(alerts.ShowAlert, alerts, button, reassert)
+        styleOverrideAlert(button)
+    elseif showing or not button:GetAttribute("gse-button") then -- a real action's glow is the bar's to show
+        pcall(alerts.HideAlert, alerts, button)
+    end
+    applyingGlow = nil
+end
+if _G.ActionButtonSpellAlertManager and _G.ActionButtonSpellAlertManager.HideAlert then
+    hooksecurefunc(_G.ActionButtonSpellAlertManager, "HideAlert", function(_, button)
+        if not applyingGlow and overrideGlowing[button] then applyOverrideGlow(button, true) end
+    end)
+end
+-- Blizzard's assisted highlight: the blue glow on the spell its rotation
+-- helper would cast next, for players who turned that option on. Its list of
+-- buttons only holds slots with an action, so an override whose icon shows
+-- that spell is given the same frame through Blizzard's own call. A
+-- LibActionButton bar does its own (GetSpellId, above).
+-- shortcut: not put back if the bar hides it on an action change, add a hook if seen.
+local overrideAssisted = setmetatable({}, {__mode = "k"})
+local function applyOverrideAssist(button)
+    local manager = _G.AssistedCombatManager
+    if not (button and button.GetAttribute and manager and manager.SetAssistedHighlightFrameShown
+        and manager.IsAssistedHighlightActive) or labLib(button) then return end
+    local spellID, nextSpell, shown = overrideSpell[button], manager.lastNextCastSpellID, false
+    if spellID and nextSpell and not isSecretValue(nextSpell) and manager:IsAssistedHighlightActive()
+        and overrideShowing(button) then
+        shown = spellID == nextSpell
+    end
+    if not shown and not overrideAssisted[button] then return end -- never hide a real action's
+    overrideAssisted[button] = shown or nil
+    pcall(manager.SetAssistedHighlightFrameShown, manager, button, shown)
+    -- Blizzard shrinks the glow (66 on its 45 buttons) to 48 for any button
+    -- with no action slot, meant for the small stance buttons; a slotless
+    -- override button (the GSE Action Bar's) gets the template's size back,
+    -- in proportion to the button.
+    local glow = shown and button.action == nil and button.AssistedCombatHighlightFrame
+    if glow and glow.Flipbook and button.GetWidth then
+        local size = (button:GetWidth() or 45) * 66 / 45
+        glow.Flipbook:SetSize(size, size)
+    end
+end
+if _G.AssistedCombatManager and _G.EventRegistry and _G.EventRegistry.RegisterCallback then
+    local owner = CreateFrame("Frame")
+    -- Next frame: after Blizzard's own pass, and after it has noted combat
+    -- (the glow animates in combat only).
+    local function refreshAssist()
+        C_Timer.After(0, function()
+            for buttonName in pairs(GSE.ButtonOverrides or {}) do
+                applyOverrideAssist(_G[buttonName])
+                -- Blizzard restyles its own buttons' proc glows on these too.
+                if overrideGlowing[_G[buttonName]] then styleOverrideAlert(_G[buttonName]) end
+            end
+        end)
+    end
+    _G.EventRegistry:RegisterCallback("AssistedCombatManager.OnAssistedHighlightSpellChange", refreshAssist, owner)
+    _G.EventRegistry:RegisterCallback("AssistedCombatManager.OnSetUseAssistedHighlight", refreshAssist, owner)
+    owner:RegisterEvent("PLAYER_REGEN_DISABLED")
+    owner:RegisterEvent("PLAYER_REGEN_ENABLED")
+    owner:SetScript("OnEvent", refreshAssist)
+end
+-- Several painters set an override's icon (this file, Storage's UpdateIcon,
+-- the bar): the spell is re-read wherever the texture is set.
+local iconSpellHooked = setmetatable({}, {__mode = "k"})
+local function hookIconSpell(button)
+    local name = button and button.GetName and button:GetName()
+    local icon = button and (button.icon or (name and _G[name .. "Icon"]))
+    if not (icon and icon.SetTexture and icon.GetTexture) or iconSpellHooked[icon] then return end
+    iconSpellHooked[icon] = true
+    local function follow()
+        local seq = button:GetAttribute("gse-button")
+        if not seq then return end
+        local spellID = spellForIcon(seq, icon:GetTexture())
+        if spellID ~= overrideSpell[button] then
+            overrideSpell[button] = spellID
+            applyOverrideCooldown(button)
+            applyOverrideCount(button)
+            applyOverrideGlow(button)
+            applyOverrideAssist(button)
+            applyOverrideUsable(button)
+        end
+    end
+    hooksecurefunc(icon, "SetTexture", follow)
+    follow()
+end
+-- The bar clears an empty slot's cooldown on its own updates; put ours back
+-- in the same call, so no frame is drawn without it.
+local cooldownHooked = setmetatable({}, {__mode = "k"})
+local function hookCooldownKeep(button)
+    local cooldown = button and button.cooldown
+    if not (cooldown and cooldown.Clear and not cooldownHooked[cooldown]) then return end
+    cooldownHooked[cooldown] = true
+    local function reassert()
+        if not applyingCooldown then applyOverrideCooldown(button) end
+    end
+    hooksecurefunc(cooldown, "Clear", reassert)
+    hooksecurefunc(cooldown, "SetCooldown", reassert)
+end
+-- Blizzard's own range indicator for that spell against the target: the key
+-- text goes red out of range. The client only reports range for a slot that
+-- holds an action, so an override is checked here, on the stock 0.2s beat.
+-- A LibActionButton bar colours range itself (IsUnitInRange, above).
+-- shortcut: a secret answer leaves the key as it is, revisit if Retail hides range in combat.
+local overrideOutOfRange = setmetatable({}, {__mode = "k"}) -- read by the icon tint
+local function applyOverrideRange(button)
+    if not (button and button.HotKey and button.GetAttribute) or labLib(button) then return end
+    if not overrideShowing(button) then return end
+    local spellID, inRange = overrideSpell[button], nil
+    if spellID then inRange = spellInRange(spellID, "target") end
+    if isSecretValue(inRange) then return end
+    pcall(_G.ActionButton_UpdateRangeIndicator, button, inRange ~= nil, inRange)
+    local outOfRange = inRange == false or nil
+    if overrideOutOfRange[button] ~= outOfRange then
+        overrideOutOfRange[button] = outOfRange
+        if applyOverrideUsable then applyOverrideUsable(button) end
+    end
+end
+-- HUI ActionBars (Larry runs it) colours a Blizzard button's icon from its
+-- own settings -- cooldown, out of range, out of power, not usable, each
+-- with its colour and desaturate switch -- reading the button's action
+-- slot, which an override has none of. With it loaded the override takes
+-- its colours and order, from the bar's config where it has one, else
+-- HUI's global settings; the user's choices on their bars apply to GSE's.
+local function huiTint(button, onCooldown, outOfRange, usable, noMana)
+    local hui = _G.HUI
+    if not (hui and hui.GetValue and hui.GetRGBA and hui.GetConfig) then return nil end
+    local ok, _, configName = pcall(hui.GetConfig, hui, button)
+    if not ok then return nil end
+    local function on(key) return hui:GetValue(key, nil, configName) end
+    local function colour(key, desaturateKey)
+        local r, g, b = hui:GetRGBA(key, nil, configName)
+        return r, g, b, on(desaturateKey) and true or false
+    end
+    if onCooldown and on("UseCDColor") then return colour("CDColor", "CDColorDesaturate") end
+    if outOfRange and on("UseOORColor") then return colour("OORColor", "OORDesaturate") end
+    if usable then return 1, 1, 1, false end
+    if noMana and on("UseOOMColor") then return colour("OOMColor", "OOMDesaturate") end
+    if on("UseNoUseColor") then return colour("NoUseColor", "NoUseDesaturate") end
+    -- A colour HUI has off it leaves to WoW's own paint: blue short of
+    -- power, grey not usable.
+    if noMana then return 0.5, 0.5, 1, false end
+    return 0.4, 0.4, 0.4, false
+end
+-- On a cooldown of its own, past the global one, for HUI's cooldown colour.
+local function onOwnCooldown(spellID)
+    local info = GSE.GetSpellCooldown(spellID)
+    if not info or isSecretValue(info.isActive) or isSecretValue(info.isOnGCD) then return false end
+    if info.isActive ~= nil then return info.isActive and not info.isOnGCD end
+    return (info.duration or 0) > 1.5 and (info.startTime or 0) > 0
+end
+-- The icon's tint for the spell it shows, as WoW's bars paint theirs: white
+-- usable, blue short of power, grey not usable. Nothing with no spell (an
+-- item's icon), on a LibActionButton bar (its own, from IsUsable above), or
+-- when WoW keeps the answer secret. True when painted.
+local applyingTint -- our own SetVertexColor, not a skin's
+applyOverrideUsable = function(button)
+    if not (button and button.GetAttribute) or labLib(button) then return false end
+    local name = button.GetName and button:GetName()
+    local icon = button.icon or (name and _G[name .. "Icon"])
+    if not (icon and icon.SetVertexColor) or not overrideShowing(button) then return false end
+    local spellID = overrideSpell[button]
+    if not spellID then return false end
+    local usable, noMana
+    if C_Spell and C_Spell.IsSpellUsable then
+        usable, noMana = C_Spell.IsSpellUsable(spellID)
+    elseif IsUsableSpell then
+        usable, noMana = IsUsableSpell(spellID)
+    else
+        return false
+    end
+    if isSecretValue(usable) or isSecretValue(noMana) then return false end
+    local r, g, b, desaturate = huiTint(button, onOwnCooldown(spellID), overrideOutOfRange[button], usable, noMana)
+    if not r then
+        -- WoW's own bars: white, blue short of power, grey not usable; no
+        -- range tint on the icon (the key text goes red).
+        desaturate = false
+        if usable then r, g, b = 1, 1, 1 elseif noMana then r, g, b = 0.5, 0.5, 1 else r, g, b = 0.4, 0.4, 0.4 end
+    end
+    applyingTint = true
+    icon:SetVertexColor(r, g, b)
+    if icon.SetDesaturated then icon:SetDesaturated(desaturate) end
+    applyingTint = nil
+    return true
+end
+GSE.ApplyOverrideUsable = applyOverrideUsable -- the icon colour guard, below
+
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+    -- What changes a spell's usability, as WoW's bars listen for it.
+    for _, event in ipairs({ "SPELL_UPDATE_USABLE", "ACTIONBAR_UPDATE_USABLE", "PLAYER_TARGET_CHANGED" }) do
+        pcall(watcher.RegisterEvent, watcher, event)
+    end
+    pcall(watcher.RegisterUnitEvent, watcher, "UNIT_POWER_FREQUENT", "player")
+    -- What changes a count: charges, the stacks it costs, reagents.
+    pcall(watcher.RegisterEvent, watcher, "SPELL_UPDATE_CHARGES")
+    pcall(watcher.RegisterUnitEvent, watcher, "UNIT_AURA", "player")
+    pcall(watcher.RegisterEvent, watcher, "BAG_UPDATE_DELAYED")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW")
+    pcall(watcher.RegisterEvent, watcher, "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE")
+    local USABLE = { SPELL_UPDATE_USABLE = true, ACTIONBAR_UPDATE_USABLE = true, PLAYER_TARGET_CHANGED = true,
+        UNIT_POWER_FREQUENT = true }
+    local COUNT = { SPELL_UPDATE_CHARGES = true, UNIT_AURA = true, BAG_UPDATE_DELAYED = true,
+        SPELL_UPDATE_USABLE = true }
+    watcher:SetScript("OnEvent", function(_, event)
+        local apply = event == "SPELL_UPDATE_COOLDOWN" and applyOverrideCooldown
+            or USABLE[event] and applyOverrideUsable or COUNT[event] and applyOverrideCount or applyOverrideGlow
+        for buttonName in pairs(GSE.ButtonOverrides or {}) do
+            apply(_G[buttonName])
+            if event == "SPELL_UPDATE_COOLDOWN" then applyOverrideUsable(_G[buttonName]) end
+            if COUNT[event] and apply ~= applyOverrideCount then applyOverrideCount(_G[buttonName]) end
+        end
+    end)
+    if _G.ActionButton_UpdateRangeIndicator then
+        local sinceRange = 0
+        watcher:SetScript("OnUpdate", function(_, elapsed)
+            sinceRange = sinceRange + elapsed
+            if sinceRange < 0.2 then return end
+            sinceRange = 0
+            for buttonName in pairs(GSE.ButtonOverrides or {}) do applyOverrideRange(_G[buttonName]) end
+        end)
+    end
+end
+-- A held key on an override button arrives as repeated presses whose down and
+-- up land in the same frame, so the button is PUSHED and NORMAL again before
+-- anything is drawn and the press-down never shows (a normal spell button
+-- stays pushed while held). Keep the pushed art up briefly after such a press.
+-- Visual only, so it works in combat.
+local PRESS_FLASH_SECONDS = 0.1
+local pressFlashHooked = setmetatable({}, {__mode = "k"})
+local function hookPressFlash(button)
+    if not (button and button.GetPushedTexture and button.SetButtonState and not pressFlashHooked[button]) then return end
+    pressFlashHooked[button] = true
+    local pushedAt
+    hooksecurefunc(button, "SetButtonState", function(self, state)
+        if not self:GetAttribute("gse-button") then return end
+        if state == "PUSHED" then
+            pushedAt = GetTime()
+        elseif state == "NORMAL" and pushedAt and GetTime() - pushedAt < 0.02 then
+            local pushed = self:GetPushedTexture()
+            if pushed then
+                pushed:Show()
+                C_Timer.After(PRESS_FLASH_SECONDS, function()
+                    if self:GetButtonState() == "NORMAL" then pushed:Hide() end
+                end)
+            end
+        end
+    end)
+end
+
 local function repaintGSEOverrideButton(button, defer)
     if not button or not button.GetAttribute then return end
 
@@ -456,6 +1006,21 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
+end
+
+-- A sequence's base icon: picked on its Config page (right-click the drag
+-- icon) so sequences that open with the same spell do not all look alike on
+-- the bars. Kept on this PC only (GSEOptions), never in the sequence itself.
+function GSE.GetSequenceBaseIcon(sequenceId)
+    local icons = GSEOptions and GSEOptions.SequenceBaseIcons
+    return sequenceId and icons and icons[sequenceId] or nil
+end
+
+function GSE.SetSequenceBaseIcon(sequenceId, icon)
+    if not sequenceId then return end
+    GSEOptions.SequenceBaseIcons = GSEOptions.SequenceBaseIcons or {}
+    GSEOptions.SequenceBaseIcons[sequenceId] = icon
+    GSE.RefreshActionBarOverrideIcons(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -637,25 +1202,27 @@ end
 -- put it back whenever anything recolours it while GSE owns the slot. A real
 -- action in the slot keeps its colour (the override yields to it).
 --
--- Opt-in because it overrides whatever the bar draws, including the usable /
--- GCD dimming the player may rely on; a skin's option is the first place to
--- fix this. The hooks go on only when the option is on; turned off, they stay
--- (hooksecurefunc cannot be undone) but do nothing.
+-- The icon is put back to the tint of the spell it shows -- white usable,
+-- blue short of power, grey not usable, as WoW's bars paint theirs
+-- (GSE.ApplyOverrideUsable). With no spell to go on (an item's icon), white
+-- only when the option says so, else whatever the bar drew.
 local colourGuardedButtons = {}
 local function guardOverrideIconColour(Button)
-    if GSEOptions.actionBarKeepIconColour ~= true or colourGuardedButtons[Button] then return end
+    if colourGuardedButtons[Button] then return end
     local button = _G[Button]
     local icon = button and (button.icon or _G[Button .. "Icon"])
     if not icon or not icon.SetVertexColor then return end
     colourGuardedButtons[Button] = true
     local restoring = false
     local function restore()
-        if restoring or GSEOptions.actionBarKeepIconColour ~= true then return end
+        if restoring or applyingTint then return end
         if not button:GetAttribute("gse-button") then return end
         if GSE.ActionBarSlotHasForeignAction(button) then return end
         restoring = true
-        icon:SetVertexColor(1, 1, 1)
-        if icon.SetDesaturated then icon:SetDesaturated(false) end
+        if not GSE.ApplyOverrideUsable(button) and GSEOptions.actionBarKeepIconColour == true then
+            icon:SetVertexColor(1, 1, 1)
+            if icon.SetDesaturated then icon:SetDesaturated(false) end
+        end
         restoring = false
     end
     hooksecurefunc(icon, "SetVertexColor", restore)
@@ -678,6 +1245,11 @@ local function hookButtonIconUpdates(Button)
     guardOverrideIconColour(Button)
     if iconHookedButtons[Button] then return end
     iconHookedButtons[Button] = true
+    hookCooldownKeep(_G[Button])
+    hookCountKeep(_G[Button])
+    hookLABAnswers(_G[Button])
+    hookIconSpell(_G[Button])
+    hookPressFlash(_G[Button])
 
     -- WoW hides the icon and shows the empty-slot look on hover for type="click" buttons.
     -- Restore the icon immediately after WoW's own OnEnter/OnLeave processing.
@@ -1154,6 +1726,14 @@ end
 -- bails if the button was re-armed in the same LoadOverrides pass.
 local function refreshClearedOverrideIcon(button)
     if not button or not button.GetAttribute then return end
+    -- What the override drew for its spell comes off with it: the swipe, the
+    -- glows, the red key. Before the bar's own repaint, for every bar.
+    overrideSpell[button] = nil
+    applyOverrideGlow(button)
+    applyOverrideAssist(button)
+    if button.cooldown and button.cooldown.Clear then button.cooldown:Clear() end
+    if button.Count and button.Count.SetText then button.Count:SetText("") end
+    if button.HotKey and _G.ActionButton_UpdateRangeIndicator then pcall(_G.ActionButton_UpdateRangeIndicator, button, false, false) end
     -- A GSE Action Bar button has no slot to repaint from: it goes back to
     -- the action it holds, or to empty.
     if button.gseActionBarButton then
@@ -1183,6 +1763,71 @@ local function refreshClearedOverrideIcon(button)
     end)
 end
 
+-- Take GSE's override off one button: its secure arming, wrapped scripts and
+-- watermark.  Out of combat only (the callers check).
+local function revertOverrideButton(k)
+    -- Drop the forced-shown bit so a no-longer-overridden Dominos slot can
+    -- hide again; it is re-applied below for slots that remain overridden.
+    setOverrideButtonForcedShown(k, false)
+    -- revert all buttons
+    if _G[k] and _G[k].SetState then
+        local btn = _G[k]
+        local original = btn.gseLabOriginal
+        btn.gseLabOriginal = nil
+        -- Every state GSE took over gets back what the bar had there --
+        -- an action on its page, the bar's own custom button
+        -- (Bartender4's vehicle exit), or nothing. Restoring only one
+        -- state left the override live on every other page, form and
+        -- stance.
+        local restore = {}
+        if original and next(original) then
+            for st, was in pairs(original) do restore[#restore + 1] = { st, was } end
+        else
+            local state = "1"
+            if string.sub(k, 1, 3) == "BT4" then
+                state = "0"
+            elseif string.sub(k, 1, 4) == "CPB_" then
+                state = ""
+            end
+            restore[1] = { state, { kind = "action", action = tonumber(string.match(k, "%d+$")) } }
+        end
+        -- Un-GSE the button FIRST. VEHICLE_OAC_LAB turns any custom
+        -- type on a marked GSE button into a click on the sequence, so
+        -- restoring a custom state (the vehicle exit) while still
+        -- marked would hand it straight back to GSE. The marks are
+        -- cleared where they were set: in the secure environment (#1931).
+        btn:SetAttribute("gse-button", nil)
+        SHBT:SetFrameRef("gseArmButton", btn)
+        local unmark = { "local b = self:GetFrameRef('gseArmButton') if not b then return end" }
+        for _, r in ipairs(restore) do
+            unmark[#unmark + 1] = "b:SetAttribute('gse-lab-state-" .. tostring(r[1]) .. "', nil)"
+        end
+        SHBT:Execute(table.concat(unmark, " "))
+        for _, r in ipairs(restore) do
+            if r[2] then
+                btn:SetState(r[1], r[2].kind, r[2].action)
+            else
+                btn:SetState(r[1], "empty")
+            end
+        end
+        removeGSEWatermark(k)
+    else
+        _G[k]:SetAttribute("gse-button", nil)
+        -- Clear the secure gate + reset type from inside the secure
+        -- environment (issue #1931); gse-button is a non-secure string so
+        -- clearing it insecurely is harmless.
+        secureDisarmGSEButton(_G[k])
+        -- The GSE Action Bar's buttons were never wrapped; the wrap
+        -- they do have is the bar's own (Actions.lua).
+        if not _G[k].gseActionBarButton then
+            SecureHandlerUnwrapScript(_G[k], "OnClick")
+            SecureHandlerUnwrapScript(_G[k], "OnEnter")
+            SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
+        end
+        removeGSEWatermark(k)
+    end
+end
+
 local function LoadOverrides(force)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
@@ -1206,67 +1851,9 @@ local function LoadOverrides(force)
         for k in pairs(GSE.ButtonOverrides) do
             clearedCandidates[k] = true
         end
+        -- revert all buttons
         for k, _ in pairs(GSE.ButtonOverrides) do
-            -- Drop the forced-shown bit so a no-longer-overridden Dominos slot can
-            -- hide again; it is re-applied below for slots that remain overridden.
-            setOverrideButtonForcedShown(k, false)
-            -- revert all buttons
-            if _G[k] and _G[k].SetState then
-                local btn = _G[k]
-                local original = btn.gseLabOriginal
-                btn.gseLabOriginal = nil
-                -- Every state GSE took over gets back what the bar had there --
-                -- an action on its page, the bar's own custom button
-                -- (Bartender4's vehicle exit), or nothing. Restoring only one
-                -- state left the override live on every other page, form and
-                -- stance.
-                local restore = {}
-                if original and next(original) then
-                    for st, was in pairs(original) do restore[#restore + 1] = { st, was } end
-                else
-                    local state = "1"
-                    if string.sub(k, 1, 3) == "BT4" then
-                        state = "0"
-                    elseif string.sub(k, 1, 4) == "CPB_" then
-                        state = ""
-                    end
-                    restore[1] = { state, { kind = "action", action = tonumber(string.match(k, "%d+$")) } }
-                end
-                -- Un-GSE the button FIRST. VEHICLE_OAC_LAB turns any custom
-                -- type on a marked GSE button into a click on the sequence, so
-                -- restoring a custom state (the vehicle exit) while still
-                -- marked would hand it straight back to GSE. The marks are
-                -- cleared where they were set: in the secure environment (#1931).
-                btn:SetAttribute("gse-button", nil)
-                SHBT:SetFrameRef("gseArmButton", btn)
-                local unmark = { "local b = self:GetFrameRef('gseArmButton') if not b then return end" }
-                for _, r in ipairs(restore) do
-                    unmark[#unmark + 1] = "b:SetAttribute('gse-lab-state-" .. tostring(r[1]) .. "', nil)"
-                end
-                SHBT:Execute(table.concat(unmark, " "))
-                for _, r in ipairs(restore) do
-                    if r[2] then
-                        btn:SetState(r[1], r[2].kind, r[2].action)
-                    else
-                        btn:SetState(r[1], "empty")
-                    end
-                end
-                removeGSEWatermark(k)
-            else
-                _G[k]:SetAttribute("gse-button", nil)
-                -- Clear the secure gate + reset type from inside the secure
-                -- environment (issue #1931); gse-button is a non-secure string so
-                -- clearing it insecurely is harmless.
-                secureDisarmGSEButton(_G[k])
-                -- The GSE Action Bar's buttons were never wrapped; the wrap
-                -- they do have is the bar's own (Actions.lua).
-                if not _G[k].gseActionBarButton then
-                    SecureHandlerUnwrapScript(_G[k], "OnClick")
-                    SecureHandlerUnwrapScript(_G[k], "OnEnter")
-                    SecureHandlerUnwrapScript(_G[k], "OnAttributeChanged")
-                end
-                removeGSEWatermark(k)
-            end
+            revertOverrideButton(k)
         end
         GSE.ButtonOverrides = {}
 
@@ -1469,6 +2056,42 @@ function GSE.RemoveActionBarOverride(buttonName)
     GSE.ReloadOverrides()
 end
 
+--- Move the sequence fromName shows onto toName, as dragging it there does.
+--- A sequence toName showed comes back to fromName, so the two swap; else
+--- fromName is left empty. Each button's change goes where its override
+--- lives (the active loadout's, or the spec's). Returns "loadout" when either
+--- did.
+function GSE.MoveActionBarOverride(fromName, toName)
+    if InCombatLockdown() or fromName == toName then return end
+    local from, to = _G[fromName], _G[toName]
+    local fromSeq = from and from:GetAttribute("gse-button")
+    if not fromSeq then return end
+    local toSeq = to and to:GetAttribute("gse-button")
+    local function layerFor(name) return GSE.OverrideLayerFor(name) == "loadout" and "loadout" or "spec" end
+    local written = GSE.SetOverrideData(toName, fromSeq, layerFor(toName))
+    if toSeq then
+        if GSE.SetOverrideData(fromName, toSeq, layerFor(fromName)) == "loadout" then written = "loadout" end
+    else
+        GSE.ClearOverrideData(fromName)
+    end
+    GSE.ReloadOverrides()
+    return written
+end
+
+--- Take the override off a button now and leave what is saved alone: the
+--- Button Bindings page when a row is removed, before Save writes it.  The
+--- next GSE.ReloadOverrides puts back whatever is still saved.  True when a
+--- live override came off.
+function GSE.ReleaseActionBarOverride(buttonName)
+    if InCombatLockdown() or not (GSE.ButtonOverrides and GSE.ButtonOverrides[buttonName] and _G[buttonName]) then
+        return false
+    end
+    revertOverrideButton(buttonName)
+    GSE.ButtonOverrides[buttonName] = nil
+    refreshClearedOverrideIcon(_G[buttonName])
+    return true
+end
+
 --- The name of the active talent loadout, for saying where a change went.
 function GSE.ActiveBindingLoadoutName()
     local loadout = GSE.ActiveBindingLoadout()
@@ -1556,7 +2179,7 @@ local function collectOverrideTargets(frame, out)
     end
 end
 
-local drag -- the drag in progress: { sequenceId, candidates, target }
+local drag -- the drag in progress: { sequenceId, candidates, target, fromButton }
 
 local function overrideTargetUnderMouse()
     local best, bestRank, bestLevel
@@ -1636,7 +2259,9 @@ function GSE.CancelSequenceDrag()
 end
 
 -- Start dragging a sequence. Returns false (and says why) when it cannot.
-function GSE.BeginSequenceDrag(sequenceId)
+-- fromButton: the GSE Action Bar button it is being dragged off, if any --
+-- the drop then moves it, and a drop on nothing takes it off the bar.
+function GSE.BeginSequenceDrag(sequenceId, fromButton)
     if drag then endDrag() end
     if InCombatLockdown() then
         GSE.Print(L["Sequences cannot be put on action buttons in combat."])
@@ -1647,10 +2272,12 @@ function GSE.BeginSequenceDrag(sequenceId)
         return false
     end
     ensureDragFrames()
-    local thisDrag = { sequenceId = sequenceId, candidates = {} }
+    local thisDrag = { sequenceId = sequenceId, candidates = {}, fromButton = fromButton }
     drag = thisDrag
-    -- The icon first, at the cursor, so it shows the moment the drag starts.
-    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
+    -- The icon first, at the cursor, so it shows the moment the drag starts:
+    -- the player's base icon, else the start icon.
+    dragIcon.texture:SetTexture(GSE.GetSequenceBaseIcon(sequenceId) or GSE.GetSequenceStartIcon(sequenceId)
+        or Statics.Icons.GSE_Logo_Dark)
     local scale = UIParent:GetEffectiveScale()
     local x, y = GetCursorPosition()
     dragIcon:ClearAllPoints()
@@ -1676,21 +2303,31 @@ end
 -- it can go on.
 function GSE.FinishSequenceDrag()
     if not drag then return end
-    local sequenceId = drag.sequenceId
+    local sequenceId, fromButton = drag.sequenceId, drag.fromButton
     local target = overrideTargetUnderMouse() or drag.target
     endDrag()
-    if not target then return end -- dropped anywhere else: nothing to do
+    if target == fromButton then return end
     if InCombatLockdown() then
-        GSE.Print(L["Sequences cannot be put on action buttons in combat."])
+        if target or fromButton then GSE.Print(L["Sequences cannot be put on action buttons in combat."]) end
+        return
+    end
+    -- Off a GSE Action Bar button and dropped on nothing: it comes off the
+    -- bar, as an action dragged off a bar does.
+    if not target then
+        if fromButton then GSE.RemoveActionBarOverride(fromButton:GetName()) end
         return
     end
     -- A real spell or item in the slot would win over the override and hide it,
     -- so only an empty slot, or one GSE already overrides, takes a sequence.
+    -- Between two GSE Action Bar buttons the two swap: the action comes to
+    -- the button the sequence left.
     if not target:GetAttribute("gse-button") then
         local slot = getButtonEffectiveSlot(target)
         local holdsAction = target.gseActionBarButton and GSE.ActionBarButtonHasAction
             and GSE.ActionBarButtonHasAction(target)
-        if holdsAction or (slot and HasAction(slot)) then
+        if holdsAction and fromButton and fromButton.gseActionBarButton and GSE.ActionBarSwapActions then
+            GSE.ActionBarSwapActions(target, fromButton)
+        elseif holdsAction or (slot and HasAction(slot)) then
             GSE.Print(L["That action button already holds something. Clear it first, then drop the sequence on it."])
             return
         end
@@ -1698,7 +2335,13 @@ function GSE.FinishSequenceDrag()
     -- A drop replaces what the button shows. Where that is the active talent
     -- loadout's override, the drop changes that loadout's -- say so, since the
     -- spec's own override for the button is left as it was.
-    if GSE.CreateActionBarOverride(target:GetName(), sequenceId) == "loadout" then
+    local written
+    if fromButton then
+        written = GSE.MoveActionBarOverride(fromButton:GetName(), target:GetName())
+    else
+        written = GSE.CreateActionBarOverride(target:GetName(), sequenceId)
+    end
+    if written == "loadout" then
         GSE.Print(string.format(L["Changed for talent loadout %s only."], GSE.ActiveBindingLoadoutName() or ""),
             L["Button Bindings"])
     end

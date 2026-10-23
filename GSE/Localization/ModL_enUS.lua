@@ -1,7 +1,7 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("GSE", "enUS", true)
 
 L["Update"] = true
-L["Enable Popup"] = true
+L["Action Bar Override Popup"] = true
 L["GSE Sequence"] = true
 L["Show Watermark"] = true
 L["Show the GSE logo as a small watermark on actionbar override buttons."] = true
@@ -21,6 +21,8 @@ L["Website or forum URL where a player can get more information or ask questions
 L["Website or forum URL where a player can get more information or ask questions about this macro."] = true
 L["Tick Manage Macro with GSE on its Configuration page to give this macro notes."] = true
 L["A sequence shows the icon of its first step."] = true
+L["Select Base Icon"] = true
+L["Right Click to choose No Combat Base Icon"] = true
 L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
 L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
@@ -748,7 +750,12 @@ L["also live in this loadout"] = true
 L["Override"] = true
 L["Copy this into the loadout's own rows, to change it for this loadout only."] = true
 L["Key"] = true
+L["Main Key"] = true
+L["Action Bar Type"] = true
+L["Backup Key"] = true
 L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."] = true
+L["Click > Set Keys or ESC to Clear > Save!"] = true
+L["%s is bound to %s now; Save moves it to %s."] = true
 L["Replace an action bar button with a sequence."] = true
 L["Bind a key straight to a sequence."] = true
 L["State"] = true
@@ -781,6 +788,7 @@ L[" was imported."] = true
 -- #1617
 L["Button Bindings"] = true
 L["Actionbar Buttons"] = true
+L["Actionbar Button"] = true
 L["New Button Binding"] = true
 
 L["Missing Variable "] = true
@@ -1077,7 +1085,7 @@ L["%s: %d deleted, %d kept for other collections."] = true
 L["By Type"] = true
 L["By Class"] = true
 L["By Collection"] = true
-L["Shared with every %s character"] = true
+L["Shared with every %s Character"] = true
 L["Shared Profile"] = true
 L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."] = true
 L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."] = true
@@ -1086,9 +1094,19 @@ L["GSE does not bind keys to sequences here. Put the sequence on an action bar b
 -- GSE Action Bar (GSE_Actionbar)
 L["GSE Action Bar"] = true
 L["Action Bar"] = true
-L["Enable the GSE Action Bar"] = true
-L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."] = true
 L["GSE Action Bar %d"] = true
+L["GSE Action Bar %d Button %d"] = true
+L["Action Bar Settings"] = true
+L["A bar of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. It holds spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Where it shows -- always, in combat, on mouseover -- is set in Edit Mode. Turning the bar on moves GSE's keybinds onto its buttons."] = true
+L["GSE\nAction Bar\n%d"] = true
+L["In combat"] = true
+L["Out of combat"] = true
+L["Orientation"] = true
+L["Horizontal"] = true
+L["Vertical"] = true
+L["Buttons"] = true
+L["Lay the bar's buttons out in rows, or in columns."] = true
+L["How many of the bar's twelve buttons it has."] = true
 L["GSE Button %d"] = true
 L["Bar %d"] = true
 L["Drag a spell, item, macro or sequence here, or right-click to choose a sequence. Set its key in WoW's Key Bindings, under GSE."] = true
@@ -1097,8 +1115,6 @@ L["The GSE Action Bar has no free button for these keys, so they were not moved:
 L["All bars"] = true
 L["Lock the bars"] = true
 L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."] = true
-L["Place the bars in Edit Mode"] = true
-L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."] = true
 L["Show keys"] = true
 L["Show on each button the key WoW's Key Bindings give it."] = true
 L["Show empty buttons"] = true
@@ -1116,7 +1132,6 @@ L["How many buttons each row of the bar holds."] = true
 L["Scale"] = true
 L["The size of the bar."] = true
 L["The GSE Action Bar could not be loaded: %s"] = true
-L["GSE Button %d (Bar %d)"] = true
 L["A macro named %s already exists."] = true
 L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
 L["The version used where no other version has been configured."] = true
