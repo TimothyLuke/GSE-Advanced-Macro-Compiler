@@ -311,7 +311,7 @@ local function sharedProfileRow(editframe, specialization, classname)
         GSE.UI.ShowConfirmDialog({
             owner       = editframe,
             title       = L["Shared Profile"],
-            message     = L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."],
+            message     = L["Share these Specialization Level Bindings on Across All Realms / Factions / Characters Loadouts with this Class."],
             width       = 360,
             height      = 200,
             confirmText = L["Use Shared"],

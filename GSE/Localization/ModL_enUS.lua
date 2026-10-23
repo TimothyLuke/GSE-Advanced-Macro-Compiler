@@ -1089,8 +1089,8 @@ L["By Collection"] = true
 L["Shared with every %s Character"] = true
 L["Shared Profile"] = true
 L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."] = true
-L["Use the shared binds and overrides for this spec? This character's own binds and overrides for it are removed."] = true
 L["Use Shared"] = true
+L["Share these Specialization Level Bindings on Across All Realms / Factions / Characters Loadouts with this Class."] = true
 L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."] = true
 -- GSE Action Bar (GSE_Actionbar)
 L["GSE Action Bar"] = true
