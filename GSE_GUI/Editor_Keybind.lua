@@ -832,7 +832,7 @@ local function inheritedSection(editframe, container, entries, opts)
         override:SetText(L["Copy to Loadout"])
         -- As wide as its label needs, never under the old 100.
         local labelWidth = override.text and override.text.GetStringWidth and override.text:GetStringWidth() or 0
-        override:SetWidth(math.max(100, math.ceil(labelWidth) + 24))
+        override:SetWidth(math.max(100, math.ceil(labelWidth) + 40))
         override:SetCallback("OnClick", entry.onOverride)
         override:SetCallback("OnEnter", function()
             GSE.CreateToolTip(L["Copy to Loadout"], L["Copy this into the loadout's own rows, to change it for this loadout only."],
