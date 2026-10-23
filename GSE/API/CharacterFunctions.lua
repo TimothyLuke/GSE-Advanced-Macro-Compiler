@@ -329,6 +329,9 @@ local ACTION_BAR_DEFAULTS = {
     ShowKeys = true,
     ShowEmpty = true,
     Spacing = 4,
+    -- A priority override on each button's key, so another addon's override
+    -- does not take it silently (GSE_Actionbar/KeyLock.lua).
+    LockKeys = true,
     -- key -> the button GSE moved it onto (GSE_Actionbar/Migration.lua), so
     -- every character of the account puts a key on the same button.
     KeyButtons = {},

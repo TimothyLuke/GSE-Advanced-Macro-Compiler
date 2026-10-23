@@ -2153,6 +2153,20 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             enableInit = Settings.CreateCheckbox(actionBarOptions, setting,
                 L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."])
         end
+        -- Lock KeyBinds to GSE: each button's key also gets a priority
+        -- override (GSE_Actionbar/KeyLock.lua), so another addon's override
+        -- does not take it silently.
+        do
+            local function GetValue() return GSE.ActionBarOptions().LockKeys ~= false end
+            local function SetValue(value)
+                GSE.ActionBarOptions().LockKeys = value == true
+                if GSE.ActionBarKeyLockRefresh and not InCombatLockdown() then GSE.ActionBarKeyLockRefresh() end
+            end
+            local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarLockKeys",
+                Settings.VarType.Boolean, L["Lock KeyBinds to GSE"], true, GetValue, SetValue)
+            Settings.CreateCheckbox(actionBarOptions, setting,
+                L["Keys bound to GSE Action Bar buttons stay with GSE even if another addon takes them with an override: GSE asks before taking one back. Turn this off to let a key go to whatever takes it."])
+        end
         -- Greyed out while the bar is off.
         local function underSwitch(init)
             if init and init.SetParentInitializer and enableInit then
