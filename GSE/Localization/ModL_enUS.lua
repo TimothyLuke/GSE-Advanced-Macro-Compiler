@@ -1087,6 +1087,17 @@ L["GSE does not bind keys to sequences here. Put the sequence on an action bar b
 L["GSE Action Bar"] = true
 L["Action Bar"] = true
 L["Enable the GSE Action Bar"] = true
+L["Lock Keys to GSE"] = true
+L["Lock KeyBinds to GSE"] = true
+L["GSE: Lock Keys to GSE"] = true
+L["Take it back"] = true
+L["Let it go"] = true
+L["Another addon"] = true
+L["Lock Keys to GSE took %s back for %s."] = true
+L["%s is left with %s. GSE will remember that; bind %s again in GSE to take it back."] = true
+L["%s took %s with an override:\n%s\n\nGSE has %s locked to %s. Take it back?"] = true
+L["Another addon's override has %s (%s), and Lock Keys to GSE could not take it back for %s."] = true
+L["Keys bound to GSE Action Bar buttons stay with GSE even if another addon takes them with an override: GSE asks before taking one back. Turn this off to let a key go to whatever takes it."] = true
 L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."] = true
 L["GSE Action Bar %d"] = true
 L["GSE Button %d"] = true
