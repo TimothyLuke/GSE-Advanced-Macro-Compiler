@@ -911,10 +911,6 @@ local function attachSequenceDragIcon(editframe, hostRow)
         sequenceDragIcon.dragLabel = badge
         sequenceDragIcon.watermark = GSE.CreateGSEWatermark(sequenceDragIcon)
         -- Under the icon: why it shows this picture.
-        local caption = sequenceDragIcon:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-        caption:SetText(L["A sequence shows the icon of its first step."])
-        caption:Hide()
-        sequenceDragIcon.caption = caption
         -- Putting the sequence on a button, or taking it off, changes what the
         -- icon mirrors. A listener of its own: AceEvent keeps one handler per
         -- message per object.
@@ -935,8 +931,6 @@ local function attachSequenceDragIcon(editframe, hostRow)
             local function pick(icon)
                 GSE.SetSequenceBaseIcon(id, icon)
                 self.texture:SetTexture(dragIconTexture(id))
-                -- The caption says first step; it is not that any more.
-                if self.caption then self.caption:Hide() end
                 if self.lastSize then setDragIconSize(self.lastSize) end
             end
             -- The editor's own icon menu, as on a block's icon, each spell's
@@ -946,6 +940,13 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 for _, v in ipairs(sequenceIconChoices(frame.Sequence)) do
                     root:CreateButton("|T" .. v.iconID .. ":0|t " .. v.name, function() pick(v.iconID) end)
                 end
+                -- Back to the first step's icon; greyed out while none is picked.
+                local reset = root:CreateButton(L["Reset"], function()
+                    GSE.SetSequenceBaseIcon(id, nil)
+                    self.texture:SetTexture(dragIconTexture(id))
+                    if self.lastSize then setDragIconSize(self.lastSize) end
+                end)
+                if reset and reset.SetEnabled and not GSE.GetSequenceBaseIcon(id) then reset:SetEnabled(false) end
                 -- Any icon at all, through GSE QoL's picker, as on a block's menu.
                 if GSE.ShowIconPicker then
                     root:CreateDivider()
@@ -968,10 +969,13 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 self.dragLabel.text:SetFont(face, size * 1.12, flags or "")
                 self.dragLabel.text:SetTextColor(1, 0.2, 0.2)
             end
+            -- "First step" only while it is true: no base icon picked.
+            local firstStep = self.sequenceId and not GSE.GetSequenceBaseIcon(self.sequenceId)
+                and ("\n\n" .. L["A sequence shows the icon of its first step."] .. "\n" .. L["-or-"]) or ""
             GSE.CreateToolTip(L["Put on an Action Button"], (self.sequenceId
                 and L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."]
                 or L["Only a saved sequence for this character's class can be put on an action button."])
-                .. "\n\n" .. L["Right Click to choose No Combat Base Icon"],
+                .. firstStep .. (firstStep ~= "" and "\n" or "\n\n") .. L["Right Click to choose No Combat Base Icon"],
                 self.editframe)
         end)
         sequenceDragIcon:SetScript("OnLeave", function(self)
@@ -994,7 +998,6 @@ local function attachSequenceDragIcon(editframe, hostRow)
     sequenceDragIcon:SetFrameLevel(hostRow.frame:GetFrameLevel() + 5)
     setDragIconSize(DRAG_ICON_SIZE)
     sequenceDragIcon.dragLabel:Hide()
-    sequenceDragIcon.caption:Hide()
     sequenceDragIcon:ClearAllPoints()
     sequenceDragIcon:SetPoint("TOPRIGHT", hostRow.frame, "TOPRIGHT", -FORM_SIDE_PADDING, 0)
     sequenceDragIcon:Show()
@@ -1011,11 +1014,11 @@ end
 -- it follows the layout and window resizes.
 local DRAG_ICON_BIG = 128
 local DRAG_ICON_MARGIN = 16
--- Under the icon, clear of the watermark in its corner: the badge, then the
--- caption. Gaps between the three.
+-- Under the icon, clear of the watermark in its corner: the badge, a gap
+-- above it.
 local DRAG_BELOW_GAP = 2
 -- The area's OnSizeChanged is set once, so what a page changes (whether the
--- badge and caption show) is read off the icon, not captured here.
+-- badge shows) is read off the icon, not captured here.
 local function fitIcon(w, h)
     if not (w and h and w > 0 and h > 0) then return end
     local room = sequenceDragIcon.belowRoom or 0
@@ -1028,10 +1031,10 @@ local function centreSequenceDragIcon(slot)
         sequenceDragArea = CreateFrame("Frame")
         sequenceDragArea:SetScript("OnSizeChanged", function(_, w, h) fitIcon(w, h) end)
     end
-    -- Badge and caption only when the icon can be dragged: otherwise it is
-    -- the GSE logo, not a first step.
+    -- The badge only when the icon can be dragged: otherwise it is the GSE
+    -- logo, not a sequence.
     local live = sequenceDragIcon.sequenceId ~= nil
-    -- The badge centred under the icon, sized to its text; the caption under it.
+    -- The badge centred under the icon, sized to its text.
     local badge = sequenceDragIcon.dragLabel
     badge.text:SetFont(GameFontNormalSmall:GetFont())
     badge:SetSize(math.ceil(badge.text:GetStringWidth()) + DRAG_BADGE_PAD_X * 2,
@@ -1039,18 +1042,12 @@ local function centreSequenceDragIcon(slot)
     badge:ClearAllPoints()
     badge:SetPoint("TOP", sequenceDragIcon, "BOTTOM", 0, -DRAG_BELOW_GAP)
     badge:SetShown(live)
-    local caption = sequenceDragIcon.caption
-    caption:ClearAllPoints()
-    caption:SetPoint("TOP", badge, "BOTTOM", 0, -DRAG_BELOW_GAP)
-    -- It says "first step": not when the player has picked a base icon.
-    caption:SetShown(live and not GSE.GetSequenceBaseIcon(sequenceDragIcon.sequenceId))
-    sequenceDragIcon.belowRoom = live
-        and (DRAG_BELOW_GAP * 2 + badge:GetHeight() + math.ceil(caption:GetStringHeight())) or 0
+    sequenceDragIcon.belowRoom = live and (DRAG_BELOW_GAP + badge:GetHeight()) or 0
     sequenceDragArea:SetParent(slot.frame:GetParent())
     sequenceDragArea:ClearAllPoints()
     sequenceDragArea:SetAllPoints(slot.frame)
     sequenceDragIcon:ClearAllPoints()
-    -- Icon, badge and caption centred together in the slot.
+    -- Icon and badge centred together in the slot.
     sequenceDragIcon:SetPoint("CENTER", sequenceDragArea, "CENTER", 0, sequenceDragIcon.belowRoom / 2)
     -- OnSizeChanged does not fire when the area comes out the same size as last
     -- time, and attachSequenceDragIcon has just set the icon back to its small

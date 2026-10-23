@@ -23,6 +23,7 @@ L["Tick Manage Macro with GSE on its Configuration page to give this macro notes
 L["A sequence shows the icon of its first step."] = true
 L["Select Base Icon"] = true
 L["Right Click to choose No Combat Base Icon"] = true
+L["-or-"] = true
 L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."] = true
 L["Stop action bar addons from greying or desaturating GSE's icon on actionbar override buttons. This also hides the bar's own usable and cooldown dimming on those buttons. Turn it off again and the bar's colouring returns the next time it updates."] = true
 L["GSE Companion"] = true
