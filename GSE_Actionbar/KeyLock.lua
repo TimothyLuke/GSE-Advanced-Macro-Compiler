@@ -62,7 +62,7 @@ end
 local function beaten(key, effective, label)
     if beatenWarned[key] then return end
     beatenWarned[key] = true
-    GSE.Print(string.format(L["Another addon's override has %s (%s), and Lock Keys to GSE could not take it back for %s."],
+    GSE.Print(string.format(L["Another addon's override has %s (%s); it could not be taken back for %s."],
         key, effective, label), L["Lock Keys to GSE"])
 end
 -- Take a locked key back from another override; says how it went.
@@ -70,7 +70,7 @@ local function retake(key, index, effective, label)
     retakes[key] = (retakes[key] or 0) + 1
     lock(key, index)
     if held(key, index) then
-        GSE.Print(string.format(L["Lock Keys to GSE took %s back for %s."], key, label), L["Lock Keys to GSE"])
+        GSE.Print(string.format(L["Took %s back for %s."], key, label), L["Lock Keys to GSE"])
     else
         beaten(key, effective, label)
     end
