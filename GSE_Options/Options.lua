@@ -2117,7 +2117,41 @@ end
 --     registered." when empty.
 -- =========================================================================
 
-local function createBlizzOptions(category, pluginOptions, colourOptions)
+-- The GSE Action Bar's switches (GSE_Actionbar): one per bar, as WoW's
+-- Action Bars page lists its own. A bar is on when the module is on and the
+-- bar is not Hidden (its Edit Mode visibility); turning one on turns the
+-- module on, turning the last one off turns the module off. Returns the
+-- first switch's initializer, for controls that grey out with the module.
+local function addActionBarSwitch(optionsCategory)
+    local first
+    for bar = 1, 2 do
+        local function barSettings() return GSE.ActionBarOptions().Bars[bar] end
+        local function GetBar() return GSE.ActionBarEnabled() and barSettings().Visibility ~= "HIDE" end
+        local function SetBar(value)
+            if (value and true or false) == GetBar() then return end
+            if value then
+                if barSettings().Visibility == "HIDE" then barSettings().Visibility = "SHOW" end
+                if not GSE.ActionBarEnabled() then GSE.SetActionBarEnabled(true) end
+            else
+                barSettings().Visibility = "HIDE"
+                local anyOn = false
+                for other = 1, 2 do
+                    if GSE.ActionBarOptions().Bars[other].Visibility ~= "HIDE" then anyOn = true end
+                end
+                if not anyOn then GSE.SetActionBarEnabled(false) end
+            end
+            if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "gseActionBarShown" .. bar,
+            Settings.VarType.Boolean, string.format(L["GSE Action Bar %d"], bar), false, GetBar, SetBar)
+        local init = Settings.CreateCheckbox(optionsCategory, setting,
+            L["A bar of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. It holds spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Where it shows -- always, in combat, on mouseover -- is set in Edit Mode. Turning the bar on moves GSE's keybinds onto its buttons."])
+        first = first or init
+    end
+    return first
+end
+
+local function createBlizzOptions(category, pluginOptions, colourOptions, generalOptions)
     local windowOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Windows & Layout")
     local troubleOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Tools & Diagnostics")
     AttachTrackerDefaultsHandler(troubleOptions)
@@ -2133,26 +2167,15 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
     -- greyed out while it is off. All here rather than in the bar, which is
     -- LoadOnDemand and so not loaded while it is off. A change lays the bars
     -- out again once they are loaded (GSE.ActionBarRefresh).
-    if GSE.ActionBarInstalled() then
+    -- Where the client has Edit Mode, the bars are set up there, and the
+    -- switch sits on the General page (CreateConfigPanels): no page of its own.
+    if GSE.ActionBarInstalled() and not (GSE.ActionBarUsesEditMode() and generalOptions) then
         local actionBarOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Action Bar"])
         local BAR_SIZE, BAR_COUNT = 12, 2
         local function refresh()
             if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end
         end
-        local enableInit
-        do
-            local function GetValue()
-                return GSE.ActionBarEnabled()
-            end
-            local function SetValue(value)
-                if (value and true or false) == GSE.ActionBarEnabled() then return end
-                GSE.SetActionBarEnabled(value)
-            end
-            local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarEnabled",
-                Settings.VarType.Boolean, L["Enable the GSE Action Bar"], false, GetValue, SetValue)
-            enableInit = Settings.CreateCheckbox(actionBarOptions, setting,
-                L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning it on moves GSE's keybinds onto its buttons."])
-        end
+        local enableInit = addActionBarSwitch(actionBarOptions)
         -- Greyed out while the bar is off.
         local function underSwitch(init)
             if init and init.SetParentInitializer and enableInit then
@@ -2190,48 +2213,57 @@ local function createBlizzOptions(category, pluginOptions, colourOptions)
             underSwitch(Settings.CreateSlider(actionBarOptions, setting, options, tooltip))
         end
 
-        header(L["All bars"])
-        -- Where the client has Edit Mode the bars are placed there (GSE_Actionbar/EditMode.lua).
-        if GSE.ActionBarUsesEditMode() then
-            header(L["Place the bars in Edit Mode"],
-                L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."])
-        else
+        -- A dropdown on a bar's settings table.
+        local function dropdown(id, read, key, label, default, choices, tooltip)
+            local function GetValue() return read()[key] or default end
+            local function SetValue(value)
+                read()[key] = value
+                refresh()
+            end
+            local setting = Settings.RegisterProxySetting(actionBarOptions, id, Settings.VarType.String, label,
+                default, GetValue, SetValue)
+            local function GetOptions()
+                local container = Settings.CreateControlTextContainer()
+                for _, choice in ipairs(choices) do container:Add(choice[1], choice[2]) end
+                return container:GetData()
+            end
+            underSwitch(Settings.CreateDropdown(actionBarOptions, setting, GetOptions, tooltip))
+        end
+
+        do
+            header(L["All bars"])
             checkbox("gseActionBarLocked", "Locked", L["Lock the bars"],
                 L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
-        end
-        checkbox("gseActionBarShowKeys", "ShowKeys", L["Show keys"],
-            L["Show on each button the key WoW's Key Bindings give it."])
-        checkbox("gseActionBarShowEmpty", "ShowEmpty", L["Show empty buttons"],
-            L["Show buttons with no sequence on them. They always show while a sequence is being dragged."])
-        slider("gseActionBarSpacing", GSE.ActionBarOptions, "Spacing", L["Button spacing"], 0, 20, 1, 4,
-            L["The gap between buttons."])
+            checkbox("gseActionBarShowKeys", "ShowKeys", L["Show keys"],
+                L["Show on each button the key WoW's Key Bindings give it."])
+            checkbox("gseActionBarShowEmpty", "ShowEmpty", L["Show empty buttons"],
+                L["Show buttons with no sequence on them. They always show while a sequence is being dragged."])
+            slider("gseActionBarSpacing", GSE.ActionBarOptions, "Spacing", L["Button spacing"], 0, 20, 1, 4,
+                L["The gap between buttons."])
 
-        for b = 1, BAR_COUNT do
-            local first = (b - 1) * BAR_SIZE + 1
-            local function bar() return GSE.ActionBarOptions().Bars[b] end
-            header(string.format(L["Bar %d -- buttons %d to %d"], b, first, first + BAR_SIZE - 1))
-            do
-                local function GetValue() return bar().Visibility or "SHOW" end
-                local function SetValue(value)
-                    bar().Visibility = value
-                    refresh()
-                end
-                local setting = Settings.RegisterProxySetting(actionBarOptions, "gseActionBarVisibility" .. b,
-                    Settings.VarType.String, L["Show the bar"], bar().Visibility or "SHOW", GetValue, SetValue)
-                local function GetOptions()
-                    local container = Settings.CreateControlTextContainer()
-                    container:Add("SHOW", L["Always"])
-                    container:Add("MOUSEOVER", L["On mouseover"])
-                    container:Add("HIDE", L["Never"])
-                    return container:GetData()
-                end
-                underSwitch(Settings.CreateDropdown(actionBarOptions, setting, GetOptions,
-                    L["A bar that is not shown still works: its buttons' keys run their sequences. It shows while a sequence is being dragged, to drop it on."]))
+            for b = 1, BAR_COUNT do
+                local first = (b - 1) * BAR_SIZE + 1
+                local function bar() return GSE.ActionBarOptions().Bars[b] end
+                header(string.format(L["Bar %d -- buttons %d to %d"], b, first, first + BAR_SIZE - 1))
+                dropdown("gseActionBarVisibility" .. b, bar, "Visibility", L["Show the bar"], "SHOW", {
+                    { "SHOW", L["Always"] },
+                    { "INCOMBAT", _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_VISIBLE_SETTING_IN_COMBAT or L["In combat"] },
+                    { "OUTOFCOMBAT", _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_VISIBLE_SETTING_OUT_OF_COMBAT or L["Out of combat"] },
+                    { "MOUSEOVER", L["On mouseover"] },
+                    { "HIDE", L["Never"] },
+                }, L["A bar that is not shown still works: its buttons' keys run their sequences. It shows while a sequence is being dragged, to drop it on."])
+                dropdown("gseActionBarOrientation" .. b, bar, "Orientation",
+                    _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_ORIENTATION or L["Orientation"], "HORIZONTAL", {
+                    { "HORIZONTAL", _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_ORIENTATION_HORIZONTAL or L["Horizontal"] },
+                    { "VERTICAL", _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_ORIENTATION_VERTICAL or L["Vertical"] },
+                }, L["Lay the bar's buttons out in rows, or in columns."])
+                slider("gseActionBarIcons" .. b, bar, "Icons", _G.HUD_EDIT_MODE_SETTING_ACTION_BAR_NUM_ICONS or L["Buttons"],
+                    6, BAR_SIZE, 1, BAR_SIZE, L["How many of the bar's twelve buttons it has."])
+                slider("gseActionBarPerRow" .. b, bar, "PerRow", L["Buttons per row"], 1, BAR_SIZE, 1, BAR_SIZE,
+                    L["How many buttons each row of the bar holds."])
+                slider("gseActionBarScale" .. b, bar, "Scale", L["Scale"], 0.5, 2, 0.05, 1,
+                    L["The size of the bar."], "%.2f")
             end
-            slider("gseActionBarPerRow" .. b, bar, "PerRow", L["Buttons per row"], 1, BAR_SIZE, 1, BAR_SIZE,
-                L["How many buttons each row of the bar holds."])
-            slider("gseActionBarScale" .. b, bar, "Scale", L["Scale"], 0.5, 2, 0.05, 1,
-                L["The size of the bar."], "%.2f")
         end
     end
     --@debug@
@@ -3135,20 +3167,26 @@ function GSE:CreateConfigPanels()
             local setting = Settings.RegisterAddOnSetting(generalOptions, "showoocqueueintooltip", "showGSEoocqueue", GSEOptions, Settings.VarType.Boolean, L["Show OOC Queue in LDB"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["GSE has a LibDataBroker (LDB) data feed.  Set this option to show queued Out of Combat events in the tooltip."])
         end
-        AddActionBarClickBehaviorOptions(generalOptions)
+        -- One Action Bar section: the GSE Action Bar's switch, where the
+        -- client's Edit Mode sets the bars up (GSE_Actionbar/EditMode.lua;
+        -- elsewhere it has its own page), then the override options.
         do
             local layout = SettingsPanel:GetLayout(generalOptions)
-            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Action Bar Overrides" , ["tooltip"]= "Action Bar Overrides" }))
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Action Bar Settings"], ["tooltip"] = L["Action Bar Settings"]}))
+        end
+        if GSE.ActionBarInstalled() and GSE.ActionBarUsesEditMode() then
+            addActionBarSwitch(generalOptions)
         end
         -- Button Binding popup: the right-click menu runs on every client
         -- (GSE.OpenContextMenu), so its switch is on every client too.
         do
-            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Enable Popup"], true)
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Action Bar Override Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
-        AddActionBarWatermarkOption(generalOptions)
         AddActionBarLabelOption(generalOptions)
+        AddActionBarWatermarkOption(generalOptions)
         AddActionBarIconColourOption(generalOptions)
+        AddActionBarClickBehaviorOptions(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
@@ -3213,7 +3251,7 @@ function GSE:CreateConfigPanels()
             AddResetOption("resetRightShiftKey", "RightShift", L["Right Shift Key"])
         end
 
-        createBlizzOptions(category, pluginOptions)
+        createBlizzOptions(category, pluginOptions, nil, generalOptions)
 
         -- Skyriding / Vehicle Keybinds subcategory is registered natively
         -- by GSE_QoL/QoL.lua via Settings.RegisterVerticalLayoutSubcategory

@@ -3474,6 +3474,12 @@ local function getMacroLineResolvedIconInfo(line, suppressUIErrors)
     local preferItem = cmd == "use" or cmd == "usetoy" or cmd == "toy"
     local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(etc, suppressUIErrors)
     resolved = trimMacroIconCandidate(resolved)
+    -- SecureCmdOptionParse returns nil when every clause is false right now
+    -- (e.g. `[harm,nodead] Spell` with no target). The literal text still
+    -- names the icon the author wanted, so fall back to it, as the tooltip
+    -- does (GetShowTooltipIconInfo); the clause reader strips the conditions.
+    -- Without this a step read as a macro and showed macro.png.
+    if resolved == "" then resolved = trimMacroIconCandidate(etc) end
     if resolved == "" then return nil end
 
     if cmd == "castsequence" then

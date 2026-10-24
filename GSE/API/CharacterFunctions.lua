@@ -321,7 +321,9 @@ function GSE.ActionBarInstalled()
 end
 
 -- What the GSE Action Bar is set to, account-wide: GSEOptions.ActionBar, with
--- anything missing filled in. Visibility is SHOW, MOUSEOVER or HIDE; a hidden
+-- anything missing filled in. Visibility is SHOW, INCOMBAT, OUTOFCOMBAT,
+-- MOUSEOVER or HIDE; Orientation HORIZONTAL or VERTICAL; Icons how many of the
+-- bar's twelve buttons it has. A hidden
 -- bar's keys still work. Here rather than in the bar, which is LoadOnDemand,
 -- because GSE's options show these while it is off too.
 local ACTION_BAR_DEFAULTS = {
@@ -333,8 +335,8 @@ local ACTION_BAR_DEFAULTS = {
     -- every character of the account puts a key on the same button.
     KeyButtons = {},
     Bars = {
-        [1] = { Visibility = "SHOW", Scale = 1, PerRow = 12 },
-        [2] = { Visibility = "HIDE", Scale = 1, PerRow = 12 },
+        [1] = { Visibility = "SHOW", Scale = 1, PerRow = 12, Icons = 12, Orientation = "HORIZONTAL" },
+        [2] = { Visibility = "HIDE", Scale = 1, PerRow = 12, Icons = 12, Orientation = "HORIZONTAL" },
     },
 }
 

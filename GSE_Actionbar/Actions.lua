@@ -379,6 +379,22 @@ end
 -- action it swapped out on the cursor and must not put that back.
 local placedAt = {}
 
+-- The button an action was last picked off, while that action is on the
+-- cursor: dropped on a button holding a sequence, the sequence comes back to
+-- it, so the two swap.
+local pickedFrom, pickedAction
+
+local function sameAction(a, b)
+    return a and b and a.kind == b.kind and a.id == b.id and a.name == b.name
+end
+
+--- Swap what two GSE Action Bar buttons hold (Events.lua, a sequence dropped
+--- on a button with an action).
+function GSE.ActionBarSwapActions(a, b)
+    local actions = ns.Actions()
+    actions[a.gseIndex], actions[b.gseIndex] = actions[b.gseIndex], actions[a.gseIndex]
+end
+
 local function place(button)
     if InCombatLockdown() then return end
     local action = ns.ActionFromCursor(GetCursorInfo())
@@ -389,6 +405,13 @@ local function place(button)
     actions[button.gseIndex] = action
     ClearCursor()
     if old then ns.PickupAction(old) end
+    local from, picked = pickedFrom, pickedAction
+    pickedFrom, pickedAction = nil, nil
+    if not old and button:GetAttribute("gse-button") and from and from ~= button
+        and not ns.ActionOf(from) and sameAction(action, picked) and GSE.MoveActionBarOverride then
+        GSE.MoveActionBarOverride(button:GetName(), from:GetName())
+        return
+    end
     changed(button)
 end
 
@@ -397,11 +420,25 @@ local function pickup(button)
     if GetCVarBool("lockActionBars") and not IsModifiedClick("PICKUPACTION") then return end
     local actions = ns.Actions()
     local old = actions[button.gseIndex]
-    if not old then return end
+    if not old then
+        -- A sequence: GSE's own drag, as from the editor (Events.lua).
+        local sequenceId = button:GetAttribute("gse-button")
+        if sequenceId and GSE.BeginSequenceDrag then GSE.BeginSequenceDrag(sequenceId, button) end
+        return
+    end
     actions[button.gseIndex] = nil
+    pickedFrom, pickedAction = button, old
     ns.PickupAction(old)
     changed(button)
 end
+
+-- Put down anywhere else, or dropped: the action is no longer the one picked
+-- off a button here.
+local cursorWatch = CreateFrame("Frame")
+cursorWatch:RegisterEvent("CURSOR_CHANGED")
+cursorWatch:SetScript("OnEvent", function()
+    if not GetCursorInfo() then pickedFrom, pickedAction = nil, nil end
+end)
 
 local function actionTooltip(button)
     local action = ns.ActionOf(button)
@@ -438,9 +475,20 @@ end
 -- click), and the click's PostClick, or the drop, places it.
 local clickGuard = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate")
 local CURSOR_CLICK = [[ if kind then return false end ]]
+-- WoW's own bars act on a mouse click's release whatever Cast on Key Down
+-- says, telling a click from a key press as addon buttons cannot; so here
+-- the button acts on release while the mouse is over it (set and cleared
+-- securely, so it holds in combat), and keys get the edge the setting
+-- names. Otherwise, with Cast on Key Down, the press that starts a drag
+-- fired the sequence.
+local MOUSE_OVER = [[ self:SetAttribute("useOnKeyDown", false) ]]
+local MOUSE_OFF = [[ self:SetAttribute("useOnKeyDown", nil) ]]
 
 --- Make a new button hold actions (ActionBar.lua, as it creates each).
 function ns.SetupActionButton(button)
+    -- Wraps first: wrapping sets the script, which drops hooks already on it.
+    clickGuard:WrapScript(button, "OnEnter", MOUSE_OVER)
+    clickGuard:WrapScript(button, "OnLeave", MOUSE_OFF)
     button:RegisterForDrag("LeftButton")
     button:HookScript("OnReceiveDrag", place)
     button:HookScript("OnDragStart", pickup)
