@@ -2152,7 +2152,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- for a button set here, so a backup key not saved yet shows; from
         -- WoW for the rest.
         local function keyTexts()
-            if bindingCommandFor(model.bind) then
+            -- A row that lost its button to another row keeps showing the
+            -- keys it holds: they go to its next button on Save.
+            local holding = GSE.isEmpty(model.bind) and model.keysRead
+            if holding or bindingCommandFor(model.bind) then
                 if not model.keysRead then
                     model.key1, model.key2 = boundKeysFor(model.bind)
                     model.keysRead = true
@@ -2276,13 +2279,52 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end)
         button:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
         local function choose(name)
+            if name == model.bind then return end
+            -- Keys stay on the row: picking a button moves only the button.
+            -- Each row's keys are read off its button before it changes, and
+            -- Save binds them to the row's button (writeBackupKey), so
+            -- nothing reaches WoW's bindings until then. Only where the
+            -- buttons take keys here (bindingCommandFor); a new row has none
+            -- of its own, so it shows the keys its button already has.
+            local function holdKeys(r)
+                if not r.keysRead and bindingCommandFor(r.bind) then
+                    r.key1, r.key2 = boundKeysFor(r.bind)
+                end
+                r.keysRead = true
+            end
+            -- One row per button (Save refuses two): the row that had this
+            -- button loses it ("Pick a button") and keeps its sequence and
+            -- keys for whichever button it gets next.
+            local other
+            for _, r in ipairs(rows) do
+                if r ~= model and r.bind == name then other = r end
+            end
+            if other then
+                holdKeys(other)
+                other.bind, other.state = nil, nil
+                other.keysChanged = true
+            end
+            -- A row holding keys (it lost its button earlier) takes them to
+            -- the new button too.
+            local holding = GSE.isEmpty(model.bind) and model.keysRead
+            local carry = bindingCommandFor(name)
+                and (holding or (not GSE.isEmpty(model.bind) and bindingCommandFor(model.bind)))
+            if carry and not holding then holdKeys(model) end
             model.bind = name
             model.state = nil
-            model.keysRead, model.keysChanged = nil, nil
+            if carry then
+                model.keysChanged = true
+            else
+                model.keysRead, model.keysChanged = nil, nil
+            end
+            markDirty()
+            if other then
+                redraw()
+                return
+            end
             refreshButtonText()
             refreshStates()
             refreshKeys()
-            markDirty()
         end
         button:SetCallback("OnClick", function()
             if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
