@@ -2035,6 +2035,30 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         dropdown:SetDisabled(false)
     end
 
+    -- A row's keys, read off its button once and then the row's own.
+    local function holdKeys(r)
+        if not r.keysRead and bindingCommandFor(r.bind) then
+            r.key1, r.key2 = boundKeysFor(r.bind)
+        end
+        r.keysRead = true
+    end
+    -- One row per key, as WoW binds a key to one action: the row that has
+    -- just taken a key (picked a button, or had it typed in) removes it from
+    -- every other row, whose button loses it on Save. True when one did.
+    local function claimKeys(model)
+        holdKeys(model)
+        local took = false
+        for _, r in ipairs(rows) do
+            if r ~= model then
+                holdKeys(r)
+                for _, k in ipairs({model.key1, model.key2}) do
+                    if k and r.key2 == k then r.key2, r.keysChanged, took = nil, true, true end
+                    if k and r.key1 == k then r.key1, r.key2, r.keysChanged, took = r.key2, nil, true, true end
+                end
+            end
+        end
+        return took
+    end
     local function buildRow(index)
         local model = rows[index]
         local row = UI:Create("SimpleGroup")
@@ -2228,16 +2252,18 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             if model.key1 and model.key2 == model.key1 then model.key2 = nil end
             model.keysChanged = true
             noteTakenKey(model.key1)
-            refreshKeys()
             markDirty()
+            if claimKeys(model) then redraw() return end
+            refreshKeys()
         end)
         keys:SetCallback("OnKeyChanged", function(_, _, k)
             -- The key the button already has is not also its backup.
             model.key2 = (k ~= "" and k ~= model.key1 and k) or nil
             model.keysChanged = true
             noteTakenKey(model.key2)
-            refreshKeys()
             markDirty()
+            if claimKeys(model) then redraw() return end
+            refreshKeys()
         end)
         for _, cell in ipairs({key, keys}) do
             cell:SetCallback("OnEnter", function()
@@ -2286,12 +2312,6 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             -- nothing reaches WoW's bindings until then. Only where the
             -- buttons take keys here (bindingCommandFor); a new row has none
             -- of its own, so it shows the keys its button already has.
-            local function holdKeys(r)
-                if not r.keysRead and bindingCommandFor(r.bind) then
-                    r.key1, r.key2 = boundKeysFor(r.bind)
-                end
-                r.keysRead = true
-            end
             -- One row per button (Save refuses two): the row that had this
             -- button loses it ("Pick a button") and keeps its sequence and
             -- keys for whichever button it gets next.
@@ -2318,7 +2338,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 model.keysRead, model.keysChanged = nil, nil
             end
             markDirty()
-            if other then
+            if claimKeys(model) or other then
                 redraw()
                 return
             end
