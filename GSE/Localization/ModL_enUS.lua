@@ -1114,13 +1114,11 @@ L["Moved %d GSE keybinds onto the GSE Action Bar. Their keys are set in WoW's Ke
 L["The GSE Action Bar has no free button for these keys, so they were not moved: %s"] = true
 L["Lock the bars"] = true
 L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."] = true
-L["Place the bars in Edit Mode"] = true
 L["Rows"] = true
 L["Icon Size"] = true
 L["Rows, or columns when the bar is vertical."] = true
-L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."] = true
 L["Show keys"] = true
-L["Report keys an override takes"] = true
+L["Report Stolen GSE Keybinds"] = true
 L["Say in chat when an override binding takes a key bound to a GSE button, so the button stops running -- another addon's, WoW's own for a vehicle or mount, or GSE's Skyriding / Vehicle Keybinds -- and again when the key is back."] = true
 L["%s (GSE Action Bar %d, button %d) is overridden by %s. It won't run the GSE button until that ends."] = true
 L["%s is back on GSE Action Bar %d, button %d."] = true
