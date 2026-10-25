@@ -317,6 +317,30 @@ end
 
 -- The button shows its action. With none, a sequence's icon is GSE's
 -- (Events.lua paints it); with neither, the button is empty.
+-- Blizzard's assisted highlight: the blue ring on the spell its rotation
+-- helper would cast next, for players who turned that on. Blizzard lights
+-- only buttons with an action slot, so a spell dropped here is given the
+-- same frame through its own call, on every repaint; the manager's events
+-- and combat's edges repaint (below). Sized to the button, as for an
+-- override (Events.lua): Blizzard shrinks the glow for a slotless button.
+local function paintAssist(button, spellID)
+    local manager = _G.AssistedCombatManager
+    if not (manager and manager.SetAssistedHighlightFrameShown and manager.IsAssistedHighlightActive) then return end
+    local nextSpell = manager.lastNextCastSpellID
+    local ok, shown = pcall(function()
+        return spellID ~= nil and nextSpell ~= nil and manager:IsAssistedHighlightActive() and spellID == nextSpell
+    end)
+    shown = ok and shown or false
+    if not shown and not button.gseAssisted then return end
+    button.gseAssisted = shown or nil
+    pcall(manager.SetAssistedHighlightFrameShown, manager, button, shown)
+    local glow = shown and button.AssistedCombatHighlightFrame
+    if glow and glow.Flipbook and button.GetWidth then
+        local size = (button:GetWidth() or 45) * 66 / 45
+        glow.Flipbook:SetSize(size, size)
+    end
+end
+
 local function paint(button)
     local action = ns.ActionOf(button)
     if not action and button:GetAttribute("gse-button") then return end
@@ -333,6 +357,7 @@ local function paint(button)
         if count then count:SetText("") end
         if name then name:SetText("") end
         setGlow(button, false)
+        paintAssist(button, nil)
         return
     end
     if icon then
@@ -345,6 +370,7 @@ local function paint(button)
     local spellID = targetsOf(action)
     local ok, glow = pcall(function() return spellID and isOverlayed(spellID) and true or false end)
     setGlow(button, ok and glow)
+    paintAssist(button, spellID)
 end
 
 --- Every button casts and shows what it holds in the current spec. Out of
@@ -519,6 +545,15 @@ for _, event in ipairs({
 }) do
     -- Not every client has every event.
     pcall(events.RegisterEvent, events, event)
+end
+-- The assisted highlight's suggestion changing, and combat's edges (the
+-- ring animates in combat only): a repaint, a frame after Blizzard's own.
+if _G.EventRegistry and _G.EventRegistry.RegisterCallback and _G.AssistedCombatManager then
+    local owner = {}
+    local function repaint() C_Timer.After(0, paintAll) end
+    _G.EventRegistry:RegisterCallback("AssistedCombatManager.OnAssistedHighlightSpellChange", repaint, owner)
+    _G.EventRegistry:RegisterCallback("AssistedCombatManager.OnSetUseAssistedHighlight", repaint, owner)
+    pcall(events.RegisterEvent, events, "PLAYER_REGEN_DISABLED")
 end
 
 -- A spec change swaps which actions the buttons hold. WoW reports the new

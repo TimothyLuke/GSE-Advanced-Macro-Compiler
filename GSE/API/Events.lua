@@ -781,6 +781,24 @@ if _G.AssistedCombatManager and _G.EventRegistry and _G.EventRegistry.RegisterCa
 end
 -- Several painters set an override's icon (this file, Storage's UpdateIcon,
 -- the bar): the spell is re-read wherever the texture is set.
+-- The spell the sequence casts next, by the icon of its current step, for
+-- a button whose own icon is nobody's spell: at rest a base icon the player
+-- picked shows (getGSESequenceIcon), so the assisted highlight -- and the
+-- cooldown, count, range and glow beside it -- had nothing to match until
+-- combat put a step icon up.
+local function stepSpell(seq)
+    local action = getCurrentGSEAction(seq)
+    if type(action) ~= "table" then return nil end
+    local iconID
+    if action.type == "spell" and action.spell then
+        local info = GSE.GetSpellInfo(GSE.UnEscapeString(tostring(action.spell)))
+        iconID = info and info.iconID
+    elseif action.macrotext and GSE.GetMacroTextIconInfo then
+        local info = GSE.GetMacroTextIconInfo(action.macrotext, true)
+        iconID = info and info.iconID
+    end
+    return iconID and spellForIcon(seq, iconID) or nil
+end
 local iconSpellHooked = setmetatable({}, {__mode = "k"})
 local function hookIconSpell(button)
     local name = button and button.GetName and button:GetName()
@@ -790,7 +808,7 @@ local function hookIconSpell(button)
     local function follow()
         local seq = button:GetAttribute("gse-button")
         if not seq then return end
-        local spellID = spellForIcon(seq, icon:GetTexture())
+        local spellID = spellForIcon(seq, icon:GetTexture()) or stepSpell(seq)
         if spellID ~= overrideSpell[button] then
             overrideSpell[button] = spellID
             applyOverrideCooldown(button)
