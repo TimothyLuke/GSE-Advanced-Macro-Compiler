@@ -2145,7 +2145,7 @@ local function addActionBarModuleSwitch(optionsCategory)
         if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end
     end
     local setting = Settings.RegisterProxySetting(optionsCategory, "gseActionBarModuleGeneral",
-        Settings.VarType.Boolean, L["Enable the GSE Action Bar Module"], false, GetValue, SetValue)
+        Settings.VarType.Boolean, L["GSE Action Bar Module"], false, GetValue, SetValue)
     return Settings.CreateCheckbox(optionsCategory, setting,
         L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning the module on loads it and moves GSE's keybinds onto its buttons; while it is off, none of its settings can be changed."])
 end
@@ -3070,6 +3070,12 @@ function GSE:CreateConfigPanels()
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Action Bar Settings"], ["tooltip"] = L["Action Bar Settings"]}))
         end
+        -- Button Binding popup: the right-click menu runs on every client
+        -- (GSE.OpenContextMenu), so its switch is on every client too.
+        do
+            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Action Bar Override Popup"], true)
+            Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
+        end
         if GSE.ActionBarInstalled() then
             local moduleSwitch = addActionBarModuleSwitch(generalOptions)
             -- The bar's one setting Edit Mode has no place for, greyed out
@@ -3095,12 +3101,6 @@ function GSE:CreateConfigPanels()
                     init:SetParentInitializer(moduleSwitch, GSE.ActionBarActive)
                 end
             end
-        end
-        -- Button Binding popup: the right-click menu runs on every client
-        -- (GSE.OpenContextMenu), so its switch is on every client too.
-        do
-            local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Action Bar Override Popup"], true)
-            Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
         AddActionBarLabelOption(generalOptions)
         AddActionBarWatermarkOption(generalOptions)
