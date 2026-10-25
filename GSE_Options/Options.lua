@@ -1599,6 +1599,21 @@ local function AddActionBarIconColourOption(optionsCategory)
     end
 end
 
+-- On by default: chat says when a key stops running a sequence on an action
+-- bar button. See GSE/API/OverrideKeys.lua.
+local function AddActionBarKeyChangesOption(optionsCategory)
+    do
+        local function GetValue()
+            return GSEOptions.actionBarReportKeyChanges ~= false
+        end
+        local function SetValue(val)
+            GSEOptions.actionBarReportKeyChanges = val == true
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarReportKeyChanges", Settings.VarType.Boolean, L["Report Key Changes"], true, GetValue, SetValue)
+        Settings.CreateCheckbox(optionsCategory, setting, L["Say in chat when the key on an action bar button with a sequence on it is cleared or bound to something else, so the sequence no longer runs from that key."])
+    end
+end
+
 local function AddActionBarClickBehaviorOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -3232,6 +3247,7 @@ function GSE:CreateConfigPanels()
         AddActionBarLabelOption(generalOptions)
         AddActionBarWatermarkOption(generalOptions)
         AddActionBarIconColourOption(generalOptions)
+        AddActionBarKeyChangesOption(generalOptions)
         AddActionBarClickBehaviorOptions(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)

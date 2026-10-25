@@ -1887,6 +1887,8 @@ local function LoadOverrides(force)
                 refreshClearedOverrideIcon(b)
             end
         end
+        -- A button just given a sequence starts from the keys it has now.
+        if GSE.CheckOverrideKeys then GSE.CheckOverrideKeys() end
     end
 end
 
