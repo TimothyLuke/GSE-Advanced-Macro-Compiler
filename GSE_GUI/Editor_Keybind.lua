@@ -1880,6 +1880,20 @@ local function listenForKey(action, slot)
     listener:StartListening(action, slot)
     return true
 end
+-- A GSE Action Bar button's keys are GSE's own binding (GSE_Actionbar's
+-- Bindings.xml): when its row goes, so do they, as the old direct keybinds'
+-- did.  Another bar's key is that bar's and stays.  Out of combat only:
+-- SetBinding is blocked there.  True when any key was cleared.
+local function clearOwnBarKeys(buttonName)
+    if GSE.isEmpty(buttonName) or string.sub(buttonName, 1, 9) ~= "GSEButton" then return false end
+    if InCombatLockdown() or not (SetBinding and SaveBindings and GetCurrentBindingSet) then return false end
+    local action = bindingActionFor(buttonName)
+    local keys = action and {bindingKeys(action)} or {}
+    if #keys == 0 then return false end
+    for _, key in ipairs(keys) do SetBinding(key) end
+    SaveBindings(GetCurrentBindingSet())
+    return true
+end
 showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
@@ -2188,8 +2202,12 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- below the dropdown's centre line (Larry, 2026-09-08).
         remove.flowYOffset = 2
         remove:SetCallback("OnEnter", function()
-            -- The only row is cleared, not removed; say which.
+            -- The only row is cleared, not removed; say which.  A GSE Action
+            -- Bar button's keys go with it.
             local text = #rows <= 1 and L["Clear this row."] or L["Remove this row."]
+            if not GSE.isEmpty(model.bind) and string.sub(model.bind, 1, 9) == "GSEButton" then
+                text = text .. "\n" .. L["Its keys are cleared too."]
+            end
             GSE.CreateToolTip(L["Remove"], text, editframe)
         end)
         remove:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
@@ -2200,6 +2218,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             else
                 table.remove(rows, index)
             end
+            clearOwnBarKeys(model.bind)
             markDirty()
             redraw()
         end)

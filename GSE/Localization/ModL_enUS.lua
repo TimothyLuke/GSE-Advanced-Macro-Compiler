@@ -764,6 +764,7 @@ L["Pick a button"] = true
 L["Limit of %d rows."] = true
 L["Set All of your Binds and Click Save!"] = true
 L["Applied when combat ends."] = true
+L["Its keys are cleared too."] = true
 L["Right Click an Empty Action Button"] = true
 L["Assign a Sequence / Same for Clearing"] = true
 L["-or-"] = true
