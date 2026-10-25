@@ -1955,15 +1955,15 @@ local function createAboutPanel()
         content:SetHeight(1)
         scrollFrame:SetScrollChild(content)
 
-        -- Logo (top-left of content)
+        -- Logo (left of content), placed below once the History text beside
+        -- it is measured.
         local logo = content:CreateTexture(nil, "ARTWORK")
         logo:SetTexture(ABOUT_LOGO_TEXTURE)
         logo:SetSize(ABOUT_LOGO_WIDTH, ABOUT_LOGO_HEIGHT)
-        logo:SetPoint("TOPLEFT", content, "TOPLEFT", padding, -padding)
 
-        -- History header (right of logo, aligned to top)
+        -- History header (right of the logo's column, at the top)
         local histHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
-        histHeader:SetPoint("TOPLEFT", logo, "TOPRIGHT", padding, 0)
+        histHeader:SetPoint("TOPLEFT", content, "TOPLEFT", padding + ABOUT_LOGO_WIDTH + padding, -padding)
         histHeader:SetTextColor(HEADER_GOLD_R, HEADER_GOLD_G, HEADER_GOLD_B)
         histHeader:SetText(L["History"])
 
@@ -1976,9 +1976,16 @@ local function createAboutPanel()
         aboutDesc:SetPoint("TOPLEFT", histHeader, "BOTTOMLEFT", 0, -6)
         aboutDesc:SetText(L["GSE was originally forked from GnomeSequencer written by semlar.  It was enhanced by TimothyLuke to include a lot of configuration and boilerplate functionality with a GUI added.  The enhancements pushed the limits of what the original code could handle and was rewritten from scratch into GSE.\n\nGSE itself wouldn't be what it is without the efforts of the all the GSE Sequence Creators / Community who helped me make what GSE is today.  Check out https://discord.gg/gseunited and https://gseunited.com for the things that make this mod work.  I also want to acknowledge Lutechi for creating the original WowLazyMacros community which we have grown out of."])
 
-        -- Version (anchored below logo)
+        -- The logo centred on the History heading and text beside it, and
+        -- Version below whichever then ends lower: the text runs past the
+        -- logo's foot, and under the logo alone the two overlapped. Measured
+        -- once the text is set.
+        local besideHeight = histHeader:GetStringHeight() + 6 + aboutDesc:GetStringHeight()
+        local logoDown = math.max(0, math.floor((besideHeight - ABOUT_LOGO_HEIGHT) / 2 + 0.5))
+        logo:SetPoint("TOPLEFT", content, "TOPLEFT", padding, -padding - logoDown)
+        local belowLogo = math.max(0, math.ceil(besideHeight - ABOUT_LOGO_HEIGHT - logoDown))
         local versionHeader = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightLarge")
-        versionHeader:SetPoint("TOPLEFT", logo, "BOTTOMLEFT", 0, -padding)
+        versionHeader:SetPoint("TOPLEFT", logo, "BOTTOMLEFT", 0, -padding - belowLogo)
         versionHeader:SetTextColor(HEADER_GOLD_R, HEADER_GOLD_G, HEADER_GOLD_B)
         versionHeader:SetText(L["Version"])
 
