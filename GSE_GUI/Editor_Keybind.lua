@@ -1605,6 +1605,26 @@ local function bindingKeys(action)
     if context then return GetBindingKey(action, nil, context) end
     return GetBindingKey(action)
 end
+-- The WoW binding command a bar button is keyed by, for the buttons whose key
+-- can be set here: Blizzard's bars (BAR_COMMANDS), and a bar that names its
+-- command on the button (button.commandName, or Dominos's "commandName"
+-- attribute).  Nil for the rest -- a bar addon that binds a click on its own
+-- frame, Forever's gamepad bars -- whose keys are shown and set elsewhere.
+local function bindingCommandFor(bind)
+    if GSE.isEmpty(bind) then return nil end
+    local prefix, num = string.match(bind, "^(.-)(%d+)$")
+    if prefix and BAR_COMMANDS[prefix] then return BAR_COMMANDS[prefix] .. num end
+    local b = _G[bind]
+    if type(b) ~= "table" then return nil end
+    local cmd = b.commandName or (b.GetAttribute and b:GetAttribute("commandName"))
+    if type(cmd) == "string" and cmd ~= "" then return cmd end
+    return nil
+end
+-- What WoW has bound to such a button right now: its key, its backup key.
+local function boundKeysFor(bind)
+    local cmd = bindingCommandFor(bind)
+    if cmd and GetBindingKey then return bindingKeys(cmd) end
+end
 
 -- Forever's gamepad bars (Blizzard_GamepadActionBars) have no key binding
 -- per button.  There are four -- TopBar / LeftBar / RightBar / BottomBar, each
@@ -1710,6 +1730,28 @@ end
 -- same terms the keybind one was; refactoring a panel Larry has just signed
 -- off on to save 120 lines is the wrong trade today.
 local showOverridePanel
+-- A row's keys into WoW, on Save: the bar button's bindings become the
+-- row's key and backup key, in that order (a key used by another action
+-- moves here, as on WoW's own screen).  True when written.  Out of combat
+-- only: WoW blocks SetBinding in combat.
+local function writeBackupKey(row)
+    local cmd = row.keysChanged and bindingCommandFor(row.bind)
+    if not cmd or InCombatLockdown() then return false end
+    local old1, old2 = bindingKeys(cmd)
+    if old1 then SetBinding(old1) end
+    if old2 then SetBinding(old2) end
+    if row.key1 then SetBinding(row.key1, cmd) end
+    if row.key2 then SetBinding(row.key2, cmd) end
+    row.keysChanged = nil
+    return true
+end
+-- The binding set WoW is using (account or character); 2, the character's,
+-- where the client cannot say.
+local function saveWoWBindings()
+    if not SaveBindings then return end
+    local getSet = _G.GetCurrentBindingSet
+    SaveBindings(getSet and getSet() or 2)
+end
 -- The open Button Bindings panel's rows re-read their keys when WoW's
 -- bindings change, so a key set in WoW's own Key Bindings shows at once.
 local activeKeyRefreshers
@@ -1946,6 +1988,14 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             GSE_C["ActionBarBinds"]["LoadOuts"][specialization][loadout] = nil
         end
 
+        -- Backup keys changed on rows go to WoW on Save, and WoW's own Key
+        -- Bindings screen shows them then.
+        local keysChanged = false
+        for _, r in ipairs(rows) do
+            if writeBackupKey(r) then keysChanged = true end
+        end
+        if keysChanged then saveWoWBindings() end
+
         -- LoadOverrides reverts every live override before re-arming from the
         -- data, so rows removed here go dead on this call.
         ownOverrideReload = true
@@ -1985,6 +2035,30 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         dropdown:SetDisabled(false)
     end
 
+    -- A row's keys, read off its button once and then the row's own.
+    local function holdKeys(r)
+        if not r.keysRead and bindingCommandFor(r.bind) then
+            r.key1, r.key2 = boundKeysFor(r.bind)
+        end
+        r.keysRead = true
+    end
+    -- One row per key, as WoW binds a key to one action: the row that has
+    -- just taken a key (picked a button, or had it typed in) removes it from
+    -- every other row, whose button loses it on Save. True when one did.
+    local function claimKeys(model)
+        holdKeys(model)
+        local took = false
+        for _, r in ipairs(rows) do
+            if r ~= model then
+                holdKeys(r)
+                for _, k in ipairs({model.key1, model.key2}) do
+                    if k and r.key2 == k then r.key2, r.keysChanged, took = nil, true, true end
+                    if k and r.key1 == k then r.key1, r.key2, r.keysChanged, took = r.key2, nil, true, true end
+                end
+            end
+        end
+        return took
+    end
     local function buildRow(index)
         local model = rows[index]
         local row = UI:Create("SimpleGroup")
@@ -2079,53 +2153,132 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             end)
         end
 
-        -- The button's key and its backup key: its first binding in WoW's Key
-        -- Bindings, then the rest, as that panel lists them.  Shown only: keys
-        -- are set in WoW's own Key Bindings, and the row follows (UPDATE_BINDINGS).
+        -- The button's key and its backup key: its first and second binding
+        -- in WoW's Key Bindings, as that panel lists them.  Click, press a
+        -- key; written to WoW on Save.  A button whose keys cannot be set
+        -- here (bindingCommandFor) only shows them.
         local function keyCell(width)
-            local cell = UI:Create("InteractiveLabel")
+            local cell = UI:Create("ControllerKeybinding")
             cell:SetWidth(width)
-            cell:SetJustifyH("CENTER")
-            cell:SetJustifyV("MIDDLE")
-            cell:SetCallback("OnEnter", function()
-                local hint = L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."]
-                local all = buttonKeysText(model.bind, "\n")
-                GSE.CreateToolTip(L["Key"], all and (all .. "\n\n" .. hint) or hint, editframe)
-            end)
-            cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+            cell:SetHeight(KB_ROW_HEIGHT)
+            if cell.button and cell.frame then
+                -- The widget keeps 20px clear on its right; not in a row.
+                cell.button:SetPoint("BOTTOMRIGHT", cell.frame, "BOTTOMRIGHT", 0, 0)
+                -- The tooltip lists the keys of a button that cannot be set too.
+                if cell.button.SetMotionScriptsWhileDisabled then cell.button:SetMotionScriptsWhileDisabled(true) end
+            end
             return cell
         end
         local key, keys = keyCell(AO_COL_KEY), keyCell(AO_COL_KEYS)
         local refreshButtonText
-        -- WoW's keys for the button: the first, then every further one.
+        -- The button's keys as WoW shows them: its own key, then its backup
+        -- (every further key, for a button not set here).  Read from the row
+        -- for a button set here, so a backup key not saved yet shows; from
+        -- WoW for the rest.
         local function keyTexts()
+            -- A row that lost its button to another row keeps showing the
+            -- keys it holds: they go to its next button on Save.
+            local holding = GSE.isEmpty(model.bind) and model.keysRead
+            if holding or bindingCommandFor(model.bind) then
+                if not model.keysRead then
+                    model.key1, model.key2 = boundKeysFor(model.bind)
+                    model.keysRead = true
+                end
+                local shown = GetBindingText or function(key) return key end
+                return model.key1 and shown(model.key1) or nil, model.key2 and shown(model.key2) or nil
+            end
             local all = buttonKeysText(model.bind, "\001")
             if not all then return nil end
             local first, rest = string.match(all, "^(.-)\001(.*)$")
             if not first then return all end
             return first, (string.gsub(rest, "\001", ", "))
         end
-        local function fillKeyCell(cell, width, text)
-            if text and text:find("|A:", 1, true) then
-                -- Controller glyphs: sized to the row (their atlases carry
-                -- padding, so smaller reads as specks), and never cut -- a cut
-                -- through the |A..|a markup prints it as text.
-                cell:SetText(sizeGlyphs(text, 22))
-            else
-                if text then text = fitText(cell.text, text, width - 4) end
-                cell:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
+        local function fillKeyCell(cell, width, text, settable)
+            cell:SetKey(text or "")
+            -- A controller's keys are pictures of its buttons: the red button
+            -- under them goes, and the cell still takes the click.  This
+            -- widget is not pooled, so the art comes back with the next row.
+            if cell.button then
+                local shown = (text and text:find("|A:", 1, true)) and 0 or 1
+                for _, part in ipairs({"Left", "Middle", "Right"}) do
+                    local art = cell.button[part]
+                    if art and art.SetAlpha then art:SetAlpha(shown) end
+                end
             end
-            cell:SetHeight(KB_ROW_HEIGHT)
+            local caption = text and cell.button and cell.button:GetFontString()
+            if caption then
+                if text:find("|A:", 1, true) then
+                    -- Controller glyphs: sized to the row (their atlases carry
+                    -- padding, so smaller reads as specks), and never cut -- a
+                    -- cut through the |A..|a markup prints it as text.  Two
+                    -- keys with modifiers run past the cell at that size, so
+                    -- they step down until the cell holds them.
+                    local fitted
+                    for _, size in ipairs({22, 18, 16, 14}) do
+                        fitted = sizeGlyphs(text, size)
+                        caption:SetText(fitted)
+                        if not caption.GetStringWidth or caption:GetStringWidth() <= width - 12 then break end
+                    end
+                    text = fitted
+                else
+                    text = fitText(caption, text, width - 12)
+                end
+                cell.button:SetText(text)
+            end
+            -- Nothing to show and nothing to set: a dash, not "Not Bound".
+            if not text and not settable and cell.button then cell.button:SetText("-") end
+            cell:SetDisabled(not settable)
         end
         local function refreshKeys()
             local first, second = keyTexts()
-            fillKeyCell(key, AO_COL_KEY, first)
-            fillKeyCell(keys, AO_COL_KEYS, second)
+            local settable = bindingCommandFor(model.bind) ~= nil
+            fillKeyCell(key, AO_COL_KEY, first, settable)
+            fillKeyCell(keys, AO_COL_KEYS, second, settable)
             if refreshButtonText then refreshButtonText() end
         end
-        -- A key set in WoW's Key Bindings while the pane is open shows at once.
+        -- A key WoW uses for something else moves on Save, as on WoW's own
+        -- screen; say what it is bound to now.
+        local function noteTakenKey(k)
+            local action = k and GetBindingAction and GetBindingAction(k)
+            if action and action ~= "" and action ~= bindingCommandFor(model.bind) then
+                GSE.Print(string.format(L["%s is bound to %s now; Save moves it to %s."],
+                    k, _G.GetBindingName and _G.GetBindingName(action) or action, buttonLabel(model.bind)),
+                    L["Button Bindings"])
+            end
+        end
+        key:SetCallback("OnKeyChanged", function(_, _, k)
+            model.key1 = k ~= "" and k or nil
+            -- The button's key is not also its backup.
+            if model.key1 and model.key2 == model.key1 then model.key2 = nil end
+            model.keysChanged = true
+            noteTakenKey(model.key1)
+            markDirty()
+            if claimKeys(model) then redraw() return end
+            refreshKeys()
+        end)
+        keys:SetCallback("OnKeyChanged", function(_, _, k)
+            -- The key the button already has is not also its backup.
+            model.key2 = (k ~= "" and k ~= model.key1 and k) or nil
+            model.keysChanged = true
+            noteTakenKey(model.key2)
+            markDirty()
+            if claimKeys(model) then redraw() return end
+            refreshKeys()
+        end)
+        for _, cell in ipairs({key, keys}) do
+            cell:SetCallback("OnEnter", function()
+                local hint = bindingCommandFor(model.bind)
+                    and L["Click > Set Keys or ESC to Clear > Save!"]
+                    or L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."]
+                GSE.CreateToolTip(nil, hint, editframe)
+            end)
+            cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+        end
+        -- A backup key typed here and not yet saved is kept.
         keyRefreshers[#keyRefreshers + 1] = function()
-            if keys.frame and keys.frame:IsVisible() then refreshKeys() end
+            if model.keysChanged or not (keys.frame and keys.frame:IsVisible()) then return end
+            model.keysRead = nil
+            refreshKeys()
         end
 
         -- ~100 action buttons is too many for one flat list.  The picker is
@@ -2153,18 +2306,39 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         button:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
         local function choose(name)
             if name == model.bind then return end
+            -- Keys stay on the row: picking a button moves only the button.
+            -- Each row's keys are read off its button before it changes, and
+            -- Save binds them to the row's button (writeBackupKey), so
+            -- nothing reaches WoW's bindings until then. Only where the
+            -- buttons take keys here (bindingCommandFor); a new row has none
+            -- of its own, so it shows the keys its button already has.
             -- One row per button (Save refuses two): the row that had this
-            -- button loses it ("Pick a button") and keeps its sequence for
-            -- whichever button it gets next.
+            -- button loses it ("Pick a button") and keeps its sequence and
+            -- keys for whichever button it gets next.
             local other
             for _, r in ipairs(rows) do
                 if r ~= model and r.bind == name then other = r end
             end
-            if other then other.bind, other.state = nil, nil end
+            if other then
+                holdKeys(other)
+                other.bind, other.state = nil, nil
+                other.keysChanged = true
+            end
+            -- A row holding keys (it lost its button earlier) takes them to
+            -- the new button too.
+            local holding = GSE.isEmpty(model.bind) and model.keysRead
+            local carry = bindingCommandFor(name)
+                and (holding or (not GSE.isEmpty(model.bind) and bindingCommandFor(model.bind)))
+            if carry and not holding then holdKeys(model) end
             model.bind = name
             model.state = nil
+            if carry then
+                model.keysChanged = true
+            else
+                model.keysRead, model.keysChanged = nil, nil
+            end
             markDirty()
-            if other then
+            if claimKeys(model) or other then
                 redraw()
                 return
             end
