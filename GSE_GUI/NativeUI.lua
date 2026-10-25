@@ -2749,7 +2749,9 @@ local function createEditBox()
     widget.editBox = editBox
     widget.labelHeight = labelHeight
 
-    editBox:SetScript("OnTextChanged", function(self) widget:Fire("OnTextChanged", self:GetText()) end)
+    -- userInput passed through: Blizzard's own flag is the only way a handler can
+    -- tell a keystroke from the engine's deferred re-fire of injected text.
+    editBox:SetScript("OnTextChanged", function(self, userInput) widget:Fire("OnTextChanged", self:GetText(), userInput) end)
     editBox:SetScript("OnEnterPressed", function(self) self:ClearFocus(); widget:Fire("OnEnterPressed", self:GetText()) end)
     editBox:SetScript("OnEditFocusLost", function(self) widget:Fire("OnEditFocusLost", self:GetText()) end)
     editBox:SetScript("OnEnter", function() widget:Fire("OnEnter") end)
@@ -2912,7 +2914,9 @@ local function createMultiLineEditBox()
     scrollBG:SetScript("OnMouseDown", focusEditBox)
     scrollFrame:SetScript("OnMouseDown", focusEditBox)
 
-    editBox:SetScript("OnTextChanged", function(self) widget:Fire("OnTextChanged", self:GetText()) end)
+    -- userInput passed through: Blizzard's own flag is the only way a handler can
+    -- tell a keystroke from the engine's deferred re-fire of injected text.
+    editBox:SetScript("OnTextChanged", function(self, userInput) widget:Fire("OnTextChanged", self:GetText(), userInput) end)
     editBox:SetScript("OnEditFocusLost", function(self) widget:Fire("OnEditFocusLost", self:GetText()) end)
     scrollFrame:SetScript(
         "OnMouseWheel",
