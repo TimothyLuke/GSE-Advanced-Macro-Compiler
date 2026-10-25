@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- Mapping a one-spec-per-class client's talent TREES onto retail spec ids.
 --

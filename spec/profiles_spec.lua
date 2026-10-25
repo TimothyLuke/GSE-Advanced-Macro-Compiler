@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- Profiles (#2111 phase 4): a class's spec setup -- keybinds, action-bar
 -- overrides, settings -- shared by every character of that class, with a
 -- character able to opt out of it for a spec and keep its own.

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
 
 -- StringFunctions: the text half.
 --

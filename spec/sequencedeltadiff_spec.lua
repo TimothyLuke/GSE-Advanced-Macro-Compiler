@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- Tests for GSE.DiffDelta() — the in-game diff (edit → delta). Round-trip
 -- contract: ApplyDelta(base, DiffDelta(base, target)) == target, across field
 -- edits, add/remove/reorder, Loop/If nesting, top-level fields, version add/

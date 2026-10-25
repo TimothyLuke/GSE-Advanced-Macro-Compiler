@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- End-to-end CBOR transport test, entirely in Lua: the Node encoder
 -- (api/src/lib/cbor.js) emits the delta as CBOR; here we decode it with a
 -- pure-Lua CBOR decoder (spec/cbor.lua, a stand-in for the Mod's

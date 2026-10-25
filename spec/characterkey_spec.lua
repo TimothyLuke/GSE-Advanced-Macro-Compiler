@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- Which key a character's macro bucket lives under.
 --

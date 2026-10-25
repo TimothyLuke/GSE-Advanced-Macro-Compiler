@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- Version references in MetaData — Default plus the ten context overrides —
 -- are INDEXES into Versions. Deleting a version has to move them, and the
 -- three cases are easy to get wrong: the old delete handler decremented

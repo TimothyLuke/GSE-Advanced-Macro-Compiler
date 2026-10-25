@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- The guard that stops an action block's edit boxes rewriting the wrong action
 -- (#2106). Deleting one Action block rewrote 36 others from

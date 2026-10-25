@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- WoW Forever has no Delves or Scenarios, Arenas, Heroic, Mythic or Mythic+
 -- dungeons, or Timewalking. Storage.lua drops those contexts there, at load, so
 -- the editor rows, the version picked in game and the delete check all lose

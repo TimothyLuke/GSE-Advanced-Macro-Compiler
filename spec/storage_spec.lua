@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 describe(
   "API Storage",
   function()

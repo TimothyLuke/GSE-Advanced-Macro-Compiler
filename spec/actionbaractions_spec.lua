@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- What a GSE Action Bar button holds (GSE_Actionbar/Actions.lua): a spell,
 -- item, toy, macro or equipment set, taken off the cursor as any action bar
 -- takes it, kept by GSE per character and spec, and cast through the button's

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- One reader for "what does this macro clause name": conditionals and a
 -- castsequence reset= go through GSE.GetConditionalsFromString, then the "!"
 -- toggle guard. The icon resolvers in Storage and the Editor and the

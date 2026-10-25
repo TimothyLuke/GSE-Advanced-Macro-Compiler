@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- The manual-reset snippet is secure-environment code stamped onto the button
 -- at build time, so it cannot read GSEOptions when it runs. Which form gets
 -- stamped is decided here, in normal Lua — and the reset itself must keep

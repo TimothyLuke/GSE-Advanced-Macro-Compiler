@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- Sharing with another GSE player: the list a player offers, the request for
 -- one element, and what is sent and filed.
 --

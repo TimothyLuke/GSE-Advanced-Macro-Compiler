@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- AceEvent keeps ONE handler per message per object. Several modules
 -- registered GSE_SEQUENCE_UPDATED (and GSE_MODS_VISIBLE) on the GSE object
 -- itself, so each replaced the last and only whichever loaded last ran -- the

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
 
 -- Coverage for the ActionButtonUseKeyDown-independent click model:
 --   * GSE.GetKeybindClickTarget picks executor vs key-down relay correctly.

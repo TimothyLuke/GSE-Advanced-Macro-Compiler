@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- getPlayerSpells backs the Patron Tab spell list. It has to work on two
 -- different spellbook APIs, and the interesting case is the client that has
 -- SOME of the modern one: TBC Classic Anniversary and MoP Classic expose

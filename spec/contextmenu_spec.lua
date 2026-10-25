@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- GSE.OpenContextMenu draws Blizzard-menu generators itself in WoW Forever's
 -- gamepad mode, because opening Blizzard's menu from addon code there trips
 -- ADDON_ACTION_FORBIDDEN. That only works if the stand-in description records

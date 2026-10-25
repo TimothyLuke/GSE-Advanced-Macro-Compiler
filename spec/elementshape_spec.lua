@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- Variables and macros share a sequence's shape: MetaData for identity and
 -- version selection, Versions for what runs. Older content is flat. The
 -- upgrade functions turn either into the new shape, and one already new comes

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
 
 -- GSE.CreateGSE3Button: the compiled step list -> the secure button.
 --

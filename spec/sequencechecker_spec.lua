@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- Tests for GSE.ScanMacrosForErrors() and GSE.FixSequenceStructure()
 -- Run with: busted spec/sequencechecker_spec.lua
 

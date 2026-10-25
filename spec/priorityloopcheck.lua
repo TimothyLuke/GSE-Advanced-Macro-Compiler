@@ -1,4 +1,3 @@
----@diagnostic disable: lowercase-global
 -- Use this to test sequential loop on https://www.lua.org/cgi-bin/demo
 sequence = {
   PreMacro = {

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- Action-bar overrides on LibActionButton bars (Bartender4, ElvUI, NDui, CPB_).
 --
 -- GSE takes over EVERY paging state of a LAB button (0-18 on Bartender4), but

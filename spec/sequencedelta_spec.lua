@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- Tests for GSE.ApplySequenceDelta() — the Lua port of the Node delta codec
 -- (api/src/lib/seqDelta.js). Run with: busted spec/sequencedelta_spec.lua
 --

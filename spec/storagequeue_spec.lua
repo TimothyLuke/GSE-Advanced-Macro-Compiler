@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- GSE.EnqueueOOC -- the out-of-combat work queue, and its priority hierarchy.
 --
 -- Everything the addon cannot do in combat lands here and is drained on the way

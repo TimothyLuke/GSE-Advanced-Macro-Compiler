@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, lowercase-global
 -- Spell ranks on a vanilla-content client running Retail's API (WoW Forever).
 --
 -- The rules under test (see "Spell ranks" in GSE/API/translator.lua):

@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- The compiler: a sequence's blocks -> the ordered list the button fires.
 --
 -- This is the most load-bearing logic in the addon. Everything else stores,

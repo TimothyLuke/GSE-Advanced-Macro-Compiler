@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- Which talent loadout keybindings and action bar overrides are layered by,
 -- on top of the spec's: a saved loadout's config id (Retail), else none.

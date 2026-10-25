@@ -294,9 +294,10 @@ function GSE.ClearCommonKeyBinds()
 end
 
 --- Is the GSE Action Bar turned on (GSE's options)? It is off until the
---- player turns it on, or GSE does to move keybinds (Events.lua).
+--- player turns it on, or GSE does to move keybinds (Events.lua), and off
+--- whatever the setting where the module is not there (GSE.ActionBarInstalled).
 function GSE.ActionBarEnabled()
-    return type(GSEOptions) == "table" and GSEOptions.ActionBarEnabled == true
+    return type(GSEOptions) == "table" and GSEOptions.ActionBarEnabled == true and GSE.ActionBarInstalled()
 end
 
 --- Is the GSE Action Bar (GSE_Actionbar) on and running? WoW cannot unload an
@@ -313,46 +314,18 @@ function GSE.ActionBarUsesEditMode()
     return GSE.GameMode >= 12 and EditModeManagerFrame ~= nil
 end
 
---- Is the GSE Action Bar installed at all, on or off?
+--- Is the GSE Action Bar module there to load: installed, and not turned off
+--- for this character in WoW's AddOns list? Where it is not, GSE shows and
+--- does nothing of it.
 function GSE.ActionBarInstalled()
-    if C_AddOns.DoesAddOnExist then return C_AddOns.DoesAddOnExist(Statics.ActionBarAddOn) end
-    local _, _, _, _, reason = C_AddOns.GetAddOnInfo(Statics.ActionBarAddOn)
-    return reason ~= "MISSING"
-end
-
--- What the GSE Action Bar is set to, account-wide: GSEOptions.ActionBar, with
--- anything missing filled in. Visibility is SHOW, MOUSEOVER or HIDE; a hidden
--- bar's keys still work. Here rather than in the bar, which is LoadOnDemand,
--- because GSE's options show these while it is off too.
-local ACTION_BAR_DEFAULTS = {
-    Locked = true,
-    ShowKeys = true,
-    ShowEmpty = true,
-    Spacing = 4,
-    -- key -> the button GSE moved it onto (GSE_Actionbar/Migration.lua), so
-    -- every character of the account puts a key on the same button.
-    KeyButtons = {},
-    Bars = {
-        [1] = { Visibility = "SHOW", Scale = 1, PerRow = 12 },
-        [2] = { Visibility = "HIDE", Scale = 1, PerRow = 12 },
-    },
-}
-
-local function fillDefaults(target, defaults)
-    for k, v in pairs(defaults) do
-        if type(v) == "table" then
-            if type(target[k]) ~= "table" then target[k] = {} end
-            fillDefaults(target[k], v)
-        elseif target[k] == nil then
-            target[k] = v
-        end
+    local name = Statics.ActionBarAddOn
+    if C_AddOns.DoesAddOnExist then
+        if not C_AddOns.DoesAddOnExist(name) then return false end
+    else
+        local _, _, _, _, reason = C_AddOns.GetAddOnInfo(name)
+        if reason == "MISSING" then return false end
     end
-end
-
-function GSE.ActionBarOptions()
-    if type(GSEOptions.ActionBar) ~= "table" then GSEOptions.ActionBar = {} end
-    fillDefaults(GSEOptions.ActionBar, ACTION_BAR_DEFAULTS)
-    return GSEOptions.ActionBar
+    return C_AddOns.GetAddOnEnableState(name, UnitName("player")) ~= 0
 end
 
 --- Turn the GSE Action Bar on or off, for the whole account, at once: on loads

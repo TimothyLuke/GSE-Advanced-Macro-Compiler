@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, lowercase-global, duplicate-set-field
 
 -- WoW chat-slash globals. Real WoW exposes SlashCmdList + SLASH_<NAME>1 as
 -- the canonical slash-command registration surface; Utils.lua registers
@@ -7,7 +6,10 @@
 SlashCmdList = SlashCmdList or {}
 
 GSE = {}
-GSE.L = {}
+-- A string with no translation reads as its own key, as AceLocale gives
+-- enUS (ModL_enUS.lua sets each to true): code that formats one at load
+-- (Statics.lua) gets the string, not nil.
+GSE.L = setmetatable({}, { __index = function(_, k) return k end })
 GSE.Static = {}
 GSE.VersionString = "2.0.00-18-g95ecb41"
 -- Production source files use `local _, GSE = ...` (main GSE) or

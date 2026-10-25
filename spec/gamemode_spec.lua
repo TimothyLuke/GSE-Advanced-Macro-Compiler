@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- GSE.GameMode gates API availability, not content.
 --

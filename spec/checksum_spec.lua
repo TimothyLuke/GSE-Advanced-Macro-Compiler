@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- ── Helper: bytes to lowercase hex ────────────────────────────────────────────
 local function to_hex(s)

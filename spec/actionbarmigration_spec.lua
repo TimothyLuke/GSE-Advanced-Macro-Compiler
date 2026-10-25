@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- The GSE Action Bar (GSE_Actionbar): a character's GSE keybinds move onto the
 -- bar's buttons -- each key bound in WoW's Key Bindings to a button, and the
 -- button given a Button Binding to the sequence the key ran, per spec and per
@@ -159,10 +158,15 @@ describe("GSE keybinds", function()
     require("../GSE/API/CharacterFunctions")
   end)
 
-  local loaded
+  local loaded, installed, enableState
   before_each(function()
-    loaded = false
-    _G.C_AddOns = { IsAddOnLoaded = function(name) return loaded and name == "GSE_Actionbar" end }
+    loaded, installed, enableState = false, true, 2
+    _G.UnitName = function() return "Tester" end
+    _G.C_AddOns = {
+      IsAddOnLoaded = function(name) return loaded and name == "GSE_Actionbar" end,
+      DoesAddOnExist = function(name) return installed and name == "GSE_Actionbar" end,
+      GetAddOnEnableState = function(name) return name == "GSE_Actionbar" and enableState or 0 end,
+    }
   end)
 
   it("are GSE's own where WoW honours them and the bar is off", function()
@@ -195,6 +199,21 @@ describe("GSE keybinds", function()
     _G.GSEOptions = { ActionBarEnabled = false }
     loaded = true
     assert.is_true(GSE.KeybindingsEnabled())
+  end)
+
+  it("are GSE's own where the module is missing or turned off in WoW's AddOns list, whatever GSE's setting", function()
+    GSE.DirectKeybindsRetired = false
+    _G.GSEOptions = { ActionBarEnabled = true }
+    installed = false
+    assert.is_false(GSE.ActionBarInstalled())
+    assert.is_false(GSE.ActionBarEnabled())
+    assert.is_true(GSE.KeybindingsEnabled())
+    installed, enableState = true, 0
+    assert.is_false(GSE.ActionBarInstalled())
+    assert.is_true(GSE.KeybindingsEnabled())
+    enableState = 2
+    assert.is_true(GSE.ActionBarInstalled())
+    assert.is_false(GSE.KeybindingsEnabled())
   end)
 end)
 
@@ -229,12 +248,18 @@ describe("GSE Action Bar buttons", function()
     assert.truthy(wrap and menu and wrap < menu)
   end)
 
-  it("are listed under GSE in WoW's Key Bindings", function()
+  it("are listed in WoW's Key Bindings one section per bar", function()
     local xml = readSource("GSE_Actionbar/Bindings.xml")
-    local _, count = xml:gsub('category="BINDING_HEADER_GSE"', "")
-    assert.are.equal(24, count)
-    -- Set by GSE, which loads first: WoW reads it as the bar loads, before the
-    -- bar's deferred setup runs.
-    assert.truthy(readSource("GSE/API/Statics.lua"):find('_G["BINDING_HEADER_GSE"] = Statics.GSEString', 1, true))
+    for bar = 1, 2 do
+      local _, count = xml:gsub('category="BINDING_HEADER_GSEBAR' .. bar .. '"', "")
+      assert.are.equal(12, count)
+      -- The first and last of the bar's twelve buttons are in its section.
+      for _, index in ipairs({ (bar - 1) * 12 + 1, bar * 12 }) do
+        assert.truthy(xml:find('name="CLICK GSEButton' .. index .. ':LeftButton" category="BINDING_HEADER_GSEBAR' .. bar .. '"', 1, true))
+      end
+    end
+    -- Set by GSE, which loads first: WoW reads them as the bar loads, before
+    -- the bar's deferred setup runs.
+    assert.truthy(readSource("GSE/API/Statics.lua"):find('_G["BINDING_HEADER_GSEBAR" .. bar] =', 1, true))
   end)
 end)

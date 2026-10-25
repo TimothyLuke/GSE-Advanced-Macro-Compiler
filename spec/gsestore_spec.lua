@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- GSEStore: migration from the old SavedVariables, and the reconcile that
 -- writes this session's working views back at logout.
 --

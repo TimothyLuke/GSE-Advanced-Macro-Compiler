@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 -- GSE decrypts the packed (!GSE3!+) envelope so it can run a macro; it never
 -- produces one. Every at-rest write therefore has to answer the same question
 -- first -- "would this put protected content on disk in the clear?" -- and

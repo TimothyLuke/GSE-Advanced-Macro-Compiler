@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global
 
 -- Seven entries in Statics.SpecIDList are disambiguated as "Frost - Mage",
 -- because Frost is both a Mage and a Death Knight spec. Either half comes from

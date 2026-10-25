@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-global, duplicate-set-field
 -- Storage.lua lifecycle: deleting, cloning, and the repack request.
 --
 -- packedatrest_spec covers the WRITE side -- which branch a save takes when the
