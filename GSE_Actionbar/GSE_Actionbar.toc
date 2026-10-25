@@ -34,3 +34,4 @@ Migration.lua
 Actions.lua
 ActionBar.lua
 EditMode.lua
+Overrides.lua

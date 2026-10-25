@@ -23,8 +23,11 @@ end
 -- MOUSEOVER or HIDE; Orientation HORIZONTAL or VERTICAL; Icons how many of its
 -- twelve buttons it has; Spacing, ShowEmpty and ShowKeys its icon padding,
 -- whether it shows empty buttons and keys. A hidden bar's keys still work.
+-- ReportOverrides: say in chat when an override takes a button's key
+-- (Overrides.lua).
 local DEFAULTS = {
     Locked = true,
+    ReportOverrides = true,
     -- key -> the button GSE moved it onto (Migration.lua), so every
     -- character of the account puts a key on the same button.
     KeyButtons = {},

@@ -2244,6 +2244,8 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
             underSwitch(Settings.CreateDropdown(actionBarOptions, setting, GetOptions, tooltip))
         end
 
+        checkbox("gseActionBarReportOverrides", settings, "ReportOverrides", L["Report keys an override takes"], true,
+            L["Say in chat when an override binding takes a key bound to a GSE button, so the button stops running -- another addon's, WoW's own for a vehicle or mount, or GSE's Skyriding / Vehicle Keybinds -- and again when the key is back."])
         if editMode then
             local placing = L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."]
             header(L["Place the bars in Edit Mode"], placing)

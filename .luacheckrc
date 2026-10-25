@@ -171,6 +171,7 @@ globals = {
     -- WoW
     "C_AddOns",
     "debugprofilestop",
+    "debugstack",
     "ALL",
     "ALWAYS",
     "BNET_CLIENT_WOW",
