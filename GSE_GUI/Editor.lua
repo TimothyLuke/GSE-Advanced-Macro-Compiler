@@ -2291,7 +2291,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
             end
             -- Back to the icon the block's lines give: the saved one and the
             -- pick both go.
-            rootDescription:CreateButton(L["Reset"], function()
+            rootDescription:CreateButton("|T" .. Statics.ActionsIcons.DeleteX .. ":0|t " .. L["Reset"], function()
                 local stored = sequence.Versions[version].Actions[keyPath]
                 if stored then
                     stored.Icon = nil
