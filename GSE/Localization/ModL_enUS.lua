@@ -1015,7 +1015,7 @@ L["Specialisation / Class ID"] = true
 -- appear at runtime (Options tooltips, About panel, supporter list, OOC update
 -- prompt, auto-repair chat print); they previously fell through AceLocale's
 -- key-as-value fallback.
-L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Button Bindings and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."] = true
+L["A WoW setting shared by every addon: on, your action buttons act when you press a key; off, when you let it go. Neither up nor down affects GSE's buttons: a press runs one step either way, on GSE's action bar, any other bar, or a GSE keybind."] = true
 L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
 L["Keybind %s will be cleared when combat ends."] = true
 L["it"] = true
@@ -1092,7 +1092,7 @@ L["GSE Action Bar"] = true
 L["GSE Action Bar %d"] = true
 L["GSE Action Bar %d Button %d"] = true
 L["Action Bar Settings"] = true
-L["Enable the GSE Action Bar Module"] = true
+L["Enable the GSE Action bars"] = true
 L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning the module on loads it and moves GSE's keybinds onto its buttons; while it is off, none of its settings can be changed."] = true
 L["GSE\nAction Bar\n%d"] = true
 L["GSE Button %d"] = true

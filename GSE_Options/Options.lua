@@ -1600,8 +1600,9 @@ local function AddActionBarIconColourOption(optionsCategory)
 end
 
 -- On by default: chat says when a key stops running a sequence on an action
--- bar button. See GSE/API/OverrideKeys.lua.
-local function AddActionBarKeyChangesOption(optionsCategory)
+-- bar button. See GSE/API/OverrideKeys.lua. Under parent, beside the other
+-- report, but never greyed out by it: it watches the keys of any bar.
+local function AddActionBarKeyChangesOption(optionsCategory, parent)
     do
         local function GetValue()
             return GSEOptions.actionBarReportKeyChanges ~= false
@@ -1610,7 +1611,10 @@ local function AddActionBarKeyChangesOption(optionsCategory)
             GSEOptions.actionBarReportKeyChanges = val == true
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarReportKeyChanges", Settings.VarType.Boolean, L["Report Key Changes"], true, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["Say in chat when the key on an action bar button with a sequence on it is cleared or bound to something else, so the sequence no longer runs from that key."])
+        local init = Settings.CreateCheckbox(optionsCategory, setting, L["Say in chat when the key on an action bar button with a sequence on it is cleared or bound to something else, so the sequence no longer runs from that key."])
+        if init and init.SetParentInitializer and parent then
+            init:SetParentInitializer(parent, function() return true end)
+        end
     end
 end
 
@@ -1644,7 +1648,7 @@ local function AddActionBarClickBehaviorOptions(optionsCategory)
             end
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["This is a common WoW setting used by all addons; it controls when your action buttons respond.  On: they react when you press the key (key-down).  Off: they react when you release it (key-up).  GSE now works either way -- Button Bindings and keybinds fire a single step in both states.  With this on, GSE keybinds also fire on key-down for a faster response.  Changes apply immediately out of combat (or on your next rebind if toggled mid-combat)."])
+        Settings.CreateCheckbox(optionsCategory, setting, L["A WoW setting shared by every addon: on, your action buttons act when you press a key; off, when you let it go. Neither up nor down affects GSE's buttons: a press runs one step either way, on GSE's action bar, any other bar, or a GSE keybind."])
     end
 end
 
@@ -2118,11 +2122,12 @@ end
 -- createBlizzOptions registers the three vertical-layout subcategories
 -- that hang off the main GSE entry:
 --   * Windows & Layout -- Toolbar / Editor scale, Debug window size,
---     watermark toggle, button-behaviour CVar (ActionButtonUseKeyDown),
+--     watermark toggle,
 --     MS Click Timing, Companion App, Import & Export defaults, Editor
 --     sequence-list filters, and the GSE Toolbar / Editor open
 --     buttons.
---   * Tools & Diagnostics -- the "Modifier Hold to Pause" section
+--   * Tools & Diagnostics -- the Action Button CVar (ActionButtonUseKeyDown),
+--     the "Modifier Hold to Pause" section
 --     (added in upstream 3.3.19-10), Spell Cache controls, Tracker /
 --     Keybind Diagnostics with the sequence icon frame and successful
 --     cast frame toggles, master tracker enable, and the Plugins
@@ -2145,7 +2150,7 @@ local function addActionBarModuleSwitch(optionsCategory)
         if GSE.ActionBarRefresh then GSE.ActionBarRefresh() end
     end
     local setting = Settings.RegisterProxySetting(optionsCategory, "gseActionBarModuleGeneral",
-        Settings.VarType.Boolean, L["Enable the GSE Action Bar Module"], false, GetValue, SetValue)
+        Settings.VarType.Boolean, L["Enable the GSE Action bars"], false, GetValue, SetValue)
     return Settings.CreateCheckbox(optionsCategory, setting,
         L["Two bars of twelve buttons whose keys are set in WoW's Key Bindings, under GSE. They hold spells, items and macros like any action bar, and sequences: put one on a button in Button Bindings, by right-clicking it, or by dragging the sequence onto it. Turning the module on loads it and moves GSE's keybinds onto its buttons; while it is off, none of its settings can be changed."])
 end
@@ -2172,12 +2177,16 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
     -- 7.1 - Tools & Diagnostics subcategory body (troubleshooting controls)
     --
     -- Populates the "Tools & Diagnostics" left-rail entry with the
-    -- following groups in order: Modifier Hold to Pause (Shift / Alt /
+    -- following groups in order: Action Button CVar, Modifier Hold to
+    -- Pause (Shift / Alt /
     -- Ctrl checkboxes), Spell Cache, Tracker / Keybind Diagnostics
     -- (sequence icon frame + successful cast frame toggles, master
     -- tracker enable, Linked checkbox, the various Lock checkboxes),
     -- and a per-sequence reset list (one row per loaded sequence).
     -- ---------------------------------------------------------------------
+    -- WoW's key-down setting: GSE works the same either way, so it sits
+    -- here rather than on the General page.
+    AddActionBarClickBehaviorOptions(troubleOptions)
     -- Troubleshooting
     do
         -- Modifier-held pause toggles. The reload prompt is required: the
@@ -3070,8 +3079,9 @@ function GSE:CreateConfigPanels()
             local layout = SettingsPanel:GetLayout(generalOptions)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Action Bar Settings"], ["tooltip"] = L["Action Bar Settings"]}))
         end
+        local moduleSwitch
         if GSE.ActionBarInstalled() then
-            local moduleSwitch = addActionBarModuleSwitch(generalOptions)
+            moduleSwitch = addActionBarModuleSwitch(generalOptions)
             -- The bar's one setting Edit Mode has no place for, greyed out
             -- under the switch until the module has loaded.
             do
@@ -3096,17 +3106,16 @@ function GSE:CreateConfigPanels()
                 end
             end
         end
-        -- Button Binding popup: the right-click menu runs on every client
+        AddActionBarKeyChangesOption(generalOptions, moduleSwitch)
+        AddActionBarLabelOption(generalOptions)
+        AddActionBarWatermarkOption(generalOptions)
+        AddActionBarIconColourOption(generalOptions)
+        -- Last in the section. Button Binding popup: the right-click menu runs on every client
         -- (GSE.OpenContextMenu), so its switch is on every client too.
         do
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Action Bar Override Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
         end
-        AddActionBarLabelOption(generalOptions)
-        AddActionBarWatermarkOption(generalOptions)
-        AddActionBarIconColourOption(generalOptions)
-        AddActionBarKeyChangesOption(generalOptions)
-        AddActionBarClickBehaviorOptions(generalOptions)
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
         AddOutOfCombatQueueOptions(generalOptions)
