@@ -338,15 +338,6 @@ local function getCurrentGSEAction(seq)
 end
 
 local function getGSESequenceIcon(seq)
-    -- A base icon the player picked shows while the sequence is at rest (its
-    -- first step, first time through); running, the step icons show as before.
-    local base = GSE.GetSequenceBaseIcon(seq)
-    if base then
-        local frame = _G[seq]
-        local step = frame and frame:GetAttribute("step") or 1
-        local iteration = frame and frame:GetAttribute("iteration") or 1
-        if step <= 1 and iteration <= 1 then return base end
-    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -429,10 +420,9 @@ end
 
 -- An override slot holds no action, so the bar draws no cooldown on it. The
 -- swipe is for the spell whose icon the button shows. That icon can be a
--- block's own icon or the player's base icon rather than the spell the step
--- resolves to, so the spell is found by its icon among every spell the
--- sequence names (all branches). No spell there has that icon (an item, a
--- picked picture): no swipe.
+-- block's own icon rather than the spell the step resolves to, so the spell
+-- is found by its icon among every spell the sequence names (all branches).
+-- No spell there has that icon (an item, a picked picture): no swipe.
 local overrideSpell = setmetatable({}, {__mode = "k"})
 local isSecretValue = _G.issecretvalue or function() return false end
 local function addClauseSpells(map, clauses)
@@ -603,6 +593,8 @@ local function setSpellCooldown(cooldown, spellID)
         end
     end
 end
+-- For the GSE Action Bar's plain spells, which draw their own (Actions.lua).
+GSE.SetSpellCooldown = setSpellCooldown
 local applyingCooldown -- our own SetCooldown/Clear, not the bar's
 local function applyOverrideCooldown(button)
     local cooldown = button and button.cooldown
@@ -1006,21 +998,6 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
-end
-
--- A sequence's base icon: picked on its Config page (right-click the drag
--- icon) so sequences that open with the same spell do not all look alike on
--- the bars. Kept on this PC only (GSEOptions), never in the sequence itself.
-function GSE.GetSequenceBaseIcon(sequenceId)
-    local icons = GSEOptions and GSEOptions.SequenceBaseIcons
-    return sequenceId and icons and icons[sequenceId] or nil
-end
-
-function GSE.SetSequenceBaseIcon(sequenceId, icon)
-    if not sequenceId then return end
-    GSEOptions.SequenceBaseIcons = GSEOptions.SequenceBaseIcons or {}
-    GSEOptions.SequenceBaseIcons[sequenceId] = icon
-    GSE.RefreshActionBarOverrideIcons(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -2276,10 +2253,8 @@ function GSE.BeginSequenceDrag(sequenceId, fromButton)
     ensureDragFrames()
     local thisDrag = { sequenceId = sequenceId, candidates = {}, fromButton = fromButton }
     drag = thisDrag
-    -- The icon first, at the cursor, so it shows the moment the drag starts:
-    -- the player's base icon, else the start icon.
-    dragIcon.texture:SetTexture(GSE.GetSequenceBaseIcon(sequenceId) or GSE.GetSequenceStartIcon(sequenceId)
-        or Statics.Icons.GSE_Logo_Dark)
+    -- The icon first, at the cursor, so it shows the moment the drag starts.
+    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
     local scale = UIParent:GetEffectiveScale()
     local x, y = GetCursorPosition()
     dragIcon:ClearAllPoints()

@@ -201,10 +201,6 @@ GSE.CanMultiWindow = function() return true end
 -- Editor capability: show the Raw Edit button.
 GSE.CanRawEdit = function() return true end
 
--- The icon picker for other GSE menus (the Configuration page's base icon):
--- callback(iconID) runs with the icon chosen.
-GSE.ShowIconPicker = ShowNativeIconPicker
-
 -- Appended to the icon context menu in the editor for QoL users.
 GSE.OnBuildIconMenu = function(rootDescription, lbl, sequence, version, keyPath)
     rootDescription:CreateDivider()
