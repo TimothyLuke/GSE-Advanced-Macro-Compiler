@@ -774,7 +774,10 @@ local function QueueFitPush(macroEditBox, delta)
     pendingFitPushes[#pendingFitPushes + 1] = { macroEditBox, delta }
     fitFlushDriver:Show()
 end
-local function FitMacroEditBoxToContent(macroEditBox, text)
+-- `atNewWidth`: the box has just been laid out at another width, so the
+-- edit box's current height is the last fit's, made at the old width --
+-- the meter alone measures the text.
+local function FitMacroEditBoxToContent(macroEditBox, text, atNewWidth)
     if not (macroEditBox and macroEditBox.SetHeight) then return end
     local eb = macroEditBox.editBox or macroEditBox.editbox
     if not eb then return end
@@ -817,7 +820,7 @@ local function FitMacroEditBoxToContent(macroEditBox, text)
     -- Take whichever is taller: the box must never be shorter than what the
     -- editbox actually draws.
     local rendered = eb.GetHeight and eb:GetHeight() or 0
-    if rendered > textHeight then textHeight = rendered end
+    if rendered > textHeight and not atNewWidth then textHeight = rendered end
     if typingOnTrailingRow then textHeight = textHeight + oneRow + spacing end
     -- The box fits its content, so its scrollbar is dead weight: hide it. (A
     -- 255-char block cannot realistically reach the row cap; one that did needs
@@ -5726,6 +5729,23 @@ function GSE.CreateEditor()
 			-- the fit pushes the height delta up through macrolayout/macroFields/
 			-- macroBody (all explicit-height, sized above for the 108px baseline).
 			FitMacroEditBoxToContent(macroeditbox, macroeditbox:GetText())
+			-- That fit measures the text at the box's width before the layout has
+			-- run (256, not the ~600 it is drawn at), so long lines count as
+			-- wrapped and the box comes out several rows too tall. Fit again
+			-- whenever the box's width changes -- the layout's, and any editor
+			-- resize. The engine's deferred OnTextChanged used to do this by
+			-- accident; it is ignored now (editIsStale). Once per widget life:
+			-- the pool puts the box's scripts back, this hook with them.
+			local fitBox = macroeditbox.editBox or macroeditbox.editbox
+			if fitBox and fitBox.HookScript and not macroeditbox.gseFitOnWidth then
+				macroeditbox.gseFitOnWidth = true
+				local fitWidget = macroeditbox
+				fitBox:HookScript("OnSizeChanged", function(_, width)
+					if not fitWidget.gseFitOnWidth or not width or width == fitWidget.gseFitWidth then return end
+					fitWidget.gseFitWidth = width
+					FitMacroEditBoxToContent(fitWidget, fitWidget:GetText(), true)
+				end)
+			end
 			-- Keep the action icon vertically centred on the macro box as the box
 			-- resizes: anchor the icon's centre to the box's left edge -- a live WoW
 			-- anchor follows every height change with no per-resize math -- and
