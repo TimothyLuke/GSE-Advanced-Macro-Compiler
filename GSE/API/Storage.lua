@@ -3468,7 +3468,9 @@ local function getMacroLineResolvedIconInfo(line, suppressUIErrors)
     if not cmd or not etc then return nil end
 
     cmd = strlower(cmd)
-    if not Statics.CastCmds[cmd] then return nil end
+    -- /castsequence is not in Statics.CastCmds, so the castsequence branch
+    -- below was never reached and its line gave no icon: the next line's did.
+    if not Statics.CastCmds[cmd] and cmd ~= "castsequence" then return nil end
     if cmd == "stopmacro" or cmd == "cancelaura" or cmd == "cancelform" or cmd == "petautocastoff" or cmd == "petautocaston" then return nil end
 
     local preferItem = cmd == "use" or cmd == "usetoy" or cmd == "toy"
