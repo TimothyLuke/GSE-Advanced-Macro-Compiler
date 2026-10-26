@@ -2264,8 +2264,14 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
         GSE.OpenContextMenu(frame, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Select Icon"])
             for _, v in pairs(spellinfolist) do
+                -- The spell as this spec has it (Barbed Shot, not the Steady
+                -- Shot GSE stores), as the icon beside it already is.
+                local name = v.name
+                local current = v.spellID and GSE.GetCurrentSpellID and GSE.GetCurrentSpellID(v.spellID)
+                local currentInfo = current and GSE.GetSpellInfo(current)
+                if currentInfo and currentInfo.name then name = currentInfo.name end
                 rootDescription:CreateButton(
-                    "|T" .. v.iconID .. ":0|t " .. v.name,
+                    "|T" .. v.iconID .. ":0|t " .. name,
                     function()
                         setIcon(v.iconID)
                         sequence.Versions[version].Actions[keyPath].Icon = v.iconID
