@@ -2159,8 +2159,10 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
     -- (GSE.ActionBarOptions), there once it is loaded, so they are greyed out
     -- under its switch until then. A change lays the bars out again
     -- (GSE.ActionBarRefresh).
-    if GSE.ActionBarInstalled() then
-        local editMode = GSE.ActionBarUsesEditMode() and generalOptions
+    -- Where the client has Edit Mode, every bar setting is there, as for
+    -- WoW's own bars, and the page is not built: the module switch and the
+    -- override report sit on the General page (CreateConfigPanels).
+    if GSE.ActionBarInstalled() and not (GSE.ActionBarUsesEditMode() and generalOptions) then
         local actionBarOptions = Settings.RegisterVerticalLayoutSubcategory(category, L["Action Bar"])
         local BAR_SIZE, BAR_COUNT = 12, 2
         local function refresh()
@@ -2180,42 +2182,6 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
         local function header(name, tooltip)
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate",
                 { name = name, tooltip = tooltip or name }))
-        end
-        -- A line of text in the controls' own indented label font, wrapped over
-        -- as many lines as it takes; the row is as tall as the text. Blizzard's
-        -- plain row template has no OnLoad, so its Init cannot run: the row
-        -- shows its own font string instead, and gives it up when the panel
-        -- takes the row back (Resetter).
-        local NOTE_INDENT, NOTE_WIDTH = 37, 560
-        local measure
-        local function note(text)
-            local init = Settings.CreateElementInitializer("SettingsListElementTemplate", { name = text })
-            function init:GetExtent()
-                if not measure then
-                    measure = UIParent:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-                    measure:Hide()
-                    measure:SetWidth(NOTE_WIDTH)
-                    measure:SetWordWrap(true)
-                end
-                measure:SetText(text)
-                return math.ceil(measure:GetStringHeight()) + 12
-            end
-            function init:InitFrame(frame)
-                if not frame.GSENote then
-                    frame.GSENote = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    frame.GSENote:SetPoint("TOPLEFT", frame, "TOPLEFT", NOTE_INDENT, -6)
-                    frame.GSENote:SetWidth(NOTE_WIDTH)
-                    frame.GSENote:SetJustifyH("LEFT")
-                    frame.GSENote:SetWordWrap(true)
-                end
-                frame.Text:SetText("")
-                frame.GSENote:SetText(text)
-                frame.GSENote:Show()
-            end
-            function init:Resetter(frame)
-                if frame.GSENote then frame.GSENote:Hide() end
-            end
-            layout:AddInitializer(init)
         end
         -- A control on a value read and written through GetValue / SetValue;
         -- SetValue only once the module is loaded (Defaults resets greyed
@@ -2259,16 +2225,10 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
             underSwitch(Settings.CreateDropdown(actionBarOptions, setting, GetOptions, tooltip))
         end
 
-        checkbox("gseActionBarReportOverrides", settings, "ReportOverrides", L["Report keys an override takes"], true,
+        checkbox("gseActionBarReportOverrides", settings, "ReportOverrides", L["Report Stolen GSE Keybinds"], true,
             L["Say in chat when an override binding takes a key bound to a GSE button, so the button stops running -- another addon's, WoW's own for a vehicle or mount, or GSE's Skyriding / Vehicle Keybinds -- and again when the key is back."])
-        if editMode then
-            local placing = L["Open WoW's Edit Mode to move each bar, and click a bar there to set it up. Each Edit Mode layout keeps its own place for the bars."]
-            header(L["Place the bars in Edit Mode"], placing)
-            note(placing)
-        else
-            checkbox("gseActionBarLocked", settings, "Locked", L["Lock the bars"], true,
-                L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
-        end
+        checkbox("gseActionBarLocked", settings, "Locked", L["Lock the bars"], true,
+            L["Unlock to drag each bar to where you want it. A hidden bar shows its handle while unlocked."])
         for b = 1, BAR_COUNT do
             local first = (b - 1) * BAR_SIZE + 1
             local function bar() return settings().Bars[b] end
@@ -3236,7 +3196,31 @@ function GSE:CreateConfigPanels()
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = L["Action Bar Settings"], ["tooltip"] = L["Action Bar Settings"]}))
         end
         if GSE.ActionBarInstalled() then
-            addActionBarModuleSwitch(generalOptions, "General")
+            local moduleSwitch = addActionBarModuleSwitch(generalOptions, "General")
+            -- With Edit Mode there is no Action Bar page: its one setting that
+            -- Edit Mode has no place for comes here, greyed out under the
+            -- switch until the module has loaded.
+            if GSE.ActionBarUsesEditMode() then
+                local function settings()
+                    return GSE.ActionBarActive() and GSE.ActionBarOptions and GSE.ActionBarOptions() or nil
+                end
+                local setting = Settings.RegisterProxySetting(generalOptions, "gseActionBarReportOverridesGeneral",
+                    Settings.VarType.Boolean, L["Report Stolen GSE Keybinds"], true,
+                    function()
+                        local opts = settings()
+                        if not opts then return true end
+                        return opts.ReportOverrides ~= false
+                    end,
+                    function(value)
+                        local opts = settings()
+                        if opts then opts.ReportOverrides = value and true or false end
+                    end)
+                local init = Settings.CreateCheckbox(generalOptions, setting,
+                    L["Say in chat when an override binding takes a key bound to a GSE button, so the button stops running -- another addon's, WoW's own for a vehicle or mount, or GSE's Skyriding / Vehicle Keybinds -- and again when the key is back."])
+                if init and init.SetParentInitializer and moduleSwitch then
+                    init:SetParentInitializer(moduleSwitch, GSE.ActionBarActive)
+                end
+            end
         end
         -- Button Binding popup: the right-click menu runs on every client
         -- (GSE.OpenContextMenu), so its switch is on every client too.
