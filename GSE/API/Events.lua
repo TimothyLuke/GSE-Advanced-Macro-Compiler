@@ -338,15 +338,6 @@ local function getCurrentGSEAction(seq)
 end
 
 local function getGSESequenceIcon(seq)
-    -- A base icon the player picked shows while the sequence is at rest (its
-    -- first step, first time through); running, the step icons show as before.
-    local base = GSE.GetSequenceBaseIcon(seq)
-    if base then
-        local frame = _G[seq]
-        local step = frame and frame:GetAttribute("step") or 1
-        local iteration = frame and frame:GetAttribute("iteration") or 1
-        if step <= 1 and iteration <= 1 then return base end
-    end
     if seq and _G[seq] then
         local action = getCurrentGSEAction(seq)
         if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
@@ -429,10 +420,9 @@ end
 
 -- An override slot holds no action, so the bar draws no cooldown on it. The
 -- swipe is for the spell whose icon the button shows. That icon can be a
--- block's own icon or the player's base icon rather than the spell the step
--- resolves to, so the spell is found by its icon among every spell the
--- sequence names (all branches). No spell there has that icon (an item, a
--- picked picture): no swipe.
+-- block's own icon rather than the spell the step resolves to, so the spell
+-- is found by its icon among every spell the sequence names (all branches).
+-- No spell there has that icon (an item, a picked picture): no swipe.
 local overrideSpell = setmetatable({}, {__mode = "k"})
 local isSecretValue = _G.issecretvalue or function() return false end
 local function addClauseSpells(map, clauses)
@@ -783,24 +773,6 @@ if _G.AssistedCombatManager and _G.EventRegistry and _G.EventRegistry.RegisterCa
 end
 -- Several painters set an override's icon (this file, Storage's UpdateIcon,
 -- the bar): the spell is re-read wherever the texture is set.
--- The spell the sequence casts next, by the icon of its current step, for
--- a button whose own icon is nobody's spell: at rest a base icon the player
--- picked shows (getGSESequenceIcon), so the assisted highlight -- and the
--- cooldown, count, range and glow beside it -- had nothing to match until
--- combat put a step icon up.
-local function stepSpell(seq)
-    local action = getCurrentGSEAction(seq)
-    if type(action) ~= "table" then return nil end
-    local iconID
-    if action.type == "spell" and action.spell then
-        local info = GSE.GetSpellInfo(GSE.UnEscapeString(tostring(action.spell)))
-        iconID = info and info.iconID
-    elseif action.macrotext and GSE.GetMacroTextIconInfo then
-        local info = GSE.GetMacroTextIconInfo(action.macrotext, true)
-        iconID = info and info.iconID
-    end
-    return iconID and spellForIcon(seq, iconID) or nil
-end
 local iconSpellHooked = setmetatable({}, {__mode = "k"})
 local function hookIconSpell(button)
     local name = button and button.GetName and button:GetName()
@@ -810,7 +782,7 @@ local function hookIconSpell(button)
     local function follow()
         local seq = button:GetAttribute("gse-button")
         if not seq then return end
-        local spellID = spellForIcon(seq, icon:GetTexture()) or stepSpell(seq)
+        local spellID = spellForIcon(seq, icon:GetTexture())
         if spellID ~= overrideSpell[button] then
             overrideSpell[button] = spellID
             applyOverrideCooldown(button)
@@ -1026,21 +998,6 @@ end
 
 function GSE.RefreshActionBarOverrideIcons(sequenceName, defer)
     repaintAllGSEOverrideIcons(defer, sequenceName)
-end
-
--- A sequence's base icon: picked on its Config page (right-click the drag
--- icon) so sequences that open with the same spell do not all look alike on
--- the bars. Kept on this PC only (GSEOptions), never in the sequence itself.
-function GSE.GetSequenceBaseIcon(sequenceId)
-    local icons = GSEOptions and GSEOptions.SequenceBaseIcons
-    return sequenceId and icons and icons[sequenceId] or nil
-end
-
-function GSE.SetSequenceBaseIcon(sequenceId, icon)
-    if not sequenceId then return end
-    GSEOptions.SequenceBaseIcons = GSEOptions.SequenceBaseIcons or {}
-    GSEOptions.SequenceBaseIcons[sequenceId] = icon
-    GSE.RefreshActionBarOverrideIcons(sequenceId)
 end
 
 local function scheduleGSEOverrideIconRepaint()
@@ -2296,10 +2253,8 @@ function GSE.BeginSequenceDrag(sequenceId, fromButton)
     ensureDragFrames()
     local thisDrag = { sequenceId = sequenceId, candidates = {}, fromButton = fromButton }
     drag = thisDrag
-    -- The icon first, at the cursor, so it shows the moment the drag starts:
-    -- the player's base icon, else the start icon.
-    dragIcon.texture:SetTexture(GSE.GetSequenceBaseIcon(sequenceId) or GSE.GetSequenceStartIcon(sequenceId)
-        or Statics.Icons.GSE_Logo_Dark)
+    -- The icon first, at the cursor, so it shows the moment the drag starts.
+    dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
     local scale = UIParent:GetEffectiveScale()
     local x, y = GetCursorPosition()
     dragIcon:ClearAllPoints()

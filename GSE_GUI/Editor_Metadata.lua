@@ -835,45 +835,9 @@ local function setDragIconSize(icon, size)
     GSE.PlaceGSEWatermark(icon.watermark, icon, scale)
 end
 
--- Every icon the sequence's blocks offer, in every version, in order, as
--- {name, iconID} -- each block's Select Icon choices (GSE.GetActionIconCandidates).
-local iconProbe
-local function sequenceIconChoices(sequence)
-    local choices, seen = {}, {}
-    -- One picture arrives as a file ID, a numeric string or a texture path;
-    -- compare by the file ID the texture resolves to.
-    iconProbe = iconProbe or UIParent:CreateTexture()
-    local function add(info)
-        local icon = type(info) == "table" and info.iconID
-        if not icon or GSE.IsFallbackIcon(icon) then return end
-        icon = tonumber(icon) or icon
-        iconProbe:SetTexture(icon)
-        local key = (iconProbe.GetTextureFileID and iconProbe:GetTextureFileID()) or icon
-        if not seen[key] then
-            seen[key] = true
-            choices[#choices + 1] = {name = info.name or "", iconID = icon}
-        end
-    end
-    local function walk(actions)
-        if type(actions) ~= "table" then return end
-        for _, action in ipairs(actions) do
-            if type(action) == "table" then
-                if action.type == "spell" or action.type == "macro" then
-                    for _, info in ipairs(GSE.GetActionIconCandidates(action)) do add(info) end
-                end
-                walk(action)
-            end
-        end
-    end
-    for _, version in ipairs(type(sequence) == "table" and sequence.Versions or {}) do
-        if type(version) == "table" then walk(version.Actions) end
-    end
-    return choices
-end
-
--- The icon the drag icon shows: the player's base icon, else the first step's.
+-- The icon the drag icon shows: the first step's, as on a button.
 local function dragIconTexture(id)
-    return GSE.GetSequenceBaseIcon(id) or GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark
+    return GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark
 end
 
 -- Putting a sequence on a button, or taking it off, changes what each
@@ -941,39 +905,6 @@ local function attachSequenceDragIcon(editframe, hostRow)
         badge:Hide()
         sequenceDragIcon.dragLabel = badge
         sequenceDragIcon.watermark = GSE.CreateGSEWatermark(sequenceDragIcon)
-        -- Right-click: pick the sequence's base icon -- what its button shows
-        -- at rest -- from the icons it uses, or any icon at all.
-        sequenceDragIcon:RegisterForClicks("RightButtonUp")
-        sequenceDragIcon:SetScript("OnClick", function(self, button)
-            local frame = self.editframe
-            local id = frame and frame.SequenceID
-            if button ~= "RightButton" or not id then return end
-            local function pick(icon)
-                GSE.SetSequenceBaseIcon(id, icon)
-                self.texture:SetTexture(dragIconTexture(id))
-                if self.lastSize then setDragIconSize(self, self.lastSize) end
-            end
-            -- The editor's own icon menu, as on a block's icon, each spell's
-            -- icon and name.
-            GSE.OpenContextMenu(self, function(_, root)
-                root:CreateTitle(L["Select Base Icon"])
-                for _, v in ipairs(sequenceIconChoices(frame.Sequence)) do
-                    root:CreateButton("|T" .. v.iconID .. ":0|t " .. v.name, function() pick(v.iconID) end)
-                end
-                -- Back to the first step's icon; greyed out while none is picked.
-                local reset = root:CreateButton(L["Reset"], function()
-                    GSE.SetSequenceBaseIcon(id, nil)
-                    self.texture:SetTexture(dragIconTexture(id))
-                    if self.lastSize then setDragIconSize(self, self.lastSize) end
-                end)
-                if reset and reset.SetEnabled and not GSE.GetSequenceBaseIcon(id) then reset:SetEnabled(false) end
-                -- Any icon at all, through GSE QoL's picker, as on a block's menu.
-                if GSE.ShowIconPicker then
-                    root:CreateDivider()
-                    root:CreateButton(L["Choose any icon..."], function() GSE.ShowIconPicker(pick) end)
-                end
-            end)
-        end)
         sequenceDragIcon:RegisterForDrag("LeftButton")
         sequenceDragIcon:SetScript("OnDragStart", function(self)
             if self.sequenceId then GSE.BeginSequenceDrag(self.sequenceId) end
@@ -989,13 +920,10 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 self.dragLabel.text:SetFont(face, size * 1.12, flags or "")
                 self.dragLabel.text:SetTextColor(1, 0.2, 0.2)
             end
-            -- "First step" only while it is true: no base icon picked.
-            local firstStep = self.sequenceId and not GSE.GetSequenceBaseIcon(self.sequenceId)
-                and ("\n\n" .. L["A sequence shows the icon of its first step."] .. "\n" .. L["-or-"]) or ""
-            GSE.CreateToolTip(L["Put on an Action Button"], (self.sequenceId
-                and L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."]
-                or L["Only a saved sequence for this character's class can be put on an action button."])
-                .. firstStep .. (firstStep ~= "" and "\n" or "\n\n") .. L["Right Click to choose No Combat Base Icon"],
+            GSE.CreateToolTip(L["Put on an Action Button"], self.sequenceId
+                and (L["Drag this onto any action button to put the sequence on it. The button's slot must be empty, and you must be out of combat."]
+                    .. "\n\n" .. L["A sequence shows the icon of its first step."])
+                or L["Only a saved sequence for this character's class can be put on an action button."],
                 self.editframe)
         end)
         sequenceDragIcon:SetScript("OnLeave", function(self)

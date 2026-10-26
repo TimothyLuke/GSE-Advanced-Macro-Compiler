@@ -18,6 +18,9 @@ function GSE.PerformOneOffEvents()
     if GSE.isEmpty(GSEOptions.Updates) then
         GSEOptions.Updates = {}
     end
+    -- A sequence's button shows its first step's icon, at rest as when running:
+    -- the picked base icons are gone, and what was saved for them with them.
+    GSEOptions.SequenceBaseIcons = nil
     if GSE.isEmpty(GSEOptions.Updates["3200"]) then
         GSE3Storage = nil
         GSEOptions.Updates["3200"] = true

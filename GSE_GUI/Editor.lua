@@ -2210,9 +2210,8 @@ end
 
 -- The icons a block's Select Icon menu offers, as {name, iconID}: a spell
 -- block's spell; for a macro block every spell on every line, in every
--- conditional branch, plus the variable / in-game macro icon. Shared with the
--- Configuration page's base icon menu, so both list the same choices.
-function GSE.GetActionIconCandidates(action)
+-- conditional branch, plus the variable / in-game macro icon.
+local function getActionIconCandidates(action)
     local spellinfolist = {}
     if action.type == "macro" then
         if isVariableAction(action) then
@@ -2298,7 +2297,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     registerActionIconControl(lbl)
     refreshIcon()
 
-    local spellinfolist = GSE.GetActionIconCandidates(action)
+    local spellinfolist = getActionIconCandidates(action)
 
     lbl:SetCallback("OnClick", function(widget, button)
         GSE.OpenContextMenu(frame, function(ownerRegion, rootDescription)
