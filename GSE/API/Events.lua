@@ -603,6 +603,8 @@ local function setSpellCooldown(cooldown, spellID)
         end
     end
 end
+-- For the GSE Action Bar's plain spells, which draw their own (Actions.lua).
+GSE.SetSpellCooldown = setSpellCooldown
 local applyingCooldown -- our own SetCooldown/Clear, not the bar's
 local function applyOverrideCooldown(button)
     local cooldown = button and button.cooldown

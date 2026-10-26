@@ -237,6 +237,10 @@ local function paintState(button, action)
     local cooldown = region(button, "cooldown", "Cooldown")
     if cooldown then
         pcall(function()
+            -- A spell's through GSE's override path: on Retail the start and
+            -- duration can be secret, which SetCooldown refuses from an addon,
+            -- so the duration object goes to the frame instead.
+            if spellID and GSE.SetSpellCooldown then return GSE.SetSpellCooldown(cooldown, spellID) end
             local start, duration, modRate = 0, 0, nil
             if spellID then
                 local info = GSE.GetSpellCooldown(spellID)
