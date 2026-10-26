@@ -1322,6 +1322,12 @@ end
 
 local function getManualActionIcon(action)
     if type(action) == "table" and action.Icon and not isQuestionMarkIcon(action.Icon) and not isAutomaticCategorisedActionIcon(action) then
+        -- A saved icon the player did not pick yields when it is a line's this
+        -- character can never cast (GSE.IsIconOfUncastableLine), as on the button.
+        if not action.IconUserSelected and GSE.IsIconOfUncastableLine
+            and GSE.IsIconOfUncastableLine(GSE.UnEscapeString(action.macro or ""), action.Icon) then
+            return nil
+        end
         return action.Icon
     end
 end
@@ -2283,6 +2289,18 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
                     end
                 )
             end
+            -- Back to the icon the block's lines give: the saved one and the
+            -- pick both go.
+            rootDescription:CreateButton(L["Reset"], function()
+                local stored = sequence.Versions[version].Actions[keyPath]
+                if stored then
+                    stored.Icon = nil
+                    stored.IconUserSelected = nil
+                end
+                action.Icon = nil
+                action.IconUserSelected = nil
+                refreshIcon()
+            end)
             -- Extension point: QoL and other modules append extra items here.
             if GSE.OnBuildIconMenu then
                 GSE.OnBuildIconMenu(rootDescription, lbl, sequence, version, keyPath)

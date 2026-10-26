@@ -3628,6 +3628,26 @@ local function macroLineCanCast(line)
 end
 GSE.MacroLineCanCast = macroLineCanCast
 
+-- Whether an icon is one a line of this macro gives that this character can
+-- never cast: an icon saved on a block (GSE's icon reset pins the icon a
+-- block showed, a sequence can arrive with one) for a talent not taken now.
+function GSE.IsIconOfUncastableLine(macro, iconID)
+    if not (iconID and type(macro) == "string") then return false end
+    for line in string.gmatch(macro .. "\n", "([^\n]*)\n") do
+        if not macroLineCanCast(line) then
+            local found = GSE.GetSpellsFromString(line, true)
+            local list = (found and found.iconID) and { found } or found or {}
+            for _, info in ipairs(list) do
+                if info.iconID == iconID or info.originalIconID == iconID then return true end
+                local current = info.spellID and GSE.GetCurrentSpellID and GSE.GetCurrentSpellID(info.spellID)
+                local currentInfo = current and safeGetSpellInfo(current)
+                if currentInfo and currentInfo.iconID == iconID then return true end
+            end
+        end
+    end
+    return false
+end
+
 local function macroLineIconCandidate(line)
     local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
     if not cmd or not etc then return nil end
@@ -3780,7 +3800,9 @@ function GSE.GetCurrentButtonIconInfo(self, reseticon)
     end
 
     local actionIconIsFallback = GSE.IsFallbackIcon(action.Icon)
-    if action.Icon and (not actionIconIsFallback or not (spellinfo and spellinfo.iconID)) then
+    local savedIconYields = action.Icon and not action.IconUserSelected
+        and GSE.IsIconOfUncastableLine(action.macrotext, action.Icon)
+    if action.Icon and not savedIconYields and (not actionIconIsFallback or not (spellinfo and spellinfo.iconID)) then
         if not spellinfo then
             spellinfo = {}
         end
@@ -4188,6 +4210,8 @@ local function buildAction(action, metaData, blockPath)
         if blockPath then
             spelllist.blockPath = blockPath
         end
+        -- Booleans are left out above; this one is read for the icon only.
+        if action.IconUserSelected then spelllist.IconUserSelected = true end
         return spelllist
     end
 end
