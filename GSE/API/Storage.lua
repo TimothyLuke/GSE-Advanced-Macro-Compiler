@@ -3508,6 +3508,72 @@ function GSE.GetShowTooltipIconInfo(argument, suppressUIErrors)
     return getMacroIconFallbackCandidateInfo(resolved, false)
 end
 
+-- Forms, stances, stealth and pet summons: a line that only keeps one up
+-- is not what the block is for, so its icon is the block's only when nothing
+-- else in it resolves (the editor's block icon reads it the same way).
+local FORM_SPELL_IDS = {
+    [71] = true, -- Defensive Stance
+    [768] = true, -- Cat Form
+    [783] = true, -- Travel Form
+    [1066] = true, -- Aquatic Form
+    [2457] = true, -- Battle Stance
+    [2458] = true, -- Berserker Stance
+    [2645] = true, -- Ghost Wolf
+    [5487] = true, -- Bear Form
+    [24858] = true, -- Moonkin Form
+    [33891] = true, -- Tree of Life
+    [33943] = true, -- Flight Form
+    [40120] = true, -- Swift Flight Form
+    [114282] = true, -- Treant Form
+    [165961] = true, -- Stag Form
+    -- Stealth states: sit on the stance bar exactly like stances/forms do.
+    -- A management line like "/cast [nostealth] Stealth; [stealth,nocombat]
+    -- Sprint" resolves to "Stealth" when unstealthed and stole the block
+    -- icon from the real ability below it.
+    [1784]   = true, -- Stealth (Rogue)
+    [5215]   = true, -- Prowl (Druid)
+    -- Pet summoning slots: treated the same as forms/stances. A line like
+    -- /cast Call Pet 1 should not steal the action icon unless it is the
+    -- only valid candidate in the macro block.
+    [883]    = true, -- Call Pet 1
+    [83242]  = true, -- Call Pet 2
+    [83243]  = true, -- Call Pet 3
+    [83244]  = true, -- Call Pet 4
+    [83245]  = true, -- Call Pet 5
+}
+
+--- Whether a spell name or ID is a form, stance, stealth or pet summon.
+function GSE.IsFormSpellCandidate(value)
+    local candidate = trimMacroIconCandidate(value)
+    if candidate == "" then return false end
+
+    local spellID = tonumber(candidate)
+    if spellID and FORM_SPELL_IDS[spellID] then return true end
+
+    local lowerCandidate = strlower(candidate)
+    return lowerCandidate == "ghost wolf" or lowerCandidate == "tree of life" or
+        lowerCandidate == "stealth" or lowerCandidate == "prowl" or
+        lowerCandidate:match("%f[%a]form%f[%A]") ~= nil or
+        lowerCandidate:match("%f[%a]stance%f[%A]") ~= nil or
+        -- "Call Pet", "Call Pet 1" ... "Call Pet 5"
+        lowerCandidate:match("^call pet%f[%A]") ~= nil
+end
+
+-- The spell a macro line names for that test, as the editor reads it: past
+-- the conditionals and a castsequence reset=, then live.
+local function macroLineIconCandidate(line)
+    local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
+    if not cmd or not etc then return nil end
+    cmd = strlower(cmd)
+    if not Statics.CastCmds[cmd] and cmd ~= "castsequence" then return nil end
+    local _, _, parsedEtc = GSE.GetConditionalsFromString("/" .. cmd .. " " .. etc)
+    if type(parsedEtc) ~= "string" or parsedEtc == "" or string.sub(parsedEtc, 1, 1) == "/" then
+        parsedEtc = etc
+    end
+    local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(parsedEtc, true)
+    return resolved and trimMacroIconCandidate(resolved) or GSE.GetMacroClauseTarget(parsedEtc)
+end
+
 function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
     if string.sub(str or "", 14) == "/click GSE.Pau" then
         return {
@@ -3516,10 +3582,16 @@ function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
         }
     end
 
+    -- A form / stance / pet-summon line only if no other line resolves.
+    local formIconInfo
     for line in string.gmatch((str or "") .. "\n", "([^\n]*)\n") do
         local iconInfo = getMacroLineResolvedIconInfo(line, suppressUIErrors)
-        if iconInfo and iconInfo.iconID then return iconInfo end
+        if iconInfo and iconInfo.iconID then
+            if not GSE.IsFormSpellCandidate(macroLineIconCandidate(line)) then return iconInfo end
+            formIconInfo = formIconInfo or iconInfo
+        end
     end
+    return formIconInfo
 end
 
 function GSE.GetCurrentButtonIconInfo(self, reseticon)

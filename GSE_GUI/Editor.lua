@@ -1265,36 +1265,6 @@ local function isInGameMacroAction(action)
     return type(action) == "table" and action.macro and isInGameMacroBody(GSE.UnEscapeString(action.macro))
 end
 
-local FORM_SPELL_IDS = {
-    [71] = true, -- Defensive Stance
-    [768] = true, -- Cat Form
-    [783] = true, -- Travel Form
-    [1066] = true, -- Aquatic Form
-    [2457] = true, -- Battle Stance
-    [2458] = true, -- Berserker Stance
-    [2645] = true, -- Ghost Wolf
-    [5487] = true, -- Bear Form
-    [24858] = true, -- Moonkin Form
-    [33891] = true, -- Tree of Life
-    [33943] = true, -- Flight Form
-    [40120] = true, -- Swift Flight Form
-    [114282] = true, -- Treant Form
-    [165961] = true, -- Stag Form
-    -- Stealth states: sit on the stance bar exactly like stances/forms do.
-    -- A management line like "/cast [nostealth] Stealth; [stealth,nocombat]
-    -- Sprint" resolves to "Stealth" when unstealthed and stole the block
-    -- icon from the real ability below it.
-    [1784]   = true, -- Stealth (Rogue)
-    [5215]   = true, -- Prowl (Druid)
-    -- Pet summoning slots: treated the same as forms/stances. A line like
-    -- /cast Call Pet 1 should not steal the action icon unless it is the
-    -- only valid candidate in the macro block.
-    [883]    = true, -- Call Pet 1
-    [83242]  = true, -- Call Pet 2
-    [83243]  = true, -- Call Pet 3
-    [83244]  = true, -- Call Pet 4
-    [83245]  = true, -- Call Pet 5
-}
 
 local SPELL_NAME_ICON_FALLBACK_IDS = {
     ["demon blades"] = { 203555 },
@@ -1303,21 +1273,9 @@ local SPELL_NAME_ICON_FALLBACK_IDS = {
     ["rapid fire"]   = { 257044 }, -- Marksmanship Hunter channel
 }
 
-local function isFormSpellCandidate(value)
-    local candidate = trimIconCandidate(value)
-    if candidate == "" then return false end
-
-    local spellID = tonumber(candidate)
-    if spellID and FORM_SPELL_IDS[spellID] then return true end
-
-    local lowerCandidate = strlower(candidate)
-    return lowerCandidate == "ghost wolf" or lowerCandidate == "tree of life" or
-        lowerCandidate == "stealth" or lowerCandidate == "prowl" or
-        lowerCandidate:match("%f[%a]form%f[%A]") ~= nil or
-        lowerCandidate:match("%f[%a]stance%f[%A]") ~= nil or
-        -- "Call Pet", "Call Pet 1" ... "Call Pet 5"
-        lowerCandidate:match("^call pet%f[%A]") ~= nil
-end
+-- Shared with the button's icon (GSE.IsFormSpellCandidate, Storage.lua), so the
+-- block and the button it fires skip the same lines.
+local isFormSpellCandidate = GSE.IsFormSpellCandidate
 
 local function isFormIconInfo(spellinfo)
     if type(spellinfo) ~= "table" then return false end
