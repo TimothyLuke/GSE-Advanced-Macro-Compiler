@@ -3561,6 +3561,73 @@ end
 
 -- The spell a macro line names for that test, as the editor reads it: past
 -- the conditionals and a castsequence reset=, then live.
+-- Whether this character has a spell: talents and the spellbook alike, and
+-- a base spell its spec replaces (Steady Shot is Barbed Shot on Beast
+-- Mastery). A name is looked up, then in the spell cache (an unknown spell
+-- has no info by name).
+local function playerKnowsSpell(spell)
+    local info = safeGetSpellInfo(spell)
+    local spellID = info and info.spellID or tonumber(spell)
+    if not spellID then return nil end
+    local tests = { IsPlayerSpell, IsSpellKnownOrOverridesKnown, C_SpellBook and C_SpellBook.IsSpellKnown }
+    local ids = { spellID }
+    if C_Spell and C_Spell.GetOverrideSpell then ids[2] = C_Spell.GetOverrideSpell(spellID) end
+    for _, id in ipairs(ids) do
+        for _, test in pairs(tests) do
+            local ok, known = pcall(test, id)
+            if ok and known then return true end
+        end
+    end
+    return false
+end
+
+-- Whether a macro line can ever cast for this character: some clause of it
+-- has no known: condition that fails (each [..] group is an alternative) and
+-- names something it has -- a spell it knows, an item, an equipment slot.
+-- Out of combat a line whose conditions do not hold still gives its icon
+-- (the first spell it names); a line that can never fire -- a talent not
+-- taken -- should not.
+local function knownFails(group)
+    for test in string.gmatch(group, "[^,]+") do
+        test = test:match("^%s*(.-)%s*$")
+        local negated, value = test:match("^(n?o?)known:(.+)$")
+        if value then
+            local known = playerKnowsSpell(value:match("^%s*(.-)%s*$"))
+            if negated == "no" then
+                if known then return true end
+            elseif known == false or known == nil then
+                return true
+            end
+        end
+    end
+    return false
+end
+local function macroLineCanCast(line)
+    local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
+    if not cmd or not etc then return true end
+    for _, clause in ipairs(GSE.split(etc, ";")) do
+        local groups, alive = {}, false
+        for group in string.gmatch(clause, "%[([^%]]*)%]") do groups[#groups + 1] = group end
+        if #groups == 0 then alive = true end
+        for _, group in ipairs(groups) do
+            if not knownFails(group) then alive = true end
+        end
+        if alive then
+            local target = GSE.GetMacroClauseTarget(clause)
+            if string.lower(cmd) == "castsequence" then
+                target = GSE.GetMacroClauseTarget(GSE.SplitCastSequence(target)[1] or target)
+            end
+            -- /use 13: an equipment slot, not a spell ID.
+            local slot = string.lower(cmd) == "use" and tonumber(target)
+            if slot and slot >= 1 and slot <= 19 then return true end
+            local knows = target ~= "" and playerKnowsSpell(target)
+            if knows ~= false then return true end -- known, or not a spell (an item)
+        end
+    end
+    return false
+end
+GSE.MacroLineCanCast = macroLineCanCast
+
 local function macroLineIconCandidate(line)
     local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
     if not cmd or not etc then return nil end
@@ -3582,12 +3649,15 @@ function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
         }
     end
 
-    -- A form / stance / pet-summon line only if no other line resolves.
+    -- A form / stance / pet-summon line, or one that can never cast for
+    -- this character, only if no other line resolves.
     local formIconInfo
     for line in string.gmatch((str or "") .. "\n", "([^\n]*)\n") do
         local iconInfo = getMacroLineResolvedIconInfo(line, suppressUIErrors)
         if iconInfo and iconInfo.iconID then
-            if not GSE.IsFormSpellCandidate(macroLineIconCandidate(line)) then return iconInfo end
+            if not GSE.IsFormSpellCandidate(macroLineIconCandidate(line)) and macroLineCanCast(line) then
+                return iconInfo
+            end
             formIconInfo = formIconInfo or iconInfo
         end
     end

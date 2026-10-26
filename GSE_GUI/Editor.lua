@@ -1512,9 +1512,13 @@ local function isMacroLineFormOrStance(line)
     return isFormSpellCandidate(getMacroLineResolvedIconCandidate(line))
 end
 
+-- A line this character can never cast (a known: that fails, a talent not
+-- taken) is passed over like a form line (GSE.MacroLineCanCast, as the
+-- button does).
 local function getFirstMacroLineIconInfo(macro, skipForms)
     for _, line in ipairs(GSE.SplitMeIntoLines(macro or "")) do
-        if not (skipForms and isMacroLineFormOrStance(line)) then
+        if not (skipForms and (isMacroLineFormOrStance(line)
+            or (GSE.MacroLineCanCast and not GSE.MacroLineCanCast(line)))) then
             local spellinfo = GSE.GetSpellsFromString(line, true)
             local iconInfo = getMacroLineResolvedIconInfo(line, skipForms) or getFirstIconInfo(spellinfo, skipForms) or getMacroLineFallbackIconInfo(line, skipForms)
             if iconInfo then return iconInfo end
