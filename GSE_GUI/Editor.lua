@@ -933,13 +933,16 @@ end
 local function setTextQuietly(widget, text)
     if not (widget and widget.SetText) then return end
     widget.gseProgrammaticSetText = true
+    -- Kept for editIsStale: the engine fires OnTextChanged for this text a
+    -- second time, later, when the flag is long gone.
+    widget.gseInjectedText = text
     widget:SetText(text)
     widget.gseProgrammaticSetText = nil
 end
 
 -- Should this text-change handler write at all?
 --
--- Two ways it must not. The fire may be our own injection rather than the user
+-- Three ways it must not. The fire may be our own injection rather than the user
 -- typing (above). Or the box may have been recycled: every handler here closes
 -- over the keyPath of the block it was built for, and the widget pool hands one
 -- box to several blocks within a single rebuild -- liuli195 paired 14 of 36
@@ -948,15 +951,30 @@ end
 -- carries the one it was created for; if they disagree the fire belongs to a
 -- previous life and writing would corrupt an unrelated action.
 --
+-- Or the fire is the engine's own. After the synchronous OnTextChanged that
+-- SetText raises, WoW raises it AGAIN for the same text once the box is laid
+-- out and shown -- from the engine, with no Lua caller, userInput false. By
+-- then the flag above is cleared and the owner matches, so on every editor
+-- open or panel switch both boxes of a spell block "edited" themselves: the
+-- macro box (which shows the spell NAME for a spell action) stored .macro and
+-- cleared .spell, the spell box did the reverse, and whichever the engine
+-- fired last won. Macro box last: a "?" icon, then a Macro block carrying its
+-- own spell name on the next draw (the #2106 symptom back through a different
+-- door). The engine's re-fire carries exactly the text setTextQuietly put in,
+-- and the flag Blizzard passes says it was not typed; both together mark it.
+-- A Tab-menu insert also arrives with userInput false but with NEW text, so
+-- it still stores.
+--
 -- This is deliberately at the WRITE rather than in the widget lifecycle. The
 -- earlier attempt closed two lifecycle holes (stale callbacks surviving
 -- Release, IndentationLib firing during teardown) and the corruption survived
 -- both, because the fire arrives from the deferred draw instead. Guarding the
 -- write ends the class whichever path fires.
-local function editIsStale(sel, owner)
+local function editIsStale(sel, owner, value, userInput)
     if not sel then return true end
     if sel.gseProgrammaticSetText then return true end
     if sel.gseOwner ~= owner then return true end
+    if userInput == false and value == sel.gseInjectedText then return true end
     return false
 end
 
@@ -7947,10 +7965,10 @@ function GSE.CreateEditor()
 
             spellEditBox:SetCallback(
                 "OnTextChanged",
-                function(sel, object, value)
+                function(sel, object, value, userInput)
                     -- Our own injection, or a box that has moved on to another
                     -- block: either way this fire is not an edit of THIS action.
-                    if editIsStale(sel, action) then return end
+                    if editIsStale(sel, action, value, userInput) then return end
                     -- The block may be gone entirely -- a delete renumbers every
                     -- keyPath after it, and this one is captured. Indexing a
                     -- removed action errors; writing to a shifted one corrupts
@@ -8049,14 +8067,14 @@ function GSE.CreateEditor()
             )
             macroEditBox:SetCallback(
                 "OnTextChanged",
-                function(sel, object, value)
+                function(sel, object, value, userInput)
                     if sel and (sel.GSEMacroEditorColoring or (sel.editBox and sel.editBox.GSEMacroEditorColoring) or (sel.editbox and sel.editbox.GSEMacroEditorColoring)) then return end
                     -- The write that corrupted sequences in #2106. This box holds
                     -- the SPELL NAME for a spell action, and everything below
                     -- stores .macro and clears .spell unconditionally, so any
                     -- fire that is not a real user edit of this block converts a
                     -- working spell action into a macro carrying its own name.
-                    if editIsStale(sel, action) then return end
+                    if editIsStale(sel, action, value, userInput) then return end
                     if not (sequence.Versions[version]
                         and sequence.Versions[version].Actions
                         and sequence.Versions[version].Actions[keyPath]) then

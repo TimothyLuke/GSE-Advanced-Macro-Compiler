@@ -610,15 +610,16 @@ end
 
 -- The sequence's icon, top right of the Config tab row. Dragging it onto any
 -- action button puts the sequence on that button (GSE.BeginSequenceDrag in
--- GSE/API/Events.lua). One frame, reused: it is re-parented onto each tab row
--- and taken back off when the row is released, so it never rides along on a
--- recycled widget.
+-- GSE/API/Events.lua). One per editor, reused by it: it is re-parented onto
+-- each tab row and taken back off when the row is released, so it never rides
+-- along on a recycled widget.
 local DRAG_ICON_SIZE = 28
 -- "DRAG ME!" badge under the big icon: text padding.
 local DRAG_BADGE_PAD_X = 7
 local DRAG_BADGE_PAD_Y = 4
-local sequenceDragIcon
-local sequenceDragArea
+-- Every editor's own icon (editframe.sequenceDragIcon), for what follows a
+-- bar button or the overrides across all of them.
+local dragIcons = setmetatable({}, {__mode = "k"})
 
 -- Blizzard's action button art (ActionButtonTemplate on Retail, Forever and
 -- Classic Era): a 45x45 icon under a 46x45 frame and mouseover glow anchored
@@ -664,27 +665,27 @@ local function copyTextureLook(dst, src)
     if src.GetBlendMode then dst:SetBlendMode(src:GetBlendMode()) end
 end
 
-local function placeLike(dst, src, b, scale)
+local function placeLike(icon, dst, src, b, scale)
     dst:ClearAllPoints()
     local n = src.GetNumPoints and src:GetNumPoints() or 0
     for i = 1, n do
         local point, rel, relPoint, x, y = src:GetPoint(i)
-        local target = (rel == b.icon) and sequenceDragIcon.texture or sequenceDragIcon
+        local target = (rel == b.icon) and icon.texture or icon
         dst:SetPoint(point, target, relPoint, (x or 0) * scale, (y or 0) * scale)
     end
     if n == 0 then dst:SetPoint("CENTER") end
     if n < 2 and dst.SetSize then dst:SetSize(src:GetWidth() * scale, src:GetHeight() * scale) end
 end
 
-local function setIconMask(on)
-    local icon, mask = sequenceDragIcon, sequenceDragIcon.mask
+local function setIconMask(icon, on)
+    local mask = icon.mask
     if not mask or icon.maskOn == on then return end
     if on then icon.texture:AddMaskTexture(mask) else icon.texture:RemoveMaskTexture(mask) end
     icon.maskOn = on
 end
 
-local function mirrorHotKey(b, scale)
-    local hk, mine = barHotKey(b), sequenceDragIcon.hotKey
+local function mirrorHotKey(icon, b, scale)
+    local hk, mine = barHotKey(b), icon.hotKey
     local text = hk and hk:IsShown() and hk:GetText()
     if not text or text == "" or text == RANGE_INDICATOR then mine:Hide() return end
     local file, fontSize, flags = hk:GetFont()
@@ -705,18 +706,17 @@ local function mirrorHotKey(b, scale)
         local glyphRight = (jh == "LEFT" and left + sw) or (jh == "CENTER" and (left + right + sw) / 2) or right
         local glyphTop = (jv == "TOP" and top) or (jv == "BOTTOM" and bottom + sh) or ((top + bottom + sh) / 2)
         -- KEY_NUDGE_X: a visual nudge on top of the measured gap, set by eye.
-        mine:SetPoint("TOPRIGHT", sequenceDragIcon, "TOPRIGHT",
+        mine:SetPoint("TOPRIGHT", icon, "TOPRIGHT",
             -(bRight - glyphRight) * scale - KEY_NUDGE_X, -(bTop - glyphTop) * scale)
     else
-        placeLike(mine, hk, b, scale)
+        placeLike(icon, mine, hk, b, scale)
         mine:SetSize(0, 0)
     end
     mine:Show()
 end
 
 -- Blizzard's default look, for a sequence not on any button yet.
-local function applyDefaultLook(size)
-    local icon = sequenceDragIcon
+local function applyDefaultLook(icon, size)
     icon:SetSize(size, size)
     icon.texture:SetTexCoord(0, 1, 0, 1)
     if icon.mask then
@@ -725,7 +725,7 @@ local function applyDefaultLook(size)
         icon.mask:SetPoint("CENTER", icon.texture, "CENTER")
         local maskSize = size * BUTTON_ART_MASK_SIZE / BUTTON_ART_SIZE
         icon.mask:SetSize(maskSize, maskSize)
-        setIconMask(true)
+        setIconMask(icon, true)
     end
     local frameWidth = size * BUTTON_ART_FRAME_WIDTH / BUTTON_ART_SIZE
     icon.frameArt:ClearAllPoints()
@@ -753,8 +753,7 @@ local function applyDefaultLook(size)
     icon.hotKey:Hide()
 end
 
-local function applyMirrorLook(b, size)
-    local icon = sequenceDragIcon
+local function applyMirrorLook(icon, b, size)
     local bw, bh = b:GetWidth(), b:GetHeight()
     if not (bw and bh and bh > 0) then return false end
     local scale = size / bh
@@ -779,16 +778,16 @@ local function applyMirrorLook(b, size)
         local maskAtlas = barMask.GetAtlas and barMask:GetAtlas()
         local maskFile = not maskAtlas and barMask.GetTexture and barMask:GetTexture()
         if maskAtlas then icon.mask:SetAtlas(maskAtlas) elseif maskFile then icon.mask:SetTexture(maskFile) end
-        placeLike(icon.mask, barMask, b, scale)
-        setIconMask(true)
+        placeLike(icon, icon.mask, barMask, b, scale)
+        setIconMask(icon, true)
     else
-        setIconMask(false)
+        setIconMask(icon, false)
     end
     local normal = b.GetNormalTexture and b:GetNormalTexture()
     if icon.frameArt then
         if normal and normal:IsShown() and (normal:GetAtlas() or normal:GetTexture()) then
             copyTextureLook(icon.frameArt, normal)
-            placeLike(icon.frameArt, normal, b, scale)
+            placeLike(icon, icon.frameArt, normal, b, scale)
             icon.frameArt:Show()
         else
             icon.frameArt:Hide()
@@ -797,15 +796,15 @@ local function applyMirrorLook(b, size)
     local highlight = b.GetHighlightTexture and b:GetHighlightTexture()
     if icon.glow and highlight and (highlight:GetAtlas() or highlight:GetTexture()) then
         copyTextureLook(icon.glow, highlight)
-        placeLike(icon.glow, highlight, b, scale)
+        placeLike(icon, icon.glow, highlight, b, scale)
     end
-    mirrorHotKey(b, scale)
+    mirrorHotKey(icon, b, scale)
     return scale
 end
 
 -- Live updates from the mirrored button: WoW sets its key label when the
--- binding changes. Hooked once per button; only the button currently mirrored
--- is followed.
+-- binding changes. Hooked once per button; every editor's icon mirroring it
+-- follows.
 local hookedBarButtons = {}
 local function followBarButton(b)
     if hookedBarButtons[b] then return end
@@ -813,22 +812,23 @@ local function followBarButton(b)
     local hk = barHotKey(b)
     if hk then
         hooksecurefunc(hk, "SetText", function()
-            if sequenceDragIcon.mirrorOf == b then mirrorHotKey(b, sequenceDragIcon:GetHeight() / b:GetHeight()) end
+            for icon in pairs(dragIcons) do
+                if icon.mirrorOf == b then mirrorHotKey(icon, b, icon:GetHeight() / b:GetHeight()) end
+            end
         end)
     end
 end
 
-local function setDragIconSize(size)
-    local icon = sequenceDragIcon
+local function setDragIconSize(icon, size)
     icon.lastSize = size
     local b = icon.sequenceId and barButtonFor(icon.sequenceId)
-    local scale = b and applyMirrorLook(b, size)
+    local scale = b and applyMirrorLook(icon, b, size)
     if scale then
         icon.mirrorOf = b
         followBarButton(b)
     else
         icon.mirrorOf = nil
-        applyDefaultLook(size)
+        applyDefaultLook(icon, size)
         scale = size / BUTTON_ART_SIZE
     end
     -- The GSE watermark, as on an override button.
@@ -876,9 +876,40 @@ local function dragIconTexture(id)
     return GSE.GetSequenceBaseIcon(id) or GSE.GetSequenceStartIcon(id) or Statics.Icons.GSE_Logo_Dark
 end
 
+-- Putting a sequence on a button, or taking it off, changes what each
+-- editor's icon mirrors. One listener for them all: AceEvent keeps one
+-- handler per message per object.
+LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED, function()
+    C_Timer.After(0, function()
+        for icon in pairs(dragIcons) do
+            if icon:IsShown() and icon.lastSize then setDragIconSize(icon, icon.lastSize) end
+        end
+    end)
+end)
+
 local function attachSequenceDragIcon(editframe, hostRow)
+    local sequenceDragIcon = editframe.sequenceDragIcon
     if not sequenceDragIcon then
+        -- An editor is a new frame each time it opens, and WoW never frees a
+        -- frame: an icon whose editor has closed goes to this one.
+        local open = {}
+        for _, e in ipairs(GSE.GUI.editors or {}) do open[e] = true end
+        for icon in pairs(dragIcons) do
+            if not open[icon.owner] then
+                if icon.owner then icon.owner.sequenceDragIcon = nil end
+                sequenceDragIcon = icon
+                break
+            end
+        end
+    end
+    if sequenceDragIcon then
+        sequenceDragIcon.owner, editframe.sequenceDragIcon = editframe, sequenceDragIcon
+    else
+        -- One per editor, so two editors open on Configuration both have one.
         sequenceDragIcon = CreateFrame("Button", nil, UIParent)
+        editframe.sequenceDragIcon = sequenceDragIcon
+        sequenceDragIcon.owner = editframe
+        dragIcons[sequenceDragIcon] = true
         sequenceDragIcon.texture = sequenceDragIcon:CreateTexture(nil, "ARTWORK")
         sequenceDragIcon.texture:SetAllPoints()
         -- The default look needs Blizzard's action button atlases; a mirrored
@@ -910,17 +941,6 @@ local function attachSequenceDragIcon(editframe, hostRow)
         badge:Hide()
         sequenceDragIcon.dragLabel = badge
         sequenceDragIcon.watermark = GSE.CreateGSEWatermark(sequenceDragIcon)
-        -- Under the icon: why it shows this picture.
-        -- Putting the sequence on a button, or taking it off, changes what the
-        -- icon mirrors. A listener of its own: AceEvent keeps one handler per
-        -- message per object.
-        LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(Statics.Messages.ACTIONBAR_OVERRIDES_UPDATED, function()
-            C_Timer.After(0, function()
-                if sequenceDragIcon:IsShown() and sequenceDragIcon.lastSize then
-                    setDragIconSize(sequenceDragIcon.lastSize)
-                end
-            end)
-        end)
         -- Right-click: pick the sequence's base icon -- what its button shows
         -- at rest -- from the icons it uses, or any icon at all.
         sequenceDragIcon:RegisterForClicks("RightButtonUp")
@@ -931,7 +951,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
             local function pick(icon)
                 GSE.SetSequenceBaseIcon(id, icon)
                 self.texture:SetTexture(dragIconTexture(id))
-                if self.lastSize then setDragIconSize(self.lastSize) end
+                if self.lastSize then setDragIconSize(self, self.lastSize) end
             end
             -- The editor's own icon menu, as on a block's icon, each spell's
             -- icon and name.
@@ -944,7 +964,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
                 local reset = root:CreateButton(L["Reset"], function()
                     GSE.SetSequenceBaseIcon(id, nil)
                     self.texture:SetTexture(dragIconTexture(id))
-                    if self.lastSize then setDragIconSize(self.lastSize) end
+                    if self.lastSize then setDragIconSize(self, self.lastSize) end
                 end)
                 if reset and reset.SetEnabled and not GSE.GetSequenceBaseIcon(id) then reset:SetEnabled(false) end
                 -- Any icon at all, through GSE QoL's picker, as on a block's menu.
@@ -996,7 +1016,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
     sequenceDragIcon.texture:SetDesaturated(not live)
     sequenceDragIcon:SetParent(hostRow.frame)
     sequenceDragIcon:SetFrameLevel(hostRow.frame:GetFrameLevel() + 5)
-    setDragIconSize(DRAG_ICON_SIZE)
+    setDragIconSize(sequenceDragIcon, DRAG_ICON_SIZE)
     sequenceDragIcon.dragLabel:Hide()
     sequenceDragIcon:ClearAllPoints()
     sequenceDragIcon:SetPoint("TOPRIGHT", hostRow.frame, "TOPRIGHT", -FORM_SIDE_PADDING, 0)
@@ -1005,7 +1025,7 @@ local function attachSequenceDragIcon(editframe, hostRow)
         sequenceDragIcon:Hide()
         sequenceDragIcon:SetParent(UIParent)
         sequenceDragIcon:ClearAllPoints()
-        if sequenceDragArea then sequenceDragArea:ClearAllPoints() end
+        if sequenceDragIcon.area then sequenceDragIcon.area:ClearAllPoints() end
     end)
 end
 
@@ -1019,17 +1039,21 @@ local DRAG_ICON_MARGIN = 16
 local DRAG_BELOW_GAP = 2
 -- The area's OnSizeChanged is set once, so what a page changes (whether the
 -- badge shows) is read off the icon, not captured here.
-local function fitIcon(w, h)
+local function fitIcon(icon, w, h)
     if not (w and h and w > 0 and h > 0) then return end
-    local room = sequenceDragIcon.belowRoom or 0
+    local room = icon.belowRoom or 0
     local size = math.floor(math.min(DRAG_ICON_BIG, w - DRAG_ICON_MARGIN, h - DRAG_ICON_MARGIN - room))
-    setDragIconSize(math.max(DRAG_ICON_SIZE, size))
+    setDragIconSize(icon, math.max(DRAG_ICON_SIZE, size))
 end
-local function centreSequenceDragIcon(slot)
+local function centreSequenceDragIcon(editframe, slot)
+    local sequenceDragIcon = editframe and editframe.sequenceDragIcon
     if not (sequenceDragIcon and slot) then return end
+    -- Each editor's icon has its own area.
+    local sequenceDragArea = sequenceDragIcon.area
     if not sequenceDragArea then
         sequenceDragArea = CreateFrame("Frame")
-        sequenceDragArea:SetScript("OnSizeChanged", function(_, w, h) fitIcon(w, h) end)
+        sequenceDragArea:SetScript("OnSizeChanged", function(_, w, h) fitIcon(sequenceDragIcon, w, h) end)
+        sequenceDragIcon.area = sequenceDragArea
     end
     -- The badge only when the icon can be dragged: otherwise it is the GSE
     -- logo, not a sequence.
@@ -1052,7 +1076,7 @@ local function centreSequenceDragIcon(slot)
     -- OnSizeChanged does not fire when the area comes out the same size as last
     -- time, and attachSequenceDragIcon has just set the icon back to its small
     -- size.
-    fitIcon(sequenceDragArea:GetSize())
+    fitIcon(sequenceDragIcon, sequenceDragArea:GetSize())
 end
 
 -- "Disable Sequence", centred at the bottom of the Config page. A real child
@@ -1636,7 +1660,7 @@ local function drawMetadataTab(editframe, container)
     if disableRow.SetFlowHAlign then disableRow:SetFlowHAlign("CENTER") end
     disableRow:AddChild(createDisableSequenceCheckbox(editframe))
     container:AddChild(disableRow)
-    centreSequenceDragIcon(dragSlot)
+    centreSequenceDragIcon(editframe, dragSlot)
     splitColumns()
 end
 
