@@ -339,14 +339,19 @@ end
 
 local function getGSESequenceIcon(seq)
     if seq and _G[seq] then
-        local action = getCurrentGSEAction(seq)
-        if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
-            local iconInfo = GSE.GetMacroTextIconInfo(action.macrotext)
+        -- The step's icon as the button shows it when the step comes round
+        -- (UpdateIcon): the block's own icon where it has one, else what its
+        -- macro resolves to.  Asking the macro text first gave a different
+        -- icon at rest -- the first line that resolves, /startattack's glove
+        -- -- than the block's and the drag icon's.
+        if GSE.GetCurrentButtonIconInfo then
+            local iconInfo = GSE.GetCurrentButtonIconInfo(_G[seq], false)
             if iconInfo and iconInfo.iconID and not isGSEFallbackTexture(iconInfo.iconID) then return iconInfo.iconID end
         end
 
-        if GSE.GetCurrentButtonIconInfo then
-            local iconInfo = GSE.GetCurrentButtonIconInfo(_G[seq], false)
+        local action = getCurrentGSEAction(seq)
+        if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
+            local iconInfo = GSE.GetMacroTextIconInfo(action.macrotext)
             if iconInfo and iconInfo.iconID and not isGSEFallbackTexture(iconInfo.iconID) then return iconInfo.iconID end
         end
     end
