@@ -47,7 +47,7 @@ describe("GSE Action Bar in Edit Mode", function()
     return copy
   end
 
-  local function load(withLib, usesEditMode)
+  local function load(withLib)
     lem = withLib and fakeLEM() or nil
     local saved = { LibStub = _G.LibStub, hooksecurefunc = _G.hooksecurefunc, CopyTable = _G.CopyTable,
       GSE_Actionbar_Initialize = _G.GSE_Actionbar_Initialize }
@@ -63,8 +63,8 @@ describe("GSE Action Bar in Edit Mode", function()
     _G.CopyTable = deepCopy
     for k, v in pairs(HUD) do _G[k] = v end
     -- The bars' settings as they were saved when padding, empty buttons and
-    -- keys were one setting for every bar.
-    options = { Spacing = 4, ShowEmpty = true, ShowKeys = true,
+    -- keys were one setting for every bar, and the bars had a lock.
+    options = { Spacing = 4, ShowEmpty = true, ShowKeys = true, Locked = true,
       Bars = { { Visibility = "SHOW", Scale = 1, PerRow = 12 }, { Visibility = "HIDE", Scale = 1, PerRow = 12 } } }
     _G.GSEOptions = { ActionBar = options }
     refreshed = 0
@@ -76,7 +76,6 @@ describe("GSE Action Bar in Edit Mode", function()
       SetEditing = function(open) ns.editing = open end,
       GSE = {
         L = setmetatable({}, { __index = function(_, k) return k end }),
-        ActionBarUsesEditMode = function() return usesEditMode end,
       },
     }
     -- The bar's sizes, settings and line arithmetic come from Bootstrap.lua.
@@ -101,8 +100,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end
 
   it("registers each bar, starting where the bar starts", function()
-    load(true, true)
-    assert.is_true(ns.editMode)
+    load(true)
     local first = lem.frames[ns.bars[1]]
     assert.are.same({ point = "BOTTOM", x = 0, y = 230 }, first.default)
     assert.are.equal("GSE Action Bar 1", first.name)
@@ -110,17 +108,17 @@ describe("GSE Action Bar in Edit Mode", function()
     assert.are.equal(8, #lem.settings[ns.bars[1]])
   end)
 
-  it("stays out of the way where the client has no Edit Mode, or the library did not load", function()
-    load(true, false)
-    assert.is_nil(ns.editMode)
+  it("puts the bars in Edit Mode on every client, with no lock", function()
+    -- Every client has Edit Mode: no client test, only the library.
+    load(false)
     assert.is_nil(ns.EditModePoint)
-    assert.is_nil(next(lem.frames))
-    load(false, true)
-    assert.is_nil(ns.editMode)
+    load(true)
+    assert.truthy(ns.EditModePoint)
+    assert.is_nil(options.Locked)
   end)
 
   it("keeps a bar's place per layout, and has none for a layout it was never placed in", function()
-    load(true, true)
+    load(true)
     move(1, "Modern", "BOTTOMLEFT", 100, 50)
     assert.are.same({ "BOTTOMLEFT", "UIParent", "BOTTOMLEFT", 100, 50 }, ns.EditModePoint(1))
     lem.layout = "Raid"
@@ -133,7 +131,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("lays the bars out again on a change of layout, and shows them all while editing", function()
-    load(true, true)
+    load(true)
     local before = refreshed
     lem.callbacks.layout("Raid", 4)
     assert.are.equal(before + 1, refreshed)
@@ -144,7 +142,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("copies, renames and drops a bar's place with its layout", function()
-    load(true, true)
+    load(true)
     move(1, "Modern", "LEFT", 10, 20)
     move(2, "Modern", "RIGHT", -10, 0)
     lem.callbacks.create("Copy", 4, "Modern")
@@ -161,7 +159,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("sets a bar up from Blizzard's own action bar settings, in the settings GSE's options show", function()
-    load(true, true)
+    load(true)
     local set = settingsOf(2)
     assert.are.equal(8, #lem.settings[ns.bars[2]])
     assert.are.equal("HIDE", set["Bar Visible"].get("Modern"))
@@ -187,7 +185,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("gives each bar the padding, empty buttons and keys once set for every bar", function()
-    load(true, true)
+    load(true)
     assert.is_nil(options.Spacing)
     assert.is_nil(options.ShowEmpty)
     for b = 1, 2 do
@@ -198,7 +196,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("speaks in lines, as Blizzard's bars do, and keeps buttons per line for GSE's options", function()
-    load(true, true)
+    load(true)
     local set = settingsOf(1)
     local lines = set["# of Rows"]
     assert.are.equal(1, lines.get("Modern"))
@@ -212,7 +210,7 @@ describe("GSE Action Bar in Edit Mode", function()
   end)
 
   it("puts the bars back as they were when Edit Mode opened", function()
-    load(true, true)
+    load(true)
     lem.callbacks.enter()
     settingsOf(1)["Icon Padding"].set("Modern", 12)
     settingsOf(2)["Bar Visible"].set("Modern", "SHOW")
@@ -230,9 +228,9 @@ describe("GSE Action Bar in Edit Mode", function()
     return (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
   end
 
-  it("loads LibEditMode on Retail and Forever only, before the bar", function()
+  it("loads LibEditMode on every client, before the bar", function()
     local toc = readSource("GSE_Actionbar/GSE_Actionbar.toc")
-    local lib = toc:find("Lib\\LibEditMode\\embed.xml [AllowLoadGameType standard, camelot]\n", 1, true)
+    local lib = toc:find("\nLib\\LibEditMode\\embed.xml\n", 1, true)
     assert.truthy(lib)
     assert.truthy(lib < toc:find("\nBootstrap.lua\n", 1, true))
     assert.truthy(toc:find("\nActionBar.lua\nEditMode.lua\n", 1, true))

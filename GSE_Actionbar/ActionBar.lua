@@ -95,8 +95,8 @@ local function layoutBar(b)
     bar:SetScale(math.max(0.5, math.min(2, tonumber(settings.Scale) or 1)))
     bar:SetSize(across * buttonSize + (across - 1) * spacing, down * buttonSize + (down - 1) * spacing)
     bar:ClearAllPoints()
-    -- In Edit Mode's layout, where it has one (EditMode.lua); else where it
-    -- was dragged to, or where it starts.
+    -- In the active Edit Mode layout's place for it (EditMode.lua); else the
+    -- place it had before Edit Mode placed the bars, or where it starts.
     local point = ns.EditModePoint and ns.EditModePoint(b)
         or type(settings.Point) == "table" and settings.Point or DEFAULT_POINTS[b]
     bar:SetPoint(point[1], UIParent, point[3], point[4], point[5])
@@ -149,40 +149,9 @@ function ns.Refresh()
         bars[b]:Show()
         layoutBar(b)
         applyVisibility(b)
-        -- Where the client has Edit Mode, it places the bars instead (EditMode.lua).
-        bars[b].mover:SetShown(not ns.Options().Locked and not ns.editMode)
     end
     updateKeys()
     ns.ApplyActions()
-end
-
--- Unlocked, each bar has a handle over it to drag it by. Its place is kept
--- per bar, against the bottom of the screen it was dropped nearest.
-local function makeMover(bar, b)
-    local mover = CreateFrame("Frame", nil, bar, "BackdropTemplate")
-    mover:SetAllPoints()
-    mover:SetFrameLevel(bar:GetFrameLevel() + 20)
-    mover:EnableMouse(true)
-    mover:RegisterForDrag("LeftButton")
-    if mover.SetBackdrop then
-        mover:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
-        mover:SetBackdropColor(0, 0.6, 1, 0.35)
-    end
-    mover.label = mover:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mover.label:SetPoint("CENTER")
-    mover.label:SetText(string.format(L["GSE Action Bar %d"], b))
-    mover:SetScript("OnDragStart", function()
-        if InCombatLockdown() then return end
-        bar:StartMoving()
-    end)
-    mover:SetScript("OnDragStop", function()
-        bar:StopMovingOrSizing()
-        -- Kept against UIParent, at the bar's own scale.
-        local point, _, relativePoint, x, y = bar:GetPoint(1)
-        ns.Options().Bars[b].Point = { point, "UIParent", relativePoint, x, y }
-    end)
-    mover:Hide()
-    return mover
 end
 
 -- An empty button says what it is for.
@@ -196,9 +165,7 @@ end
 
 for b = 1, BAR_COUNT do
     local bar = CreateFrame("Frame", "GSEActionBar" .. b, UIParent)
-    bar:SetMovable(true)
     bar:SetClampedToScreen(true)
-    bar.mover = makeMover(bar, b)
     -- Mouseover bars fade in under the mouse; alpha is allowed in combat.
     local elapsed = 0
     bar:SetScript("OnUpdate", function(self, delta)

@@ -7,18 +7,17 @@ local L = GSE.L
 
 -- ── The bars in WoW's Edit Mode ─────────────────────────────────────────────
 --
--- On Retail and Forever (GSE.ActionBarUsesEditMode) each bar is placed and
--- set up in Edit Mode, beside WoW's own bars, through LibEditMode -- which the
--- TOC loads on those clients only. GSE's options then have no Lock for them.
+-- Each bar is placed and set up in Edit Mode, beside WoW's own bars, through
+-- LibEditMode. Every client has Edit Mode -- Classic Era, TBC Anniversary,
+-- MoP Classic, Forever and Retail -- so it is the only place the bars are set
+-- up: GSE's options have no Lock or bar settings for them.
 --
 -- A bar's place is kept per Edit Mode layout, as WoW's own bars' are:
 -- Bars[b].Layouts[layout name] = { point, x, y } against UIParent. A layout
 -- with no place for it yet has the one it had before (Bars[b].Point). What a
--- bar shows and its size are one setting for every layout, the same ones
--- GSE's options show.
+-- bar shows and its size are one setting for every layout.
 local LEM = LibStub("LibEditMode", true)
-if not LEM or not GSE.ActionBarUsesEditMode() then return end
-ns.editMode = true
+if not LEM then return end
 
 local BAR_COUNT = ns.BUTTON_COUNT / ns.BAR_SIZE
 

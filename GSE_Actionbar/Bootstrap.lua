@@ -26,7 +26,6 @@ end
 -- ReportOverrides: say in chat when an override takes a button's key
 -- (Overrides.lua).
 local DEFAULTS = {
-    Locked = true,
     ReportOverrides = true,
     -- key -> the button GSE moved it onto (Migration.lua), so every
     -- character of the account puts a key on the same button.
@@ -66,6 +65,8 @@ function ns.Options()
         end
     end
     fillDefaults(options, DEFAULTS)
+    -- The bars are placed in Edit Mode now, on every client: no lock.
+    options.Locked = nil
     -- GSE turned the bar on by itself, for keybinds it had (GSE's Events.lua):
     -- the bars start hidden, their keys working.
     if GSEOptions.ActionBarStartHidden then
@@ -76,8 +77,8 @@ function ns.Options()
 end
 
 -- A bar's buttons sit in lines: rows, or columns when it is vertical. The bar
--- keeps PerRow, buttons per line; Edit Mode (EditMode.lua) and GSE's options
--- both set it as a number of lines, as Blizzard's bars do.
+-- keeps PerRow, buttons per line; Edit Mode (EditMode.lua) sets it as a
+-- number of lines, as Blizzard's bars do.
 
 --- How many of its twelve buttons bar b has.
 function ns.IconCount(b)
@@ -98,8 +99,8 @@ end
 function GSE_Actionbar_Initialize(gse)
     if ns.GSE then return end
     ns.GSE = gse
-    -- For GSE's options, which set these once the bar is loaded.
-    gse.ActionBarOptions, gse.ActionBarLines, gse.SetActionBarLines = ns.Options, ns.Lines, ns.SetLines
+    -- For GSE's options, which set Report Stolen GSE Keybinds once the bar is loaded.
+    gse.ActionBarOptions = ns.Options
     local queue = ns.deferred
     ns.deferred = nil
     for _, fn in ipairs(queue) do
