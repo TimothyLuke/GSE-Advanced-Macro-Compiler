@@ -323,35 +323,14 @@ local function isGSEFallbackTexture(texture)
     return GSE.IsFallbackIcon(texture)
 end
 
-local function getCurrentGSEAction(seq)
-    local seqFrame = seq and _G[seq]
-    local executionseq = seq and GSE.SequencesExec and GSE.SequencesExec[seq]
-    if not seqFrame or not executionseq then return nil end
-
-    local step = seqFrame:GetAttribute("step") or 1
-    local iteration = seqFrame:GetAttribute("iteration") or 1
-    if iteration > 1 then
-        step = step + iteration * 254
-    end
-
-    return executionseq[step]
-end
-
 local function getGSESequenceIcon(seq)
     if seq and _G[seq] then
         -- The step's icon as the button shows it when the step comes round
-        -- (UpdateIcon): the block's own icon where it has one, else what its
-        -- macro resolves to.  Asking the macro text first gave a different
-        -- icon at rest -- the first line that resolves, /startattack's glove
-        -- -- than the block's and the drag icon's.
+        -- (UpdateIcon) and as the drag icon shows it: the block's own icon
+        -- where it has one, else what its macro resolves to. One lookup, so
+        -- at rest is no different from running.
         if GSE.GetCurrentButtonIconInfo then
             local iconInfo = GSE.GetCurrentButtonIconInfo(_G[seq], false)
-            if iconInfo and iconInfo.iconID and not isGSEFallbackTexture(iconInfo.iconID) then return iconInfo.iconID end
-        end
-
-        local action = getCurrentGSEAction(seq)
-        if action and action.type == "macro" and action.macrotext and GSE.GetMacroTextIconInfo then
-            local iconInfo = GSE.GetMacroTextIconInfo(action.macrotext)
             if iconInfo and iconInfo.iconID and not isGSEFallbackTexture(iconInfo.iconID) then return iconInfo.iconID end
         end
     end
