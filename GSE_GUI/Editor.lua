@@ -1320,11 +1320,12 @@ local function isIconBearingAction(action)
         not GSE.isEmpty(action.item) or not GSE.isEmpty(action.toy)
 end
 
+local judgeCastable
 local function getManualActionIcon(action)
     if type(action) == "table" and action.Icon and not isQuestionMarkIcon(action.Icon) and not isAutomaticCategorisedActionIcon(action) then
         -- A saved icon the player did not pick yields when it is a line's this
         -- character can never cast (GSE.IsIconOfUncastableLine), as on the button.
-        if not action.IconUserSelected and GSE.IsIconOfUncastableLine
+        if judgeCastable and not action.IconUserSelected and GSE.IsIconOfUncastableLine
             and GSE.IsIconOfUncastableLine(GSE.UnEscapeString(action.macro or ""), action.Icon) then
             return nil
         end
@@ -1520,11 +1521,13 @@ end
 
 -- A line this character can never cast (a known: that fails, a talent not
 -- taken) is passed over like a form line (GSE.MacroLineCanCast, as the
--- button does).
+-- button does) -- for a sequence of this character's own class only: every
+-- spell of another class's sequence is one it does not know.
+judgeCastable = true
 local function getFirstMacroLineIconInfo(macro, skipForms)
     for _, line in ipairs(GSE.SplitMeIntoLines(macro or "")) do
         if not (skipForms and (isMacroLineFormOrStance(line)
-            or (GSE.MacroLineCanCast and not GSE.MacroLineCanCast(line)))) then
+            or (judgeCastable and GSE.MacroLineCanCast and not GSE.MacroLineCanCast(line)))) then
             local spellinfo = GSE.GetSpellsFromString(line, true)
             local iconInfo = getMacroLineResolvedIconInfo(line, skipForms) or getFirstIconInfo(spellinfo, skipForms) or getMacroLineFallbackIconInfo(line, skipForms)
             if iconInfo then return iconInfo end
@@ -2251,12 +2254,18 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     -- spell, item, toy, or macro content.
     local function refreshIcon()
         local iconID = Statics.QuestionMarkIconID
+        -- Castable is this character's question only for its own class's
+        -- sequences (getFirstMacroLineIconInfo).
+        local specID = sequence and sequence.MetaData and tonumber(sequence.MetaData.SpecID)
+        local classID = specID and specID > 0 and GSE.GetClassIDforSpec and GSE.GetClassIDforSpec(specID)
+        judgeCastable = not (classID and classID > 0 and classID ~= GSE.GetCurrentClassID())
         local manualIcon = getManualActionIcon(action)
         if manualIcon and not shouldReplaceFormActionIcon(action) and not shouldUseCategorisedActionIcon(action) then
             iconID = manualIcon
         else
             iconID = getActionAutoIcon(action) or iconID
         end
+        judgeCastable = true
         setIcon(iconID)
     end
 
