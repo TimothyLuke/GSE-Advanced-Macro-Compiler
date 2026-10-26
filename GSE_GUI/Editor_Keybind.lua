@@ -1853,11 +1853,53 @@ end
 -- assumes that is where it came from, QuickKeybindFrameMixin:OnHide), so
 -- that is closed again; and the rows re-read their keys whenever the
 -- listener lets go, so a cell reads "Press a key..." only while it listens.
+-- Print Screen does nothing while Quick Keybind Mode is up. A key pressed
+-- there goes to Blizzard's listener, armed from this page (listenForKey) and
+-- so tainted, and for Print Screen it asks for a screenshot (RunBinding),
+-- which WoW refuses from tainted code: ADDON_ACTION_FORBIDDEN on GSE_GUI.
+-- It is never a key to bind there either. A keyboard frame over the mode's
+-- own takes Print Screen and passes every other key on; it shows only with
+-- the mode, out of combat (setting what a frame passes on is blocked in
+-- combat, and a frame left taking keys then would take them all).
+local printScreenSink
+local function installPrintScreenSink(mode)
+    if printScreenSink or not (mode and mode.HookScript) then return end
+    local sink = CreateFrame("Frame", nil, UIParent)
+    sink:SetFrameStrata("FULLSCREEN_DIALOG")
+    sink:SetSize(1, 1)
+    sink:SetPoint("TOPLEFT")
+    sink:Hide()
+    sink:EnableKeyboard(true)
+    sink:SetPropagateKeyboardInput(true)
+    sink:SetScript("OnKeyDown", function(self, key)
+        if InCombatLockdown() then return end
+        self:SetPropagateKeyboardInput(key ~= "PRINTSCREEN")
+    end)
+    sink:SetScript("OnKeyUp", function(self)
+        if not InCombatLockdown() then self:SetPropagateKeyboardInput(true) end
+    end)
+    local function follow()
+        if mode:IsShown() and not InCombatLockdown() then
+            sink:SetPropagateKeyboardInput(true)
+            sink:Show()
+        else
+            sink:Hide()
+        end
+    end
+    mode:HookScript("OnShow", follow)
+    mode:HookScript("OnHide", follow)
+    sink:RegisterEvent("PLAYER_REGEN_DISABLED")
+    sink:RegisterEvent("PLAYER_REGEN_ENABLED")
+    sink:SetScript("OnEvent", follow)
+    printScreenSink = sink
+    follow()
+end
 local quickKeybindHooked, quickKeybindFromHere, listenOwner = nil, nil, {}
 local function listenForKey(action, slot)
     local mode, listener = _G.QuickKeybindFrame, _G.KeybindListener
     if not (action and mode and mode.Show and listener and listener.StartListening) then return false end
     if InCombatLockdown() then return false end
+    installPrintScreenSink(mode)
     local function refreshRows()
         for _, refresh in ipairs(activeKeyRefreshers or {}) do pcall(refresh) end
     end
