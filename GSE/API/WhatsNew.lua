@@ -55,8 +55,33 @@ local content = CreateFrame("Frame", nil, scroll)
 content:SetSize(620, 1)
 scroll:SetScrollChild(content)
 
+-- The TL;DR, and its link in a box to copy from: WoW text can't be clicked.
+local WHATS_NEW_LINK = "https://gse.tools/help/keybinding-and-actionbar-overrides"
+local tldr = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+tldr:SetPoint("TOPLEFT", 0, 0)
+tldr:SetJustifyH("LEFT")
+tldr:SetJustifyV("TOP")
+tldr:SetWidth(620)
+
+local link = CreateFrame("EditBox", nil, content, "InputBoxTemplate")
+link:SetPoint("TOPLEFT", tldr, "BOTTOMLEFT", 6, -6)
+link:SetSize(440, 20)
+link:SetAutoFocus(false)
+link:SetText(WHATS_NEW_LINK)
+link:SetCursorPosition(0)
+-- Read-only: whatever is typed, the link stays; a click selects it to copy.
+link:SetScript("OnTextChanged", function(self, userInput)
+    if userInput then
+        self:SetText(WHATS_NEW_LINK)
+        self:HighlightText()
+    end
+end)
+link:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+link:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) end)
+link:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
 local label = content:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-label:SetPoint("TOPLEFT", 0, 0)
+label:SetPoint("TOPLEFT", tldr, "BOTTOMLEFT", 0, -38)
 label:SetJustifyH("LEFT")
 label:SetJustifyV("TOP")
 label:SetWidth(620)
@@ -72,10 +97,12 @@ shownew:SetScript(
 )
 
 function GSE.ShowUpdateNotes()
+    tldr:SetText(L["WhatsNewTLDR"])
+    tldr:SetHeight(tldr:GetStringHeight())
     label:SetText(L["WhatsNew"] .. "\n\n")
     label:SetHeight(label:GetStringHeight())
     shownew:SetChecked(GSEOptions.shownew)
     shownew:SetPoint("TOPLEFT", label, "BOTTOMLEFT", -4, -12)
-    content:SetHeight(label:GetStringHeight() + shownew:GetHeight() + 24)
+    content:SetHeight(tldr:GetStringHeight() + 38 + label:GetStringHeight() + shownew:GetHeight() + 24)
     whatsnewframe:Show()
 end
