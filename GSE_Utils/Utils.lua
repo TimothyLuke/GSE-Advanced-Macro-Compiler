@@ -2534,7 +2534,8 @@ do
         -- loadout, and the active loadout's on top. Say which one this button
         -- shows, and let a change go to either.
         local loadoutName = GSE.ActiveBindingLoadoutName and GSE.ActiveBindingLoadoutName()
-        local layer = existingSequence and GSE.OverrideLayerFor and GSE.OverrideLayerFor(buttonName)
+        local layer = existingSequence and GSE.OverrideLayerFor
+            and GSE.OverrideLayerFor(buttonName, GSE.OverrideStateFor and GSE.OverrideStateFor(self))
 
         local function addSequenceButtons(parent, toLayer)
             for _, entry in ipairs(names) do

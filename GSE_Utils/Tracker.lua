@@ -1896,8 +1896,9 @@ local function ResolveUsedSequence(buttonName)
         return buttonName
     end
 
-    if GSE.ButtonOverrides and type(GSE.ButtonOverrides[buttonName]) == "string" and IsValidSequence(GSE.ButtonOverrides[buttonName]) then
-        return GSE.ButtonOverrides[buttonName]
+    local overridden = GSE.ButtonOverrideSequence and GSE.ButtonOverrideSequence(buttonName)
+    if type(overridden) == "string" and IsValidSequence(overridden) then
+        return overridden
     end
 
     local used = GSE.UsedSequences and GSE.UsedSequences[buttonName]
@@ -1946,7 +1947,7 @@ local function BindingTargetMatches(target, sequence, buttonName)
     if target == sequence or target == buttonName then return true end
     local id = SequenceIdOf(sequence)
     if id and GSE.ResolveSequenceId(target) == id then return true end
-    if GSE.ButtonOverrides and GSE.ButtonOverrides[target] == sequence then return true end
+    if GSE.ButtonRunsSequence and GSE.ButtonRunsSequence(target, sequence) then return true end
     return false
 end
 
@@ -2279,7 +2280,7 @@ function GSE.SequenceIconMatchesCurrentSpec(sequence, buttonName)
         end
     end
 
-    if buttonName and GSE.ButtonOverrides and GSE.ButtonOverrides[buttonName] == sequence then return true end
+    if buttonName and GSE.ButtonRunsSequence and GSE.ButtonRunsSequence(buttonName, sequence) then return true end
 
     return true
 end

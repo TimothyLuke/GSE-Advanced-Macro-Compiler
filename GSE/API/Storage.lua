@@ -3812,7 +3812,9 @@ function GSE.UpdateIcon(self, reseticon)
         end
         if GSE.ButtonOverrides and not reseticon then
             for k, v in pairs(GSE.ButtonOverrides) do
-                if v == gsebutton and _G[k] then
+                -- The sequence the button runs now: a LAB state can have its own.
+                local runs = GSE.ButtonOverrideSequence and GSE.ButtonOverrideSequence(k) or v
+                if runs == gsebutton and _G[k] then
                     if
                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or
                             string.sub(k, 1, 4) == "NDui"

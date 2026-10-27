@@ -69,35 +69,52 @@ end
 
 local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFrameTemplate")
 
--- Secure OnAttributeChanged handler shared by all native/Dominos/third-party button paths.
--- When WoW swaps the action bar (vehicle, skyriding, possession, override bar) it changes
--- the 'action' or 'pressandholdaction' attribute on the button.  We catch that here,
--- recalculate the effective action slot (accounting for the current bar page), and ask
--- GetActionInfo whether the slot still holds a macro.  If it doesn't (vehicle spell, etc.)
--- we revert type to 'action' so the bar-swap controls work normally.
-local BAR_SWAP_OAC = [[
-    if name ~= "action" and name ~= "pressandholdaction" then return end
-    -- Gate on the SECURE flag, never the insecure "gse-button" string. Reading an
-    -- insecurely-written attribute here would taint this snippet's execution, and
-    -- because this runs interleaved with Blizzard's own OnAttributeChanged on the
-    -- same action-change event (incl. Bartender4 State-Config actionpage paging),
-    -- that taint rides into Blizzard's UpdatePressAndHoldAction and blocks its
-    -- protected SetAttribute in combat (issue #1931). gse-secure is set only from
-    -- inside the secure environment (secureArmGSEButton), so it is never tainted.
-    if not self:GetAttribute("gse-secure") then return end
+-- What a GSE-armed native/Dominos/third-party button does now, worked out
+-- inside the secure environment; shared by the two snippets below.
+--
+-- The slot it fires: its page's slot, or for Dominos and some third-party
+-- bars (no page hierarchy) its "action" attribute. Blizzard's main bar
+-- (gse-bonus-paged) pages to a stance, form or stealth bar in C, not through
+-- actionpage, so with a bonus bar up (offset 1-4; 5 is skyriding) its first
+-- page is page 6 + offset.
+--
+-- Which row runs there: a row pinned to that stance/form/stealth page
+-- (gse-page-<page>, 7-10) on that page, else the Default row (gse-default);
+-- with neither the button is a plain action button. And only on an empty or
+-- macro slot: a real action in the slot wins, as it always has (vehicle,
+-- skyriding, possession and override bar controls included).
+--
+-- Gated on the SECURE flags only, never the insecure "gse-button" string.
+-- Reading an insecurely-written attribute here would taint this snippet's
+-- execution, and because this runs interleaved with Blizzard's own
+-- OnAttributeChanged on the same action-change event (incl. Bartender4
+-- State-Config actionpage paging), that taint rides into Blizzard's
+-- UpdatePressAndHoldAction and blocks its protected SetAttribute in combat
+-- (issue #1931). gse-secure, gse-default, gse-page-* and gse-bonus-paged are
+-- set only from inside the secure environment, so they are never tainted.
+local BAR_SWAP_RESOLVE = [[
     local slot = self:GetID()
     local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
-    -- Dominos and some third-party bars store the action directly (no page hierarchy).
-    -- Fall back to GetEffectiveAttribute("action") when actionpage is absent.
     local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
                             or (page and (slot + page * 12 - 12)) or nil
+    local bonus = GetBonusBarOffset and GetBonusBarOffset() or 0
+    if effectiveAction and effectiveAction <= 12 and bonus >= 1 and bonus <= 4
+        and self:GetAttribute("gse-bonus-paged") then
+        effectiveAction = effectiveAction + (6 + bonus - 1) * 12
+    end
+    local formPage = effectiveAction and floor((effectiveAction - 1) / 12) + 1
+    local pinned = formPage and formPage >= 7 and formPage <= 10
+        and self:GetAttribute("gse-page-" .. formPage) and formPage or nil
+    local runs = pinned or self:GetAttribute("gse-default")
+    local clicks = false
     local swapped = 0
     if effectiveAction then
         local at = GetActionInfo(effectiveAction)
         -- at == nil means the slot is empty; treat empty slots same as macros so
         -- the GSE click-button binding is preserved rather than reset to type="action".
-        if at == nil or at == "macro" then
+        if runs and (at == nil or at == "macro") then
             self:SetAttribute("type", "click")
+            clicks = true
         else
             self:SetAttribute("type", "action")
             swapped = effectiveAction
@@ -109,33 +126,27 @@ local BAR_SWAP_OAC = [[
     end
 ]]
 
+-- Secure OnAttributeChanged handler shared by all native/Dominos/third-party button paths.
+-- When WoW swaps the action bar (vehicle, skyriding, possession, override bar) it changes
+-- the 'action' or 'pressandholdaction' attribute on the button.  We catch that here,
+-- recalculate the effective action slot (accounting for the current bar page), and ask
+-- GetActionInfo whether the slot still holds a macro.  If it doesn't (vehicle spell, etc.)
+-- we revert type to 'action' so the bar-swap controls work normally.
+local BAR_SWAP_OAC = [[
+    if name ~= "action" and name ~= "pressandholdaction" then return end
+    if not self:GetAttribute("gse-secure") then return end
+]] .. BAR_SWAP_RESOLVE
+
 -- OnClick pre-handler: same bar-swap check applied at mouse-click time.
 -- Without this, the pre-click handler would unconditionally re-assert type='click'
 -- (overriding BAR_SWAP_OAC) so mouse clicks during vehicle/skyriding/possession
 -- would still redirect to the GSE sequence instead of the override-bar action.
+-- On a page a row is pinned to, the click is renamed gse<page> so it reads that
+-- row's clickbutton-gse<page> (see LAB_STATE_ONCLICK).
 local BAR_SWAP_ONCLICK = [[
-    -- Gate on the secure flag, not the insecure "gse-button" string (see BAR_SWAP_OAC).
-    local gseButton = self:GetAttribute('gse-secure')
-    if gseButton then
-        local slot = self:GetID()
-        local page = slot > 0 and self:GetEffectiveAttribute("actionpage") or nil
-        local effectiveAction = (slot == 0 or not page) and self:GetEffectiveAttribute("action")
-                                or (page and (slot + page * 12 - 12)) or nil
-        local swapped = 0
-        if effectiveAction then
-            local at = GetActionInfo(effectiveAction)
-            -- at == nil means the slot is empty; preserve type='click' so the GSE
-            -- sequence still fires instead of resetting to a bare action button.
-            if at == nil or at == "macro" then
-                self:SetAttribute('type', 'click')
-            else
-                self:SetAttribute('type', 'action')
-                swapped = effectiveAction
-            end
-        end
-        if self:GetAttribute("gse-eff-action") ~= swapped then
-            self:SetAttribute("gse-eff-action", swapped)
-        end
+    if self:GetAttribute('gse-secure') then
+]] .. BAR_SWAP_RESOLVE .. [[
+        if clicks and pinned then return "gse" .. pinned end
     else
         self:SetAttribute('type', 'action')
     end
@@ -178,6 +189,23 @@ local VEHICLE_OAC_LAB = [[
     self:SetAttribute("type", "click")
 ]]
 
+-- Secure OnClick pre-handler for LAB-managed buttons: each state GSE took
+-- over runs its own sequence, so Cat and Bear (or Stealth and out of it) can
+-- run different ones. LAB's state change sets only type, and clickbutton is
+-- one attribute per button that secure code cannot swap (a frame ref stored
+-- there is a handle Blizzard's click cannot call -- see secureArmGSEButton).
+-- So each state's sequence is stored at apply time as clickbutton-gse<state>,
+-- and the click is renamed gse<state>: Blizzard's click reads the modified
+-- attribute for that name, and every other attribute falls back to its plain
+-- one. Gated on the secure per-state mark, never the insecure gse-button
+-- string (#1931).
+local LAB_STATE_ONCLICK = [[
+    local st = self:GetAttribute("state")
+    if st ~= nil and self:GetAttribute("gse-lab-state-" .. st) then
+        return "gse" .. st
+    end
+]]
+
 -- ---------------------------------------------------------------------------
 -- Secure arming of native / Dominos / third-party action buttons (issue #1931).
 --
@@ -195,7 +223,17 @@ local VEHICLE_OAC_LAB = [[
 -- the non-secure icon / yield hooks; no secure code reads it, so its taint is
 -- inert. Callers must be out of combat (SetFrameRef writes a protected attr).
 -- ---------------------------------------------------------------------------
-local function secureArmGSEButton(button, sequenceName)
+-- Blizzard's main bar (ActionButton1-12) pages to a stance, form or stealth
+-- bar in C; a bar addon that took the frame over (Dominos) pages it itself.
+local function isBonusPaged(button)
+    local name = button.GetName and button:GetName()
+    local n = name and tonumber(string.match(name, "^ActionButton(%d+)$"))
+    return n ~= nil and n <= 12 and button.SetShowGridInsecure == nil
+end
+
+-- asDefault: the button's Default row, which runs on every page no pinned row
+-- holds (gse-default). Re-arming without it leaves that as it was.
+local function secureArmGSEButton(button, sequenceName, asDefault)
     if not button then return end
     -- clickbutton holds the GSE executor frame. It MUST be set from insecure Lua
     -- with the real frame object, NOT from inside the secure snippet via a frame
@@ -219,7 +257,32 @@ local function secureArmGSEButton(button, sequenceName)
         if not b then return end
         b:SetAttribute("gse-secure", true)
         b:SetAttribute("type", "click")
-    ]])
+    ]] .. (asDefault and [[
+        b:SetAttribute("gse-default", true)
+    ]] or "") .. (isBonusPaged(button) and [[
+        b:SetAttribute("gse-bonus-paged", true)
+    ]] or ""))
+end
+
+-- Arm a row pinned to a stance, form or stealth page (7-10): the snippets run
+-- it on that page only. Its sequence is the button's clickbutton-gse<page>,
+-- set here from insecure Lua with the real frame, as clickbutton is (see
+-- secureArmGSEButton).
+local function secureArmGSEPage(button, page, sequenceName)
+    if not button then return end
+    local executor = sequenceName and _G[sequenceName]
+    if executor and executor ~= button and not InCombatLockdown() then
+        button:SetAttribute("clickbutton-gse" .. page, executor)
+    end
+    SHBT:SetFrameRef("gseArmButton", button)
+    SHBT:Execute([[
+        local b = self:GetFrameRef("gseArmButton")
+        if not b then return end
+        b:SetAttribute("gse-secure", true)
+        b:SetAttribute("gse-page-]] .. page .. [[", true)
+    ]] .. (isBonusPaged(button) and [[
+        b:SetAttribute("gse-bonus-paged", true)
+    ]] or ""))
 end
 
 -- Secure type="action": the override yields to a real action dropped on its slot.
@@ -233,17 +296,37 @@ local function secureYieldGSEButton(button)
     ]])
 end
 
--- Secure disarm: clear the gate flag and reset type as the override is removed.
-local function secureDisarmGSEButton(button)
+-- Secure disarm: clear the gate flags and reset type as the override is
+-- removed. pages: the pages rows were pinned to.
+local function secureDisarmGSEButton(button, pages)
     if not button then return end
+    local unmark = {}
+    for page in pairs(pages or {}) do
+        button:SetAttribute("clickbutton-gse" .. page, nil)
+        unmark[#unmark + 1] = "b:SetAttribute('gse-page-" .. page .. "', nil)"
+    end
     SHBT:SetFrameRef("gseArmButton", button)
     SHBT:Execute([[
         local b = self:GetFrameRef("gseArmButton")
-        if b then
-            b:SetAttribute("gse-secure", nil)
-            b:SetAttribute("type", "action")
-        end
-    ]])
+        if not b then return end
+        b:SetAttribute("gse-secure", nil)
+        b:SetAttribute("gse-default", nil)
+        b:SetAttribute("gse-bonus-paged", nil)
+        b:SetAttribute("type", "action")
+    ]] .. table.concat(unmark, " "))
+end
+
+-- Arm a native/Dominos/third-party button for one row: a row pinned to a
+-- stance, form or stealth page, or else the button's Default row.
+local function armRow(button, buttonName, sequenceName, state)
+    if state == nil then
+        secureArmGSEButton(button, sequenceName, true)
+        return
+    end
+    state = tostring(state)
+    GSE.ButtonOverrideStates[buttonName] = GSE.ButtonOverrideStates[buttonName] or {}
+    GSE.ButtonOverrideStates[buttonName][state] = sequenceName
+    secureArmGSEPage(button, state, sequenceName)
 end
 
 -- Compute the effective action slot for a button from non-secure code.
@@ -285,6 +368,40 @@ end
 -- action as something to yield to. Used to stop GSE repainting its sequence icon
 -- over the real action's icon, which otherwise fights WoW's own repaint and makes
 -- the button flicker when a normal key/spell is placed in the same slot.
+--- The state of button a sequence put on it now is for, as dropping one on it
+--- does: on a LibActionButton bar, the state it is in unless that is the
+--- bar's default; on any other bar, the stance, form or stealth page (7-10)
+--- it shows. nil: the Default row, which runs in every state no pinned row
+--- holds. A bar swapped for a vehicle, skyriding or an override bar is never
+--- a state of its own.
+function GSE.OverrideStateFor(button)
+    if type(button) ~= "table" or not button.GetAttribute or button.gseActionBarButton then return nil end
+    local name = button.GetName and button:GetName()
+    if not name then return nil end
+    if button.SetState and button.SetShowGridInsecure == nil then
+        local st = button:GetAttribute("state")
+        if st == nil then return nil end
+        st = tostring(st)
+        local n = tonumber(st)
+        if st == GSE.LABDefaultState(name) or (n and n >= 11 and n <= 14) then return nil end
+        return st
+    end
+    local slot = getButtonEffectiveSlot(button)
+    local page = slot and math.floor((slot - 1) / 12) + 1
+    if page and page >= 7 and page <= 10 then return tostring(page) end
+    return nil
+end
+
+--- Whether a native or Dominos button pages with stance, form or stealth, so
+--- a row can be pinned to one of those pages: Blizzard's main bar, and
+--- Dominos (which pages by its own settings).
+function GSE.ButtonPagesWithForms(buttonName)
+    local button = buttonName and _G[buttonName]
+    if type(button) ~= "table" or button.gseActionBarButton then return false end
+    if button.SetShowGridInsecure ~= nil then return true end
+    return isBonusPaged(button)
+end
+
 function GSE.ActionBarSlotHasForeignAction(button)
     if not button or not button.GetAttribute then return false end
     if not button:GetAttribute("gse-button") then return false end
@@ -344,11 +461,22 @@ local function getGSESequenceIcon(seq)
     return texture
 end
 
+-- The sequence an overridden button runs now: its LAB state's own, where it
+-- has one, else the button's.
+local function overrideSequence(button)
+    local seq = button:GetAttribute("gse-button")
+    if not seq then return nil end
+    local name = button.GetName and button:GetName()
+    if not name then return seq end
+    return GSE.ButtonOverrideSequence(name)
+end
+
 local function getGSEButtonIcon(self)
     -- A real action in the slot wins: don't paint the sequence icon over it.
     if GSE.ActionBarSlotHasForeignAction(self) then return nil end
-    local seq = self:GetAttribute("gse-button")
-    local seqTexture = getGSESequenceIcon(seq)
+    -- nil where only another state's row is on the button: the slot's own icon.
+    local seq = overrideSequence(self)
+    local seqTexture = seq and getGSESequenceIcon(seq)
     if seqTexture then return seqTexture end
 
     local effectiveSlot = getButtonEffectiveSlot(self)
@@ -764,7 +892,7 @@ local function hookIconSpell(button)
     if not (icon and icon.SetTexture and icon.GetTexture) or iconSpellHooked[icon] then return end
     iconSpellHooked[icon] = true
     local function follow()
-        local seq = button:GetAttribute("gse-button")
+        local seq = overrideSequence(button)
         if not seq then return end
         local spellID = spellForIcon(seq, icon:GetTexture())
         if spellID ~= overrideSpell[button] then
@@ -973,8 +1101,8 @@ end
 
 local function repaintAllGSEOverrideIcons(defer, sequenceName)
     if not GSE.ButtonOverrides then return end
-    for buttonName, seq in pairs(GSE.ButtonOverrides) do
-        if not sequenceName or seq == sequenceName then
+    for buttonName in pairs(GSE.ButtonOverrides) do
+        if not sequenceName or GSE.ButtonOverrideSequence(buttonName) == sequenceName then
             repaintGSEOverrideButton(_G[buttonName], defer)
         end
     end
@@ -1071,7 +1199,7 @@ local function scheduleIconRestore(self, icon)
         end
         -- Action bar slot not yet populated ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ delegate to UpdateIcon which
         -- resolves the spell icon from the compiled sequence execution table.
-        local seq = self:GetAttribute("gse-button")
+        local seq = overrideSequence(self)
         if seq and _G[seq] and GSE.UpdateIcon then
             GSE.UpdateIcon(_G[seq], false)
         end
@@ -1085,7 +1213,7 @@ end
 local function showGSEButtonTooltip(btn)
     if not btn or not btn.GetAttribute then return end
     if not btn:GetAttribute("gse-button") then return end
-    local seqName = btn:GetAttribute("gse-button")
+    local seqName = overrideSequence(btn)
     local seqFrame = seqName and _G[seqName]
     if not seqFrame or not GSE.SequencesExec then return end
     local step = seqFrame:GetAttribute("step") or 1
@@ -1284,7 +1412,7 @@ local function hookActionButtonUpdate()
         if not icon then return end
 
         local texture
-        local seq = self:GetAttribute("gse-button")
+        local seq = overrideSequence(self)
         if seq and self:GetAttribute("type") == "click" then
             texture = getGSEButtonIcon(self)
         else
@@ -1312,7 +1440,9 @@ end
 -- button frame when GSE owns the override.
 local GSE_EABBindOwner = CreateFrame("Frame", "GSE_EABBindOwner", UIParent)
 
-local function overrideActionButton(savedBind, force)
+-- pinnedStates: the states of this button that other rows pin, which a
+-- Default row (no State) leaves to them.
+local function overrideActionButton(savedBind, force, pinnedStates)
     if GSE.isEmpty(GSE.ButtonOverrides) then
         GSE.ButtonOverrides = {}
     end
@@ -1334,12 +1464,9 @@ local function overrideActionButton(savedBind, force)
     -- to run means nothing to override.
     local Sequence = GSE.StoredSequenceId(savedBind.Sequence)
     if not Sequence then return end
+    if savedBind.State == nil then GSE.ButtonOverrideDefaults[Button] = true end
     local SequenceLabel = GSE.SequenceName(savedBind.Sequence) or Sequence
-    local state =
-        savedBind.State and savedBind.State or string.sub(Button, 1, 3) == "BT4" and "0" or
-        string.sub(Button, 1, 4) == "CPB_" and "" or
-        string.sub(Button, 1, 4) == "NDui_" and "2" or
-        "1"
+    local state = savedBind.State or GSE.LABDefaultState(Button)
     _G[Button]:SetAttribute("gse-button", Sequence)
     if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
         local cmd = _G[Button].commandName
@@ -1368,7 +1495,7 @@ local function overrideActionButton(savedBind, force)
         -- The GSE Action Bar: no action slot, so no bar swap to watch for --
         -- the button only ever clicks its sequence.
         if not InCombatLockdown() then
-            secureArmGSEButton(_G[Button], Sequence)
+            secureArmGSEButton(_G[Button], Sequence, true)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
@@ -1414,7 +1541,7 @@ local function overrideActionButton(savedBind, force)
             end
             -- Arm type/clickbutton + the secure gate from inside the secure
             -- environment so GSE seeds no taint (issue #1931).
-            secureArmGSEButton(_G[Button], Sequence)
+            armRow(_G[Button], Button, Sequence, savedBind.State)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
@@ -1500,6 +1627,9 @@ local function overrideActionButton(savedBind, force)
                 local action = type(stateActions) == "table" and stateActions[key] or nil
                 btn.gseLabOriginal[key] = kind and { kind = kind, action = action } or false
             end
+            -- Each state's own sequence, for LAB_STATE_ONCLICK: set here, out
+            -- of combat, with the real frame, as clickbutton is (no secure
+            -- snippet reads it, so its taint is inert).
             local function applyGSEState(st)
                 rememberState(st)
                 SHBT:SetFrameRef("gseArmButton", _G[Button])
@@ -1507,13 +1637,19 @@ local function overrideActionButton(savedBind, force)
                     "local b = self:GetFrameRef('gseArmButton') " ..
                         "if b then b:SetAttribute('gse-lab-state-" .. tostring(st) .. "', true) end"
                 )
+                _G[Button]:SetAttribute("clickbutton-gse" .. tostring(st), _G[Sequence])
+                GSE.ButtonOverrideStates[Button] = GSE.ButtonOverrideStates[Button] or {}
+                GSE.ButtonOverrideStates[Button][tostring(st)] = Sequence
                 _G[Button]:SetState(st, "custom", customState())
             end
+            -- A pinned row takes its one state. A Default row takes every
+            -- state but the ones pinned rows hold (#1717): taking all of them
+            -- ran over a Cat or Stealth row with the Default row's sequence.
             if savedBind.State then
                 applyGSEState(state)
             elseif type(stateTypes) == "table" and next(stateTypes) then
                 for st in pairs(stateTypes) do
-                    if not isSwapState(st) then
+                    if not isSwapState(st) and not (pinnedStates and pinnedStates[tostring(st)]) then
                         applyGSEState(st)
                     end
                 end
@@ -1538,6 +1674,7 @@ local function overrideActionButton(savedBind, force)
             if not labVehicleDriverButtons[Button] then
                 labVehicleDriverButtons[Button] = true
                 SHBT:WrapScript(_G[Button], "OnAttributeChanged", VEHICLE_OAC_LAB)
+                SHBT:WrapScript(_G[Button], "OnClick", LAB_STATE_ONCLICK)
             end
         end
         hookButtonIconUpdates(Button)
@@ -1606,7 +1743,7 @@ local function overrideActionButton(savedBind, force)
             -- Arm type/clickbutton + the secure gate from inside the secure
             -- environment so GSE seeds no taint on the Blizzard button -- this is
             -- the taint that Bartender4 State Config surfaced in issue #1931.
-            secureArmGSEButton(_G[Button], Sequence)
+            armRow(_G[Button], Button, Sequence, savedBind.State)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
@@ -1649,11 +1786,13 @@ local function reevaluateOverrideButtonState(buttonName, sequence)
     local desiredEff = foreign and (getButtonEffectiveSlot(btn) or 0) or 0
     local isLAB = btn.SetState ~= nil
     if not isLAB then
-        local desiredType = foreign and "action" or "click"
+        -- A button whose rows are pinned to other pages is a plain action
+        -- button on this one.
+        local desiredType = (foreign or not GSE.ButtonOverrideSequence(buttonName)) and "action" or "click"
         if btn:GetAttribute("type") ~= desiredType then
             -- Route through the secure handler so this slot-yield re-arm does not
             -- re-taint the button (issue #1931). Caller is out of combat.
-            if foreign then
+            if desiredType == "action" then
                 secureYieldGSEButton(btn)
             else
                 secureArmGSEButton(btn, sequence)
@@ -1676,6 +1815,13 @@ local function reevaluateAllOverrideButtons()
 end
 
 function GSE:ACTIONBAR_SLOT_CHANGED()
+    reevaluateAllOverrideButtons()
+end
+
+-- A stance, form or stealth puts Blizzard's main bar on another page, where a
+-- row pinned to it starts or stops running. In combat the click itself
+-- decides (BAR_SWAP_ONCLICK); out of it, the button shows it now.
+function GSE:UPDATE_BONUS_ACTIONBAR()
     reevaluateAllOverrideButtons()
 end
 
@@ -1744,13 +1890,7 @@ local function revertOverrideButton(k)
         if original and next(original) then
             for st, was in pairs(original) do restore[#restore + 1] = { st, was } end
         else
-            local state = "1"
-            if string.sub(k, 1, 3) == "BT4" then
-                state = "0"
-            elseif string.sub(k, 1, 4) == "CPB_" then
-                state = ""
-            end
-            restore[1] = { state, { kind = "action", action = tonumber(string.match(k, "%d+$")) } }
+            restore[1] = { GSE.LABDefaultState(k), { kind = "action", action = tonumber(string.match(k, "%d+$")) } }
         end
         -- Un-GSE the button FIRST. VEHICLE_OAC_LAB turns any custom
         -- type on a marked GSE button into a click on the sequence, so
@@ -1765,6 +1905,7 @@ local function revertOverrideButton(k)
         end
         SHBT:Execute(table.concat(unmark, " "))
         for _, r in ipairs(restore) do
+            btn:SetAttribute("clickbutton-gse" .. tostring(r[1]), nil)
             if r[2] then
                 btn:SetState(r[1], r[2].kind, r[2].action)
             else
@@ -1777,7 +1918,7 @@ local function revertOverrideButton(k)
         -- Clear the secure gate + reset type from inside the secure
         -- environment (issue #1931); gse-button is a non-secure string so
         -- clearing it insecurely is harmless.
-        secureDisarmGSEButton(_G[k])
+        secureDisarmGSEButton(_G[k], GSE.ButtonOverrideStates and GSE.ButtonOverrideStates[k])
         -- The GSE Action Bar's buttons were never wrapped; the wrap
         -- they do have is the bar's own (Actions.lua).
         if not _G[k].gseActionBarButton then
@@ -1817,11 +1958,13 @@ local function LoadOverrides(force)
             revertOverrideButton(k)
         end
         GSE.ButtonOverrides = {}
+        GSE.ButtonOverrideStates = {}
+        GSE.ButtonOverrideDefaults = {}
 
-        -- The spec's overrides: the shared profile's, or this character's own.
-        for _, v in pairs(GSE.SpecOverrides(GetSpec(), false) or {}) do
-            overrideActionButton(v, force)
-        end
+        -- The spec's overrides (the shared profile's, or this character's
+        -- own) with the active talent loadout's on top, one per button and
+        -- state: a button's pinned states, then its Default row on the rest.
+        local loadoutRows
         do
             local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
 
@@ -1832,10 +1975,12 @@ local function LoadOverrides(force)
                 --@debug@
                 GSE.PrintDebugMessage("changing from " .. tostring(GSE.GetSelectedLoadoutConfigID()), "EVENTS")
                 --@end-debug@
-                for _, v in pairs(GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]) do
-                    overrideActionButton(v, force)
-                end
+                loadoutRows = GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]
             end
+        end
+        local rows, pinned = GSE.OverridesToApply(GSE.SpecOverrides(GetSpec(), false), loadoutRows)
+        for _, v in ipairs(rows) do
+            overrideActionButton(v, force, pinned[v.Bind])
         end
 
         -- Repaint the real action icon on any button whose override was just
@@ -2003,39 +2148,51 @@ end
 --- to the active talent loadout, "spec" makes it the spec's for every loadout
 --- (GSE.SetOverrideData); nil changes the button where its override already
 --- comes from, so the change is the one that shows. Returns the layer written.
+--- The sequence goes on the state the button is in (GSE.OverrideStateFor):
+--- put on the stealth bar, it runs on the stealth bar.
 function GSE.CreateActionBarOverride(buttonName, sequenceId, layer)
     if InCombatLockdown() then return end
-    layer = layer or (GSE.OverrideLayerFor(buttonName) == "loadout" and "loadout" or "spec")
-    local written = GSE.SetOverrideData(buttonName, sequenceId, layer)
+    local state = GSE.OverrideStateFor(_G[buttonName])
+    layer = layer or (GSE.OverrideLayerFor(buttonName, state) == "loadout" and "loadout" or "spec")
+    local written = GSE.SetOverrideData(buttonName, sequenceId, layer, state)
     GSE.ReloadOverrides()
     return written
 end
 
 --- Clear the override the button shows now -- the active talent loadout's or
---- the spec's -- and leave every other layer as it was.
+--- the spec's, for the state it is in -- and leave every other layer and
+--- state as it was.
 function GSE.RemoveActionBarOverride(buttonName)
     if InCombatLockdown() then return end
-    GSE.ClearOverrideData(buttonName)
+    GSE.ClearOverrideData(buttonName, GSE.OverrideStateFor(_G[buttonName]))
     GSE.ReloadOverrides()
 end
 
---- Move the sequence fromName shows onto toName, as dragging it there does.
---- A sequence toName showed comes back to fromName, so the two swap; else
---- fromName is left empty. Each button's change goes where its override
---- lives (the active loadout's, or the spec's). Returns "loadout" when either
---- did.
+--- Move the sequence fromName shows onto toName, as dragging it there does,
+--- each button in the state it is in: what fromName shows there moves, and
+--- lands on the state toName is in (on the stealth bar, it is on the stealth
+--- bar). A sequence saved for exactly that state of toName comes back to the
+--- row the moved one left, so the two swap; else that row is cleared. Each
+--- change goes where its row lives (the active loadout's, or the spec's).
+--- Returns "loadout" when either did.
 function GSE.MoveActionBarOverride(fromName, toName)
     if InCombatLockdown() or fromName == toName then return end
     local from, to = _G[fromName], _G[toName]
-    local fromSeq = from and from:GetAttribute("gse-button")
+    if not (from and from:GetAttribute("gse-button")) then return end
+    local fromSeq = GSE.ButtonOverrideSequence(fromName)
     if not fromSeq then return end
-    local toSeq = to and to:GetAttribute("gse-button")
-    local function layerFor(name) return GSE.OverrideLayerFor(name) == "loadout" and "loadout" or "spec" end
-    local written = GSE.SetOverrideData(toName, fromSeq, layerFor(toName))
+    local fromLayer, fromState = GSE.OverrideLayerFor(fromName, GSE.OverrideStateFor(from))
+    local toState = GSE.OverrideStateFor(to)
+    local toLayer, toRowState = GSE.OverrideLayerFor(toName, toState)
+    local toSeq = toLayer and to:GetAttribute("gse-button") and toRowState == toState
+        and GSE.ButtonOverrideSequence(toName)
+    local written = GSE.SetOverrideData(toName, fromSeq, toLayer == "loadout" and "loadout" or "spec", toState)
     if toSeq then
-        if GSE.SetOverrideData(fromName, toSeq, layerFor(fromName)) == "loadout" then written = "loadout" end
+        if GSE.SetOverrideData(fromName, toSeq, fromLayer == "loadout" and "loadout" or "spec", fromState) == "loadout" then
+            written = "loadout"
+        end
     else
-        GSE.ClearOverrideData(fromName)
+        GSE.ClearOverrideData(fromName, fromState)
     end
     GSE.ReloadOverrides()
     return written
@@ -2862,6 +3019,7 @@ GSE:RegisterEvent("PLAYER_LEAVING_WORLD")
 GSE:RegisterEvent("PLAYER_ENTERING_WORLD")
 GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 GSE:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+GSE:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
 GSE:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 GSE:RegisterEvent("UNIT_FACTION")
 GSE:RegisterEvent("PLAYER_LEVEL_UP")
