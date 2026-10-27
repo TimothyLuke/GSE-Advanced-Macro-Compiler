@@ -1703,17 +1703,30 @@ local FORM_PAGES = {
 if GSE.GameMode < 5 or GSE.IsForever then
     FORM_PAGES.WARRIOR = {["7"] = 2457, ["8"] = 71, ["9"] = 2458}
 end
--- "10 (Moonkin Form)" for the class being edited; else just the state.
-local function stateLabel(k)
+-- A button's states by name, "5 (Cat Form / Prowl)": from its bar's page
+-- driver (GSE.PageDriverNames), where the bar addon lets the player choose
+-- the pages; Blizzard's main bar and Dominos by the pages above. A state
+-- nothing names shows its number.
+local function stateNamer(buttonName)
     local classfile = GetClassInfo and select(2, GetClassInfo(GSE.GetCurrentClassID()))
-    local spell = classfile and FORM_PAGES[classfile] and FORM_PAGES[classfile][k]
-    local info = spell and GSE.GetSpellInfo(spell)
-    if info and info.name then return k .. " (" .. info.name .. ")" end
-    return k
+    local driver = GSE.ButtonPageDriver and GSE.ButtonPageDriver(buttonName)
+    local names = driver and GSE.PageDriverNames(driver, classfile)
+    return function(k)
+        local name
+        if names then
+            name = names[k] and table.concat(names[k], " / ")
+        elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
+            local spell = classfile and FORM_PAGES[classfile] and FORM_PAGES[classfile][k]
+            local info = spell and GSE.GetSpellInfo(spell)
+            name = info and info.name
+        end
+        return name and (k .. " (" .. name .. ")") or k
+    end
 end
 local function stateListFor(buttonName, saved)
     local frame = buttonName and _G[buttonName]
     local states, order = {["Default"] = "Default"}, {"Default"}
+    local stateLabel = stateNamer(buttonName)
     local function add(k)
         if k ~= nil and not states[k] then
             states[k] = stateLabel(k)
@@ -1726,10 +1739,27 @@ local function stateListFor(buttonName, saved)
             if k ~= default and k ~= buttonName then add(k) end
         end
     elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
-        for _, k in ipairs(BONUS_PAGES) do add(k) end
+        -- A bar paging by its own driver (EllesmereUI): the pages it sends a
+        -- form or modifier to. Blizzard's main bar and Dominos: 7-10.
+        local pages = BONUS_PAGES
+        if frame.SetShowGridInsecure == nil and GSE.ButtonPageDriver(buttonName) then
+            pages = {}
+            for page = 1, 10 do
+                if GSE.DriverStateForPage(buttonName, page) then pages[#pages + 1] = tostring(page) end
+            end
+        end
+        for _, k in ipairs(pages) do add(k) end
     end
     add(saved)
     if #order == 1 then return nil end
+    -- Default, then the pages by number, then any state named otherwise.
+    table.sort(order, function(a, b)
+        if a == "Default" or b == "Default" then return a == "Default" and b ~= "Default" end
+        local na, nb = tonumber(a), tonumber(b)
+        if na and nb then return na < nb end
+        if na or nb then return na ~= nil end
+        return tostring(a) < tostring(b)
+    end)
     return states, order
 end
 

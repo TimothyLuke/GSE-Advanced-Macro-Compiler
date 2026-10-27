@@ -285,6 +285,144 @@ function GSE.LABDefaultState(buttonName)
     return "1"
 end
 
+-- ── What a bar's pages are for ──────────────────────────────────────────────
+--
+-- A LibActionButton bar pages by a driver of the bar addon's ("[bonusbar:3] 9;
+-- [mod:shift] 5; 1"), and Bartender4, ElvUI and EllesmereUI let the player
+-- choose the pages: Cat Form can be page 5 on one bar and 7 on another. The
+-- Button Bindings name a state by the conditions its bar's driver gives it.
+-- Display only: what runs in a state is the state attribute's business.
+
+-- Each driver registered from now on. Bar addons set theirs up at login,
+-- after GSE has loaded.
+local pageDrivers = setmetatable({}, {__mode = "k"})
+if hooksecurefunc and RegisterStateDriver then
+    hooksecurefunc("RegisterStateDriver", function(frame, state, values)
+        if state == "page" and type(frame) == "table" and type(values) == "string" then
+            pageDrivers[frame] = values
+        end
+    end)
+end
+
+local function readPageDriver(frame)
+    if pageDrivers[frame] then return pageDrivers[frame] end
+    -- One set before GSE loaded: ElvUI keeps its bar's on the bar...
+    local page = frame.GetAttribute and frame:GetAttribute("page")
+    if type(page) == "string" and string.find(page, "[", 1, true) then return page end
+    -- ...and Bartender4 builds its bar's again on request.
+    if type(frame.GetStateOption) == "function" and type(frame.UpdateStates) == "function" then
+        if not frame:GetStateOption("enabled") then return nil end
+        if frame:GetStateOption("customEnabled") then return frame:GetStateOption("custom") end
+        local driver = frame:UpdateStates(true)
+        if type(driver) == "string" then return driver end
+    end
+end
+
+--- The page driver of the bar a button is on, or nil.
+function GSE.ButtonPageDriver(buttonName)
+    local frame = buttonName and _G[buttonName]
+    for _ = 1, 3 do
+        frame = type(frame) == "table" and frame.GetParent and frame:GetParent()
+        if not frame then return nil end
+        local ok, driver = pcall(readPageDriver, frame)
+        if ok and driver then return driver end
+    end
+end
+
+-- The form, stance or stealth each bonus bar is for, by class.
+local BONUS_BAR_SPELLS = {
+    DRUID = { 768, 33891, 5487, 24858 }, -- Cat, Tree of Life, Bear, Moonkin
+    ROGUE = { 1784, 51713 }, -- Stealth, Shadow Dance
+    WARRIOR = { 2457, 71, 2458 }, -- Battle, Defensive, Berserker
+    PRIEST = { 15473 }, -- Shadowform
+    MONK = { 103985, 115069, 115070 }, -- Tiger, Ox, Serpent
+    EVOKER = { 369536 }, -- Soar
+}
+local PROWL, STEALTH = 5215, 1784
+local NOT_A_FORM = {
+    overridebar = true, vehicleui = true, possessbar = true, shapeshift = true, petbattle = true,
+}
+
+local function spellName(spellID)
+    local info = spellID and GSE.GetSpellInfo(spellID)
+    return info and info.name
+end
+
+-- One [..] group of a driver as a name: "Bear Form", "Shift + Cat Form".
+-- Nil for a vehicle, Skyriding or a page switched by hand.
+local function describePageConditions(group, classfile)
+    local bonus, form, stealth, modifier, target
+    for raw in string.gmatch(group, "[^,]+") do
+        local test = string.lower(raw:match("^%s*(.-)%s*$"))
+        if NOT_A_FORM[test] or test:match("^bar:") then return nil end
+        local n = tonumber(test:match("^bonusbar:(%d+)$"))
+        if n then
+            if n < 1 or n > 4 then return nil end
+            bonus = n
+        end
+        n = tonumber(test:match("^form:(%d+)$") or test:match("^stance:(%d+)$"))
+        if n then form = n end
+        if test == "stealth" or test == "stealth:1" then stealth = true end
+        local key = test:match("^mod:(%a+)$") or test:match("^modifier:(%a+)$")
+        if key then modifier = _G[string.upper(key) .. "_KEY_TEXT"] or key end
+        if test == "help" or test == "harm" then target = test end
+    end
+
+    local name
+    if bonus and stealth and classfile == "DRUID" then
+        name = spellName(PROWL)
+    elseif bonus then
+        name = spellName(BONUS_BAR_SPELLS[classfile] and BONUS_BAR_SPELLS[classfile][bonus])
+    elseif form and GetShapeshiftFormInfo then
+        name = spellName(select(4, GetShapeshiftFormInfo(form)))
+    elseif stealth then
+        name = spellName(classfile == "DRUID" and PROWL or STEALTH)
+    end
+    local parts = {}
+    if modifier then parts[#parts + 1] = modifier end
+    if name then parts[#parts + 1] = name end
+    if target then parts[#parts + 1] = target == "help" and GSE.L["Friendly target"] or GSE.L["Hostile target"] end
+    if #parts == 0 then return nil end
+    return table.concat(parts, " + ")
+end
+
+--- What a driver puts on each page: { [page] = { name, ... } }, in its order,
+--- and the page it gives when no condition holds (the bar's own).
+function GSE.PageDriverNames(driver, classfile)
+    local names, default = {}, nil
+    for clause in string.gmatch(tostring(driver or "") .. ";", "([^;]*);") do
+        local page = clause:match("(%d+)%s*$")
+        if page and not string.find(clause, "[", 1, true) then default = default or page end
+        if page then
+            for group in string.gmatch(clause, "%[([^%]]*)%]") do
+                local name = describePageConditions(group, classfile)
+                if name then
+                    names[page] = names[page] or {}
+                    local seen = false
+                    for _, have in ipairs(names[page]) do
+                        if have == name then seen = true end
+                    end
+                    if not seen then table.insert(names[page], name) end
+                end
+            end
+        end
+    end
+    return names, default
+end
+
+--- The page a bar addon's own driver has a button's bar on now, when that is
+--- one it sends a form, stance, stealth or modifier to (1-10, not the bar's
+--- own): EllesmereUI's, whose pages the player chooses. Nil otherwise.
+function GSE.DriverStateForPage(buttonName, page)
+    local driver = GSE.ButtonPageDriver(buttonName)
+    if not (driver and page and page >= 1 and page <= 10) then return nil end
+    local _, classfile = UnitClass("player")
+    local names, default = GSE.PageDriverNames(driver, classfile)
+    local key = tostring(page)
+    if key ~= default and names[key] then return key end
+    return nil
+end
+
 --- The action-bar overrides to put on for a spec, from its own rows and the
 --- active talent loadout's: one per button and state, the loadout's replacing
 --- the spec's for the same button and state. Returns them in the order to

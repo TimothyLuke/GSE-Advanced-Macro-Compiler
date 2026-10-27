@@ -246,6 +246,15 @@ describe("Stance, form and stealth pages on other bars", function()
     assert.are.equal("gse7", onClick(button, { bonus = 1 }))
   end)
 
+  it("runs a row on a page a bar addon's own driver chose (EllesmereUI: Cat Form on 5)", function()
+    local button = { id = 1, attributes = { ["gse-secure"] = true, ["gse-default"] = true, ["gse-page-5"] = true,
+      actionpage = 5 } }
+    assert.are.equal("gse5", onClick(button, { bonus = 1 }))
+    button.attributes.actionpage = 1
+    assert.is_nil(onClick(button, { bonus = 0 }))
+    assert.are.equal("click", button.attributes.type)
+  end)
+
   it("never takes skyriding's page (bonus bar 5) for a form's", function()
     local button = mainBarButton({ ["gse-page-7"] = true, ["gse-page-10"] = true })
     assert.is_nil(onClick(button, { bonus = 5 }))
@@ -261,5 +270,101 @@ describe("Stance, form and stealth pages on other bars", function()
     assert.truthy(move:find("GSE.ButtonOverrideSequence(fromName)", 1, true), "what shows there moves")
     local remove = body(src, "function GSE.RemoveActionBarOverride", "\nend\n")
     assert.truthy(remove:find("GSE.ClearOverrideData(buttonName, GSE.OverrideStateFor(_G[buttonName]))", 1, true))
+  end)
+end)
+
+describe("A bar's pages by name", function()
+  setup(function()
+    require("../spec/mockGSE")
+    require("../GSE/API/Statics")
+    require("../GSE/API/InitialOptions")
+    require("../GSE/API/StringFunctions")
+    require("../GSE/API/CharacterFunctions")
+    require("../GSE/API/Storage")
+    require("../GSE/API/Profiles")
+  end)
+
+  local SPELLS = { [768] = "Cat Form", [33891] = "Tree of Life", [5487] = "Bear Form", [24858] = "Moonkin Form",
+    [5215] = "Prowl", [1784] = "Stealth" }
+  -- Put back what the last test faked first: Lua 5.1's runner has no after_each.
+  local saved
+  local function restore()
+    if not saved then return end
+    GSE.GetSpellInfo, _G.SHIFT_KEY_TEXT, _G.BT4Button1, _G.ElvUI_Bar1Button1 =
+      saved.spell, saved.shift, saved.bt4, saved.elv
+    saved = nil
+  end
+  local function start()
+    restore()
+    saved = { spell = GSE.GetSpellInfo, shift = _G.SHIFT_KEY_TEXT, bt4 = _G.BT4Button1, elv = _G.ElvUI_Bar1Button1 }
+    GSE.GetSpellInfo = function(id) return SPELLS[id] and { name = SPELLS[id] } end
+    _G.SHIFT_KEY_TEXT = "Shift"
+  end
+  after_each(restore)
+
+  local function named(driver, page)
+    local names = GSE.PageDriverNames(driver, "DRUID")[page]
+    return names and table.concat(names, " / ")
+  end
+
+  it("names a Bartender4 bar's pages as the player set them", function()
+    start()
+    local driver = "[overridebar][possessbar][shapeshift]possess;[bonusbar:5]dragon;"
+      .. "[bonusbar:3]9;[bonusbar:1,stealth:1]5;[bonusbar:1]5;0"
+    assert.are.equal("Bear Form", named(driver, "9"))
+    assert.are.equal("Prowl / Cat Form", named(driver, "5"))
+    assert.is_nil(named(driver, "10"))
+    assert.is_nil(named(driver, "0"))
+  end)
+
+  it("names ElvUI's own pages, two forms on one page included", function()
+    start()
+    local driver = "[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 10; [bonusbar:3] 9; [bonusbar:4] 10; 1"
+    assert.are.equal("Cat Form", named(driver, "7"))
+    assert.are.equal("Prowl", named(driver, "8"))
+    assert.are.equal("Bear Form", named(driver, "9"))
+    assert.are.equal("Tree of Life / Moonkin Form", named(driver, "10"))
+  end)
+
+  it("names a modifier's page, and no vehicle, Skyriding or hand-switched page", function()
+    start()
+    local driver = "[overridebar] 18; [vehicleui][possessbar] 16; [mod:shift,bonusbar:3] 6; [mod:shift] 5; "
+      .. "[bar:2] 2; [bonusbar:5] 11; 1"
+    assert.are.equal("Shift + Bear Form", named(driver, "6"))
+    assert.are.equal("Shift", named(driver, "5"))
+    for _, page in ipairs({ "18", "16", "2", "11", "1" }) do assert.is_nil(named(driver, page)) end
+  end)
+
+  it("counts a page as a state only where the driver sends a form or modifier", function()
+    start()
+    local savedUnitClass = _G.UnitClass
+    _G.UnitClass = function() return "Druid", "DRUID" end
+    local bar = { GetAttribute = function(_, key)
+      return key == "page" and "[bar:2] 2; [bonusbar:1,stealth] 5; [bonusbar:1] 5; [bonusbar:3] 9; [bonusbar:5] 11; 1" or nil
+    end }
+    _G.ElvUI_Bar1Button1 = { GetParent = function() return bar end }
+    local states = {}
+    for page = 1, 12 do states[#states + 1] = GSE.DriverStateForPage("ElvUI_Bar1Button1", page) end
+    _G.UnitClass = savedUnitClass
+    assert.are.same({ "5", "9" }, states)
+  end)
+
+  it("reads the driver from the bar a button is on", function()
+    start()
+    local elvBar = { GetAttribute = function(_, key) return key == "page" and "[bonusbar:3] 9; 1" or nil end }
+    _G.ElvUI_Bar1Button1 = { GetParent = function() return elvBar end }
+    assert.are.equal("[bonusbar:3] 9; 1", GSE.ButtonPageDriver("ElvUI_Bar1Button1"))
+    local options = { enabled = true }
+    local bt4Bar = {
+      GetStateOption = function(_, key) return options[key] end,
+      UpdateStates = function(_, returnOnly) return returnOnly and "[bonusbar:1]5;0" or nil end,
+    }
+    _G.BT4Button1 = { GetParent = function() return bt4Bar end }
+    assert.are.equal("[bonusbar:1]5;0", GSE.ButtonPageDriver("BT4Button1"))
+    options.customEnabled, options.custom = true, "[bonusbar:3]9;0"
+    assert.are.equal("[bonusbar:3]9;0", GSE.ButtonPageDriver("BT4Button1"))
+    -- Paging off: no driver, and the bar is not asked to build one.
+    options.enabled = false
+    assert.is_nil(GSE.ButtonPageDriver("BT4Button1"))
   end)
 end)

@@ -882,6 +882,8 @@ L["When enabled, holding Alt makes GSE send an empty macro and stops the sequenc
 L["Pause Sequences While Ctrl Is Held"] = true
 L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequence from advancing until Ctrl is released."] = true
 
+L["Friendly target"] = true
+L["Hostile target"] = true
 L["WhatsNewTLDR"] =
 [[|cFFFFFFFFTL;DR:|r A sequence now goes straight onto an action bar button: drag it there from the editor, or right-click an empty button and pick it. From |cFF00FFFFRetail 12.1.7|r your GSE keybinds move onto the optional GSE Action Bar. See it animated on gse.tools -- copy the link:]]
 

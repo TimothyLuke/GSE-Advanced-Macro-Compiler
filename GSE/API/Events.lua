@@ -103,7 +103,7 @@ local BAR_SWAP_RESOLVE = [[
         effectiveAction = effectiveAction + (6 + bonus - 1) * 12
     end
     local formPage = effectiveAction and floor((effectiveAction - 1) / 12) + 1
-    local pinned = formPage and formPage >= 7 and formPage <= 10
+    local pinned = formPage and formPage <= 10
         and self:GetAttribute("gse-page-" .. formPage) and formPage or nil
     local runs = pinned or self:GetAttribute("gse-default")
     local clicks = false
@@ -388,6 +388,12 @@ function GSE.OverrideStateFor(button)
     end
     local slot = getButtonEffectiveSlot(button)
     local page = slot and math.floor((slot - 1) / 12) + 1
+    -- A bar addon paging by its own driver (EllesmereUI): the pages it sends
+    -- a form or modifier to, wherever the player put them. Not Dominos, whose
+    -- pages are counted as Blizzard's are.
+    if button.SetShowGridInsecure == nil and GSE.ButtonPageDriver(name) then
+        return GSE.DriverStateForPage(name, page)
+    end
     if page and page >= 7 and page <= 10 then return tostring(page) end
     return nil
 end
@@ -399,6 +405,7 @@ function GSE.ButtonPagesWithForms(buttonName)
     local button = buttonName and _G[buttonName]
     if type(button) ~= "table" or button.gseActionBarButton then return false end
     if button.SetShowGridInsecure ~= nil then return true end
+    if GSE.ButtonPageDriver(buttonName) then return true end
     return isBonusPaged(button)
 end
 
