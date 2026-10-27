@@ -80,7 +80,7 @@ link:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
 link:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) end)
 link:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 
-local label = content:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+local label = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 label:SetPoint("TOPLEFT", tldr, "BOTTOMLEFT", 0, -38)
 label:SetJustifyH("LEFT")
 label:SetJustifyV("TOP")
