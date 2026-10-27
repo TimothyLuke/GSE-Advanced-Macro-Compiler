@@ -8,21 +8,18 @@ local whatsnewframe = CreateFrame("Frame", "GSEWhatsNewFrame", UIParent, frameTe
 whatsnewframe:SetSize(700, 500)
 whatsnewframe:Hide()
 
--- Popup configuration (strata, centre anchor, drag) is routed through
--- GSE.UI.MakePopup so every GSE popup behaves consistently. This file is
--- in the GSE/ addon which loads BEFORE GSE_GUI/NativeUI.lua — so GSE.UI
--- doesn't exist when this top-level code runs. Defer to first OnShow,
--- where GSE_GUI is guaranteed loaded. A configured flag keeps the call
--- idempotent (MakePopup is itself idempotent, but the flag avoids the
--- ~6 function-call overhead on every subsequent open).
-local configured = false
-whatsnewframe:HookScript("OnShow", function(self)
-    if configured then return end
-    configured = true
-    if GSE.UI and GSE.UI.MakePopup then
-        GSE.UI.MakePopup(self, {center = true, movable = true})
-    end
-end)
+-- Set up here, as GSE.UI.MakePopup would: GSE_GUI loads on demand, so at
+-- login MakePopup isn't there and a window left to it had no anchor and never
+-- showed.
+whatsnewframe:SetFrameStrata("TOOLTIP")
+whatsnewframe:SetToplevel(true)
+whatsnewframe:SetClampedToScreen(true)
+whatsnewframe:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+whatsnewframe:SetMovable(true)
+whatsnewframe:EnableMouse(true)
+whatsnewframe:RegisterForDrag("LeftButton")
+whatsnewframe:SetScript("OnDragStart", function(self) self:StartMoving() end)
+whatsnewframe:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
 if whatsnewframe.SetBackdrop then
     whatsnewframe:SetBackdrop(

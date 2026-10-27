@@ -147,6 +147,12 @@ function GSE.PerformOneOffEvents()
         GSEOptions.Updates["3310"] = true
     end
 
+    -- What's New is the GSE Action Bar now: show it once more.
+    if GSE.isEmpty(GSEOptions.Updates["3336"]) then
+        GSEOptions.shownew = true
+        GSEOptions.Updates["3336"] = true
+    end
+
     -- Back-fill the modifier-pause toggles for users who upgraded into a
     -- GSEOptions table that pre-dates these keys. SetDefaultOptions() only
     -- fires on fresh installs (gated on DebugModules), so without this
