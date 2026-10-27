@@ -3422,9 +3422,44 @@ local function getMacroIconItemInfo(candidate)
     end
 end
 
+-- A talent or channel whose name looks up nothing on this client: its icon
+-- by the spells it can be.
+local SPELL_NAME_ICON_FALLBACK_IDS = {
+    ["demon blades"] = { 203555 },
+    ["dream breath"] = { 355936, 355941, 382614 },
+    ["lifetreading"] = { 1217941 },
+    ["rapid fire"]   = { 257044 }, -- Marksmanship Hunter channel
+}
+
+-- `/use 13`: the item in that equipment slot.
+local function getEquipmentSlotIconInfo(candidate)
+    local slot = tonumber(trimMacroIconCandidate(candidate))
+    if not slot or slot < 1 or slot > 19 then return nil end
+
+    if GetInventoryItemTexture then
+        local ok, texture = pcall(GetInventoryItemTexture, "player", slot)
+        if ok and texture then
+            return { name = "equipment slot " .. slot, iconID = texture, slot = slot }
+        end
+    end
+
+    if GetInventoryItemID and C_Item and C_Item.GetItemIconByID then
+        local ok, itemID = pcall(GetInventoryItemID, "player", slot)
+        if ok and itemID then
+            local okIcon, icon = pcall(C_Item.GetItemIconByID, itemID)
+            if okIcon and icon then
+                return { name = "equipment slot " .. slot, iconID = icon, slot = slot }
+            end
+        end
+    end
+end
+
 local function getMacroIconSpellOrItemInfo(candidate, preferItem)
     candidate = GSE.GetMacroClauseTarget(candidate)
     if candidate == "" then return nil end
+    if preferItem and tonumber(candidate) and tonumber(candidate) <= 19 then
+        return getEquipmentSlotIconInfo(candidate)
+    end
 
     if preferItem then
         local itemInfo = getMacroIconItemInfo(candidate)
@@ -3440,8 +3475,24 @@ local function getMacroIconSpellOrItemInfo(candidate, preferItem)
         if spellinfo and spellinfo.iconID then return spellinfo end
     end
 
+    if GSE.GetSpellId then
+        local spellID = GSE.GetSpellId(candidate, Statics.TranslatorMode.ID, true)
+        if spellID and spellID ~= candidate then
+            spellinfo = safeGetSpellInfo(spellID)
+            if spellinfo and spellinfo.iconID then return spellinfo end
+        end
+    end
+
+    for _, spellID in ipairs(SPELL_NAME_ICON_FALLBACK_IDS[strlower(candidate)] or {}) do
+        spellinfo = safeGetSpellInfo(spellID)
+        if spellinfo and spellinfo.iconID then return spellinfo end
+    end
+
     return getMacroIconItemInfo(candidate)
 end
+
+--- The icon of the spell, item or equipment slot one macro clause names.
+GSE.GetMacroTargetIconInfo = getMacroIconSpellOrItemInfo
 
 local function getMacroIconFallbackCandidateInfo(candidate, preferItem)
     for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
@@ -3451,44 +3502,6 @@ local function getMacroIconFallbackCandidateInfo(candidate, preferItem)
             if iconInfo then return iconInfo end
         end
     end
-end
-
-local function getMacroIconCastSequenceInfo(candidate)
-    for _, semicolonCandidate in ipairs(GSE.split(candidate or "", ";")) do
-        for _, sequenceCandidate in ipairs(GSE.SplitCastSequence(semicolonCandidate)) do
-            local _, _, sequenceEtc = GSE.GetConditionalsFromString(sequenceCandidate)
-            local iconInfo = getMacroIconFallbackCandidateInfo(sequenceEtc)
-            if iconInfo then return iconInfo end
-        end
-    end
-end
-
-local function getMacroLineResolvedIconInfo(line, suppressUIErrors)
-    local cmd, etc = string.match(line or "", "^%s*/(%w+)%s+([^\n]+)")
-    if not cmd or not etc then return nil end
-
-    cmd = strlower(cmd)
-    -- /castsequence is not in Statics.CastCmds, so the castsequence branch
-    -- below was never reached and its line gave no icon: the next line's did.
-    if not Statics.CastCmds[cmd] and cmd ~= "castsequence" then return nil end
-    if cmd == "stopmacro" or cmd == "cancelaura" or cmd == "cancelform" or cmd == "petautocastoff" or cmd == "petautocaston" then return nil end
-
-    local preferItem = cmd == "use" or cmd == "usetoy" or cmd == "toy"
-    local resolved = GSE.SafeSecureCmdOptionParse and GSE.SafeSecureCmdOptionParse(etc, suppressUIErrors)
-    resolved = trimMacroIconCandidate(resolved)
-    -- SecureCmdOptionParse returns nil when every clause is false right now
-    -- (e.g. `[harm,nodead] Spell` with no target). The literal text still
-    -- names the icon the author wanted, so fall back to it, as the tooltip
-    -- does (GetShowTooltipIconInfo); the clause reader strips the conditions.
-    -- Without this a step read as a macro and showed macro.png.
-    if resolved == "" then resolved = trimMacroIconCandidate(etc) end
-    if resolved == "" then return nil end
-
-    if cmd == "castsequence" then
-        return getMacroIconCastSequenceInfo(resolved)
-    end
-
-    return getMacroIconFallbackCandidateInfo(resolved, preferItem)
 end
 
 --- Resolve the icon a `#showtooltip <thing>` directive was asking for.
@@ -3508,7 +3521,213 @@ function GSE.GetShowTooltipIconInfo(argument, suppressUIErrors)
     return getMacroIconFallbackCandidateInfo(resolved, false)
 end
 
-function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
+-- ── The icon a macro block shows ────────────────────────────────────────────
+--
+-- An icon set on the block always wins (GetCurrentButtonIconInfo, the
+-- editor): it is the author's choice, castable or not. Without one, the
+-- block shows the first spell, item or slot named anywhere in it, ranked:
+--
+--   1. one this character can cast, with no modifier on it
+--   2. one it can cast under a modifier ([mod], [mod:shift] ...)
+--   3. a form, stance or stealth
+--   4. a pet summon
+--
+-- and only then, by the same ranks, one it can't cast: a talent not taken,
+-- a spell another class's sequence names, or a [known:] that fails.
+-- Within a rank, the clause a line would fire now comes first: "/cast
+-- [stealth] Ambush; Sinister Strike" shows Ambush in stealth and Sinister
+-- Strike out of it. A line none of whose clauses hold now has its first
+-- clause count as the one it fires.
+
+-- Forms, stances and stealth: what the character is in, not what the block
+-- is for.
+local FORM_SPELL_IDS = {
+    [71] = true, -- Defensive Stance
+    [768] = true, -- Cat Form
+    [783] = true, -- Travel Form
+    [1066] = true, -- Aquatic Form
+    [2457] = true, -- Battle Stance
+    [2458] = true, -- Berserker Stance
+    [2645] = true, -- Ghost Wolf
+    [5487] = true, -- Bear Form
+    [24858] = true, -- Moonkin Form
+    [33891] = true, -- Tree of Life
+    [33943] = true, -- Flight Form
+    [40120] = true, -- Swift Flight Form
+    [114282] = true, -- Treant Form
+    [165961] = true, -- Stag Form
+    [1784] = true, -- Stealth
+    [5215] = true, -- Prowl
+}
+
+-- Calling, keeping and reviving a pet.
+local PET_SPELL_IDS = {
+    [883] = true, -- Call Pet 1
+    [83242] = true, -- Call Pet 2
+    [83243] = true, -- Call Pet 3
+    [83244] = true, -- Call Pet 4
+    [83245] = true, -- Call Pet 5
+    [982] = true, -- Revive Pet
+    [2641] = true, -- Dismiss Pet
+    [136] = true, -- Mend Pet
+}
+
+local RANK_PLAIN, RANK_MODIFIED, RANK_FORM, RANK_PET = 1, 2, 3, 4
+-- Above every rank and its not-firing-now step (4 * 2 + 1).
+local RANK_CANNOT_CAST = 10
+
+local function isFormName(name)
+    name = strlower(name)
+    return name == "ghost wolf" or name == "tree of life" or name == "stealth" or name == "prowl"
+        or name:match("%f[%a]form%f[%A]") ~= nil or name:match("%f[%a]stance%f[%A]") ~= nil
+end
+
+local function isPetName(name)
+    name = strlower(name)
+    return name:match("^call pet%f[%A]") ~= nil or name == "revive pet" or name == "dismiss pet"
+        or name == "mend pet"
+end
+
+-- The rank of what a clause names, by the spell itself: a form, a pet, or
+-- neither (nil).
+local function spellRank(target, info)
+    local spellID = tonumber(info.spellID) or tonumber(target)
+    if FORM_SPELL_IDS[spellID] then return RANK_FORM end
+    if PET_SPELL_IDS[spellID] then return RANK_PET end
+    for _, name in ipairs({ target, info.name }) do
+        if type(name) == "string" and name ~= "" then
+            if isFormName(name) then return RANK_FORM end
+            if isPetName(name) then return RANK_PET end
+        end
+    end
+end
+
+-- Whether this character has a spell: from talents or the spellbook, a base
+-- spell its spec replaces counted (Steady Shot is Barbed Shot on Beast
+-- Mastery).
+local function playerKnowsSpell(spellID)
+    local ids = { spellID }
+    if C_Spell and C_Spell.GetOverrideSpell then
+        local ok, override = pcall(C_Spell.GetOverrideSpell, spellID)
+        if ok and override then ids[2] = override end
+    end
+    local tests = { IsPlayerSpell, IsSpellKnownOrOverridesKnown, C_SpellBook and C_SpellBook.IsSpellKnown }
+    for _, id in ipairs(ids) do
+        for i = 1, 3 do
+            if tests[i] then
+                local ok, known = pcall(tests[i], id)
+                if ok and known then return true end
+            end
+        end
+    end
+    return false
+end
+
+local function knowsSpellNamed(value)
+    local info = safeGetSpellInfo(tonumber(value) or value)
+    local spellID = info and info.spellID or tonumber(value)
+    return spellID ~= nil and playerKnowsSpell(spellID)
+end
+
+-- One [..] group of a clause: whether a known: in it fails (noknown: the
+-- other way round), and whether it asks for a modifier.
+local function readConditionGroup(group)
+    local fails, modified = false, false
+    for condition in string.gmatch(group, "[^,]+") do
+        local test = strlower(condition:match("^%s*(.-)%s*$"))
+        local negated, value = test:match("^(n?o?)known:(.+)$")
+        if value then
+            local known = knowsSpellNamed(value:match("^%s*(.-)%s*$"))
+            if (negated == "no") == known then fails = true end
+        elseif test:match("^mod") then
+            modified = true
+        end
+    end
+    return fails, modified
+end
+
+-- The clause's candidate, or nil when it names nothing with an icon.
+local function clauseCandidate(cmd, clause)
+    local groups = {}
+    for group in string.gmatch(clause, "%[([^%]]*)%]") do groups[#groups + 1] = group end
+
+    -- Each [..] group is an alternative: the clause is unmodified if any
+    -- live group is, and live if any group's known: holds.
+    local alive, modified = #groups == 0, #groups > 0
+    for _, group in ipairs(groups) do
+        local fails, groupModified = readConditionGroup(group)
+        if not fails then
+            alive = true
+            if not groupModified then modified = false end
+        end
+    end
+    if not alive then modified = false end
+
+    -- /castsequence reset=3 A, B: A. A clause naming nothing with an icon
+    -- falls back to the spell its known: asks for.
+    local target = GSE.GetMacroClauseTarget(clause)
+    target = GSE.GetMacroClauseTarget(GSE.SplitCastSequence(target)[1] or target)
+    local preferItem = cmd == "use" or cmd == "usetoy" or cmd == "toy"
+    local info = target ~= "" and getMacroIconSpellOrItemInfo(target, preferItem) or nil
+    if not (info and info.iconID) then
+        for spellID in string.gmatch(clause, "%f[%w]known:(%d+)") do
+            info = getMacroIconSpellOrItemInfo(spellID)
+            if info and info.iconID then
+                target = spellID
+                break
+            end
+        end
+    end
+    if not (info and info.iconID) then return nil end
+
+    local canCast = alive
+    if canCast and not info.slot and info.spellID then
+        canCast = playerKnowsSpell(info.spellID)
+    end
+    local rank = spellRank(target, info) or (modified and RANK_MODIFIED or RANK_PLAIN)
+    return { info = info, rank = rank, canCast = canCast }
+end
+
+local SKIPPED_ICON_COMMANDS = {
+    stopmacro = true, cancelaura = true, cancelform = true, petautocastoff = true, petautocaston = true,
+}
+
+-- The clause of a line that would fire now: the first whose conditions
+-- hold, else the first.
+local function firingClause(clauses)
+    for i, clause in ipairs(clauses) do
+        local result = GSE.SafeSecureCmdOptionParse(clause)
+        if result and trimMacroIconCandidate(result) ~= "" then return i end
+    end
+    return 1
+end
+
+--- Every spell, item and slot a macro block names, in order, each with its
+--- rank ({ info, rank, canCast, firing }).
+function GSE.GetMacroTextIconCandidates(str)
+    local candidates = {}
+    for line in string.gmatch((str or "") .. "\n", "([^\n]*)\n") do
+        local cmd, etc = string.match(line, "^%s*/(%w+)%s+(.-)%s*$")
+        cmd = cmd and strlower(cmd)
+        if cmd and etc ~= "" and (Statics.CastCmds[cmd] or cmd == "castsequence")
+            and not SKIPPED_ICON_COMMANDS[cmd] then
+            local clauses = GSE.split(etc, ";")
+            local firing = firingClause(clauses)
+            for i, clause in ipairs(clauses) do
+                local candidate = clauseCandidate(cmd, clause)
+                if candidate then
+                    candidate.firing = i == firing
+                    candidates[#candidates + 1] = candidate
+                end
+            end
+        end
+    end
+    return candidates
+end
+
+--- The icon a macro block shows when none is set on it (see above), and
+--- every candidate it was picked from.
+function GSE.GetMacroTextIconInfo(str)
     if string.sub(str or "", 14) == "/click GSE.Pau" then
         return {
             name = "GSE Pause",
@@ -3516,10 +3735,16 @@ function GSE.GetMacroTextIconInfo(str, suppressUIErrors)
         }
     end
 
-    for line in string.gmatch((str or "") .. "\n", "([^\n]*)\n") do
-        local iconInfo = getMacroLineResolvedIconInfo(line, suppressUIErrors)
-        if iconInfo and iconInfo.iconID then return iconInfo end
+    local candidates = GSE.GetMacroTextIconCandidates(str)
+    local best, bestRank
+    for _, candidate in ipairs(candidates) do
+        local rank = candidate.rank * 2 + (candidate.firing and 0 or 1)
+            + (candidate.canCast and 0 or RANK_CANNOT_CAST)
+        if not bestRank or rank < bestRank then
+            best, bestRank = candidate.info, rank
+        end
     end
+    return best, candidates
 end
 
 function GSE.GetCurrentButtonIconInfo(self, reseticon)
@@ -3704,7 +3929,7 @@ local function GetDebuggerTraceSpell(action, foundSpell)
     end
 
     if action.type == "macro" and action.macrotext then
-        local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext, true) or GSE.GetSpellsFromString(action.macrotext, true)
+        local macroIconInfo = GSE.GetMacroTextIconInfo(action.macrotext) or GSE.GetSpellsFromString(action.macrotext)
         if macroIconInfo and #macroIconInfo > 0 then
             macroIconInfo = macroIconInfo[1]
         end

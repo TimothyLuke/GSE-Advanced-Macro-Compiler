@@ -2911,10 +2911,10 @@ local function ResolveActionIcon(action)
     local iconInfo
     if action.type == "macro" and action.macrotext then
         if GSE.GetMacroTextIconInfo then
-            iconInfo = GSE.GetMacroTextIconInfo(action.macrotext, true)
+            iconInfo = GSE.GetMacroTextIconInfo(action.macrotext)
         end
         if not iconInfo and GSE.GetSpellsFromString then
-            iconInfo = GSE.GetSpellsFromString(action.macrotext, true)
+            iconInfo = GSE.GetSpellsFromString(action.macrotext)
         end
         if iconInfo and #iconInfo > 0 then
             iconInfo = iconInfo[1]

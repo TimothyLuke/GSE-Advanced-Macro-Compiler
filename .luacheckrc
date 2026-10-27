@@ -370,6 +370,7 @@ globals = {
     "UnitRace",
     "IsSpellKnown",
     "IsPlayerSpell",
+    "IsSpellKnownOrOverridesKnown",
     "GetSpecializationInfoByID",
     "GetSpecializationRole",
     "GetSpellCooldown",

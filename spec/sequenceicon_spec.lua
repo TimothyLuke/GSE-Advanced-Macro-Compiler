@@ -12,8 +12,17 @@ describe("Sequence step icon", function()
     ["Spirit Mend"] = { name = "Spirit Mend", iconID = 104 },
     ["Barbed Shot"] = { name = "Barbed Shot", iconID = 105 },
     ["Kill Command"] = { name = "Kill Command", iconID = 106 },
+    ["Cat Form"] = { name = "Cat Form", iconID = 107, spellID = 768 },
+    ["Call Pet 1"] = { name = "Call Pet 1", iconID = 108, spellID = 883 },
+    ["Wailing Arrow"] = { name = "Wailing Arrow", iconID = 109, spellID = 466930 },
   }
-  local GLOBALS = { "SecureCmdOptionParse", "C_Item", "gmatch", "strlower" }
+  local byID = {}
+  for _, info in pairs(known) do
+    info.spellID = info.spellID or info.iconID + 1000
+    byID[info.spellID] = info
+  end
+  for id, info in pairs(byID) do known[id] = info end
+  local GLOBALS = { "SecureCmdOptionParse", "C_Item", "gmatch", "strlower", "IsPlayerSpell" }
   local saved, savedGetSpellInfo, savedExec
 
   -- WoW's parser out of combat: a clause needing combat is false, the rest
@@ -53,7 +62,29 @@ describe("Sequence step icon", function()
     _G.C_Item = { GetItemInfo = function() return nil end }
     _G.gmatch = _G.gmatch or string.gmatch
     _G.strlower = _G.strlower or string.lower
-    GSE.GetSpellInfo = function(spell) return known[spell] end
+    -- A fresh table each time, as C_Spell.GetSpellInfo gives: the button
+    -- writes a block's own icon into the one it gets.
+    GSE.GetSpellInfo = function(spell)
+      local info = known[tonumber(spell) or spell]
+      if not info then return nil end
+      local copy = {}
+      for k, v in pairs(info) do copy[k] = v end
+      return copy
+    end
+    _G.IsPlayerSpell = nil
+  end
+
+  -- This character knows these spells, and only these.
+  local function knows(...)
+    local ids = {}
+    for _, name in ipairs({ ... }) do
+      ids[known[name].spellID] = true
+    end
+    _G.IsPlayerSpell = function(id) return ids[id] == true end
+  end
+
+  local function icon(...)
+    return GSE.GetMacroTextIconInfo(table.concat({ ... }, "\n")).iconID
   end
 
   after_each(function()
@@ -92,6 +123,59 @@ describe("Sequence step icon", function()
     GSE.SequencesExec = { seqB = { { type = "macro", Icon = 105,
       macrotext = "/startattack\n/cast [@pet,exists] Kill Command" } } }
     assert.are.equal(105, GSE.GetCurrentButtonIconInfo(button("seqB"), false).iconID)
+  end)
+
+  it("ranks a spell with no modifier above one under a modifier, wherever it is", function()
+    start()
+    knows("Exhilaration", "Kill Command")
+    assert.are.equal(106, icon("/cast [mod:shift] Exhilaration", "/cast Kill Command"))
+    assert.are.equal(106, icon("/cast [mod:shift] Exhilaration; Kill Command"))
+    assert.are.equal(102, icon("/cast [mod:shift] Kill Command; [nomod] Exhilaration"))
+  end)
+
+  it("ranks a modifier's spell above a form, and a form above a pet", function()
+    start()
+    knows("Barbed Shot", "Cat Form", "Call Pet 1")
+    assert.are.equal(105, icon("/cast Cat Form", "/cast [mod:alt] Barbed Shot"))
+    assert.are.equal(107, icon("/cast Call Pet 1", "/cast Cat Form"))
+    assert.are.equal(108, icon("/cast Call Pet 1"))
+  end)
+
+  it("ranks a spell this character can cast above one it can't", function()
+    start()
+    knows("Kill Command", "Exhilaration")
+    assert.are.equal(106, icon("/cast Wailing Arrow", "/cast Kill Command"))
+    assert.are.equal(102, icon("/cast Wailing Arrow", "/cast [mod] Exhilaration"))
+    -- A known: that fails is a clause that can't cast.
+    assert.are.equal(106, icon("/cast [known:466930] Exhilaration", "/cast Kill Command"))
+    -- Nothing castable: the ranks alone.
+    assert.are.equal(109, icon("/cast [mod] Spirit Mend", "/cast Wailing Arrow"))
+  end)
+
+  it("follows the clause a line would fire now, within a rank", function()
+    start()
+    knows("Barbed Shot", "Kill Command", "Cat Form")
+    local stealthed = false
+    _G.SecureCmdOptionParse = function(options)
+      local conditions, rest = options:match("^%s*%[([^%]]*)%]%s*(.*)$")
+      if not conditions then return options end
+      local holds = { stealth = stealthed, nostealth = not stealthed }
+      if holds[conditions] == false then return nil end
+      return rest
+    end
+    assert.are.equal(106, icon("/cast [stealth] Barbed Shot; Kill Command"))
+    stealthed = true
+    assert.are.equal(105, icon("/cast [stealth] Barbed Shot; Kill Command"))
+    -- A form that would fire now still ranks below a spell.
+    stealthed = false
+    assert.are.equal(106, icon("/cast [nostealth] Cat Form; Kill Command"))
+  end)
+
+  it("shows the block's own icon even when its spells can't be cast", function()
+    start()
+    knows("Kill Command")
+    GSE.SequencesExec = { seqC = { { type = "macro", Icon = 109, macrotext = "/cast Kill Command" } } }
+    assert.are.equal(109, GSE.GetCurrentButtonIconInfo(button("seqC"), false).iconID)
   end)
 
   it("asks a sequence at rest for its icon as the running button does (#2187)", function()
