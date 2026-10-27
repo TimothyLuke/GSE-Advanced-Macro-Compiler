@@ -2182,16 +2182,27 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         button:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
         local function choose(name)
             if name == model.bind then return end
-            -- One row per button (Save refuses two): the row that had this
-            -- button loses it ("Pick a button") and keeps its sequence for
-            -- whichever button it gets next.
-            local other
+            -- One row per button and state (Save refuses two). A row that has
+            -- this button keeps it, and this row takes the first state no row
+            -- holds, Default first. Only when every state is taken, or the
+            -- button has none, does the Default row lose it ("Pick a button")
+            -- and keep its sequence for whichever button it gets next.
+            local held = {}
             for _, r in ipairs(rows) do
-                if r ~= model and r.bind == name then other = r end
+                if r ~= model and r.bind == name then held[rowKey(r)] = r end
             end
+            local _, order = stateListFor(name)
+            local state
+            for _, k in ipairs(order or {"Default"}) do
+                if not held[rowKey({bind = name, state = k})] then
+                    state = k
+                    break
+                end
+            end
+            local other = not state and held[name]
             if other then other.bind, other.state = nil, nil end
             model.bind = name
-            model.state = nil
+            model.state = state ~= "Default" and state or nil
             markDirty()
             if other then
                 redraw()
