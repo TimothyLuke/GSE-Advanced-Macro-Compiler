@@ -4045,8 +4045,10 @@ function GSE.UpdateIcon(self, reseticon)
                             string.sub(k, 1, 4) == "NDui"
                      then
                         -- Yield to a real action the player dropped into this slot (matches the
-                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering.
-                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k])) then
+                        -- Blizzard-bar branch below and getGSEButtonIcon) so the icon stops flickering,
+                        -- and to the bar's own action in a state GSE did not take over (#2199).
+                        if not (GSE.ActionBarSlotHasForeignAction and GSE.ActionBarSlotHasForeignAction(_G[k]))
+                            and (not GSE.ActionBarOverrideShowing or GSE.ActionBarOverrideShowing(_G[k])) then
                             _G[k].icon:SetTexture(spellinfo.iconID)
                         end
                     else

@@ -478,21 +478,6 @@ local function overrideSequence(button)
     return GSE.ButtonOverrideSequence(name)
 end
 
-local function getGSEButtonIcon(self)
-    -- A real action in the slot wins: don't paint the sequence icon over it.
-    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
-    -- nil where only another state's row is on the button: the slot's own icon.
-    local seq = overrideSequence(self)
-    local seqTexture = seq and getGSESequenceIcon(seq)
-    if seqTexture then return seqTexture end
-
-    local effectiveSlot = getButtonEffectiveSlot(self)
-    if effectiveSlot and GetActionTexture then
-        local texture = GetActionTexture(effectiveSlot)
-        if texture and not isGSEFallbackTexture(texture) then return texture end
-    end
-end
-
 -- Bars that hide empty action buttons (notably Dominos) will hide a GSE override
 -- slot, because the slot holds no real action -- HasAction() is false, so the
 -- bar's "show empty buttons" gate keeps it hidden and the assigned override
@@ -629,6 +614,26 @@ local function overrideShowing(button)
             and button:GetAttribute("gse-lab-state-" .. tostring(button:GetAttribute("state"))) and true or false
     end
     return not GSE.ActionBarSlotHasForeignAction(button)
+end
+GSE.ActionBarOverrideShowing = overrideShowing
+
+local function getGSEButtonIcon(self)
+    -- A real action in the slot wins: don't paint the sequence icon over it.
+    if GSE.ActionBarSlotHasForeignAction(self) then return nil end
+    -- A LibActionButton bar in a state GSE did not take over (an override,
+    -- vehicle or skyriding bar, or a state only another row pins) shows that
+    -- state's own action, empty or not (#2199).
+    if labLib(self) and not overrideShowing(self) then return nil end
+    -- nil where only another state's row is on the button: the slot's own icon.
+    local seq = overrideSequence(self)
+    local seqTexture = seq and getGSESequenceIcon(seq)
+    if seqTexture then return seqTexture end
+
+    local effectiveSlot = getButtonEffectiveSlot(self)
+    if effectiveSlot and GetActionTexture then
+        local texture = GetActionTexture(effectiveSlot)
+        if texture and not isGSEFallbackTexture(texture) then return texture end
+    end
 end
 -- A LibActionButton bar draws cooldown, range colour and proc glow itself, in
 -- the player's own settings, from what each button answers for its spell. An
@@ -1181,9 +1186,17 @@ local function setWatermarkVisible(Button, visible)
     if visible then wm:Show() else wm:Hide() end
 end
 
+-- On a LibActionButton bar the watermark shows only while the button is in a
+-- state GSE took over.
+local function syncLABWatermark(button)
+    local name = button and button.GetName and button:GetName()
+    if not name or not button:GetAttribute("gse-button") then return end
+    setWatermarkVisible(name, overrideShowing(button))
+end
+
 function GSE.SetActionBarWatermarkEnabled(enabled)
-    for _, wm in pairs(watermarkedButtons) do
-        if enabled then wm:Show() else wm:Hide() end
+    for name, wm in pairs(watermarkedButtons) do
+        if enabled and (not labLib(_G[name]) or overrideShowing(_G[name])) then wm:Show() else wm:Hide() end
     end
     for wm in pairs(otherWatermarks) do
         if enabled then wm:Show() else wm:Hide() end
@@ -1220,6 +1233,9 @@ end
 local function showGSEButtonTooltip(btn)
     if not btn or not btn.GetAttribute then return end
     if not btn:GetAttribute("gse-button") then return end
+    -- The bar's own action shows (a real action in the slot, or a LAB state
+    -- GSE did not take over): its own tooltip stands (#2199).
+    if not overrideShowing(btn) then return end
     local seqName = overrideSequence(btn)
     local seqFrame = seqName and _G[seqName]
     if not seqFrame or not GSE.SequencesExec then return end
@@ -1386,6 +1402,12 @@ local function hookButtonIconUpdates(Button)
             -- type was set back to "click" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ WoW's own update will run this frame
             -- and clear the icon; restore it on the next frame.
             scheduleIconRestore(self, icon)
+        elseif name == "state" and labLib(self) then
+            -- A LibActionButton bar paged to a state GSE did not take over (an
+            -- override, vehicle or skyriding bar): its own action shows, so
+            -- the watermark goes (#2199). The library records the state's
+            -- kind after this attribute, so look on the next frame.
+            C_Timer.After(0, function() syncLABWatermark(self) end)
         end
     end)
 end
@@ -1686,6 +1708,8 @@ local function overrideActionButton(savedBind, force, pinnedStates)
         end
         hookButtonIconUpdates(Button)
         addGSEWatermark(Button)
+        -- Applied while on an override, vehicle or skyriding bar (#2199).
+        syncLABWatermark(_G[Button])
         scheduleIconRestore(_G[Button], _G[Button].icon or _G[Button .. "Icon"])
         GSE.ButtonOverrides[Button] = Sequence
         repaintGSEOverrideButton(_G[Button])
