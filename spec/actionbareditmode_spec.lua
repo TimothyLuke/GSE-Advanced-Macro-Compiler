@@ -234,7 +234,9 @@ describe("GSE Action Bar in Edit Mode", function()
     assert.truthy(lib)
     assert.truthy(lib < toc:find("\nBootstrap.lua\n", 1, true))
     assert.truthy(toc:find("\nActionBar.lua\nEditMode.lua\n", 1, true))
-    -- Not in git, as GSE's other libraries: the packager fetches it.
-    assert.truthy(readSource(".pkgmeta"):find("GSE/GSE_Actionbar/Lib/LibEditMode:", 1, true))
+    -- Not in git, as GSE's other libraries: the packager fetches it. Externals
+    -- land at .release/GSE/<key>, and GSE_Actionbar sits at .release/GSE/GSE_Actionbar
+    -- -- a GSE/ prefix would bury the library inside the GSE addon instead.
+    assert.truthy(readSource(".pkgmeta"):find("\n  GSE_Actionbar/Lib/LibEditMode:\n", 1, true))
   end)
 end)
