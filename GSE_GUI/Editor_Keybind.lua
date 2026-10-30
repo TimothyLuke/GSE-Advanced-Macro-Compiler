@@ -1419,6 +1419,21 @@ end
 -- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
 local AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 175, 110, 110, 150, 180
+-- Set per panel: with the State column a row is seven cells, 805 wide at the
+-- widths above, and the editor at its narrowest leaves the rows 676 (measured
+-- in game), so State and the X wrapped to a second line.  These fit it.
+-- The row's inset from the pane's left edge and the scrollbar's: the + and
+-- the X off the edges.
+local AO_ROW_INSET = 6
+-- The gap after the + and before the X; the rest of the row has none.
+local AO_ADD_GAP, AO_REMOVE_GAP = 6, 10
+local function setOverrideColumns(withState)
+    if withState then
+        AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 150, 80, 80, 120, 140
+    else
+        AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 175, 110, 110, 150, 180
+    end
+end
 local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEY + AO_COL_KEYS + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
 
 -- Every action button this client can override, name -> name.  One scan per
@@ -1940,7 +1955,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
     local rows = {}
-    local rowContainer, inheritedContainer, redraw
+    local rowContainer, inheritedContainer, rowsPane, redraw
     local showState
     -- One per shown row (activeKeyRefreshers).
     local keyRefreshers = {}
@@ -1989,46 +2004,107 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- One row; true once it is placed. Runs right after each layout of the
     -- row (row.afterLayout), in the same frame, so a resize never draws the
     -- loose row first; and from tightenRows. A second run finds nothing.
+    -- A cell's width without laying out its row: the row is laid out once,
+    -- after every cell has its width.
+    local function setCellWidth(widget, width)
+        widget.width = width
+        widget.frame:SetWidth(width)
+        if widget.OnWidthSet then widget:OnWidthSet(width) end
+    end
+    -- The row runs from the scroll pane's left edge to the scrollbar's left
+    -- edge, kept clear whether or not the bar shows, with no gaps between
+    -- cells: the button, key and sequence cells share the width left over
+    -- (Larry, 2026-10-30).
+    local function rowArea()
+        local pane = rowContainer
+        while pane and not pane.scrollbar do pane = pane.parent end
+        if not (pane and pane.frame and pane.scrollbar) then return nil end
+        local left, right = pane.frame:GetLeft(), pane.scrollbar:GetLeft()
+        if not (left and right) then return nil end
+        return left + AO_ROW_INSET, right - AO_ROW_INSET
+    end
     local function tightenChain(chain)
         -- Skip until the layout has actually placed the row (under
         -- UI:SuspendLayout the frames have no points yet).
         if not (chain.frames[1].GetLeft and chain.frames[1]:GetLeft()) then return false end
-        local carried = 0
-        for i = 1, #chain.frames - 1 do
+        local frames, row = chain.frames, chain.rowWidget
+        -- A width or padding changed: lay the row out again, which runs this
+        -- again (row.afterLayout); bounded, so it can never loop.
+        local function relayout()
+            if (chain.depth or 0) >= 3 then return false end
+            chain.depth = (chain.depth or 0) + 1
+            row:DoLayout()
+            chain.depth = chain.depth - 1
+            return true
+        end
+        -- Not on a row the layout wrapped, whose cells are not left to right.
+        local function inOrder()
+            for i = 2, #frames do
+                local l, prev = frames[i]:GetLeft(), frames[i - 1]:GetLeft()
+                if not (l and prev and l > prev) then return false end
+            end
+            return #frames > 1
+        end
+        local areaLeft, areaRight = rowArea()
+        local rowLeft, rowRight = chain.row:GetLeft(), chain.row:GetRight()
+        if areaLeft and areaRight and rowLeft and rowRight then
+            -- The row's frame stops at the row list's padding; the layout's
+            -- own padding, negative, runs the cells out past it.
+            local padLeft, padRight = areaLeft - rowLeft, rowRight - areaRight
+            if math.abs((row.flowPadLeft or 0) - padLeft) > 0.5
+                or math.abs((row.flowPadRight or 0) - padRight) > 0.5 then
+                row.flowPadLeft, row.flowPadRight = padLeft, padRight
+                if relayout() then return true end
+            end
+            -- Narrowed (a resize) so far the row wrapped: from the column
+            -- widths again, which fit the narrowest editor.
+            if not inOrder() then
+                for i, cell in ipairs(chain.grow) do setCellWidth(cell, chain.base[i]) end
+                if relayout() then return true end
+            end
+        end
+        for i = 1, #frames - 1 do
             local edge = chain.edges[i]
-            local nextFrame = chain.frames[i + 1]
+            local nextFrame = frames[i + 1]
             if edge and edge.frame and edge.frame.GetRight and nextFrame.GetLeft then
                 local visibleRight, nextLeft = edge.frame:GetRight(), nextFrame:GetLeft()
                 if visibleRight and nextLeft then
                     local slack = nextLeft - (visibleRight + (edge.pad or 0) + KB_ICON_GAP)
                     if slack > 0.5 then
-                        for j = i + 1, #chain.frames do slideLeft(chain.frames[j], slack) end
-                        carried = carried + slack
+                        for j = i + 1, #frames do slideLeft(frames[j], slack) end
                     end
                 end
             end
         end
-        -- The row shrank by `carried`; give half back so the tightened
-        -- row is centred where the loose one was.
-        if carried > 0.5 then
-            for _, frame in ipairs(chain.frames) do slideLeft(frame, -carried / 2) end
+        if areaLeft and areaRight and inOrder() then
+            -- The X ends at the area's right edge, or the loadout marker
+            -- does, right after it.
+            if chain.mark then areaRight = areaRight - chain.mark:GetWidth() end
+            -- The only gaps: after the + and before the X, the latter clear
+            -- of the State dropdown's art, which runs past its frame.
+            for j = 2, #frames do slideLeft(frames[j], -AO_ADD_GAP) end
+            slideLeft(frames[#frames], -AO_REMOVE_GAP)
+            local spare = (areaRight - areaLeft) - (frames[#frames]:GetRight() - frames[1]:GetLeft())
+            if math.abs(spare) > 0.5 then
+                -- Shared out from the column widths, so another pass gives
+                -- the same widths; the two key cells pay for the gaps.
+                local total, base = 0, 0
+                for i, cell in ipairs(chain.grow) do
+                    total, base = total + cell.width, base + chain.base[i]
+                end
+                local share = (total + spare + AO_ADD_GAP + AO_REMOVE_GAP - base) / #chain.grow
+                for i, cell in ipairs(chain.grow) do
+                    local pay = chain.payGaps[i] and (AO_ADD_GAP + AO_REMOVE_GAP) / 2 or 0
+                    setCellWidth(cell, math.max(1, chain.base[i] + share - pay))
+                end
+                if relayout() then return true end
+            end
+            local shift = frames[1]:GetLeft() - areaLeft
+            for _, frame in ipairs(frames) do slideLeft(frame, shift) end
         end
         if chain.mark and chain.removeFrame then
             chain.mark:ClearAllPoints()
-            chain.mark:SetPoint("LEFT", chain.removeFrame, "RIGHT", KB_ICON_GAP, 0)
-            -- The layout centred the row without the marker; centre
-            -- it with the marker, so the marker takes room from the
-            -- left margin instead of running off the right edge. A
-            -- row wider than its frame starts at the frame's left.
-            local left = chain.frames[1]:GetLeft()
-            local right = chain.removeFrame:GetRight()
-            local rowLeft, rowRight = chain.row:GetLeft(), chain.row:GetRight()
-            if left and right and rowLeft and rowRight then
-                right = right + KB_ICON_GAP + chain.mark:GetWidth()
-                local by = (left + right) / 2 - (rowLeft + rowRight) / 2
-                if right - left > rowRight - rowLeft then by = left - rowLeft end
-                for _, frame in ipairs(chain.frames) do slideLeft(frame, by) end
-            end
+            chain.mark:SetPoint("LEFT", chain.removeFrame, "RIGHT", 0, 0)
         end
         return true
     end
@@ -2039,7 +2115,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         if not first then return end
         for i, headingFrame in ipairs(headingFrames) do
             local control, edge = first.frames[i], first.edges[i]
-            if control and headingFrame.GetCenter and control.GetLeft then
+            if control and headingFrame and headingFrame.GetCenter and control.GetLeft then
                 local left = control:GetLeft()
                 local right = edge and edge.frame and edge.frame.GetRight and edge.frame:GetRight()
                 right = right and (right + (edge.pad or 0)) or (control.GetRight and control:GetRight())
@@ -2205,7 +2281,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local row = UI:Create("SimpleGroup")
         row:SetFullWidth(true)
         row:SetLayout("Flow")
-        if row.SetFlowGap then row:SetFlowGap(6) end
+        if row.SetFlowGap then row:SetFlowGap(0) end -- no gaps: tightenChain
         if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
         if row.SetFlowVAlign then row:SetFlowVAlign("CENTER") end
         if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
@@ -2220,6 +2296,11 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 if #rows >= KB_MAX_ROWS then return end
                 table.insert(rows, {})
                 redraw()
+                -- The new row in view: once past the pane's bottom, the
+                -- pane scrolls to its end.  In the same frame as the redraw
+                -- (the row heights are known at once), so the row is never
+                -- drawn below first.
+                if rowsPane and rowsPane.SetScroll then rowsPane:SetScroll(math.huge) end
             end)
             addSlot:SetCallback("OnEnter", function()
                 GSE.CreateToolTip(L["Add"],
@@ -2266,7 +2347,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end)
 
         local state = showState and UI:Create("Dropdown")
-        if state then state:SetWidth(AO_COL_STATE) end
+        -- Blizzard's dropdown art runs about 6 past its frame on each side
+        -- (measured in game); 12 narrower, its box is as wide as the State
+        -- heading above it.  A further 12 is the row's inset either side.
+        if state then state:SetWidth(AO_COL_STATE - 12 - 2 * AO_ROW_INSET) end
         local function refreshStates()
             if not state then return end
             local states, order = stateListFor(model.bind, model.state)
@@ -2509,7 +2593,9 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local mark = marks and loadoutMark(editframe, rowKey(model) and marks[rowKey(model)] or nil)
         local cells = {add = addSlot, button = button, key = key, keys = keys, sequence = sequence, state = state,
             remove = remove, mark = mark}
-        local chain = {frames = {}, edges = {}}
+        local chain = {frames = {}, edges = {}, row = row.frame, rowWidget = row,
+            grow = {button, key, keys, sequence}, base = {AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_SEQ},
+            payGaps = {false, true, true, false}}
         for i, name in ipairs(columnLayout()) do
             local cell = cells[name]
             if name == "mark" then
@@ -2518,7 +2604,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 -- pane, so the layout wrapped it under the row; pinned to the
                 -- right it never wraps, and tightenRows anchors it to the X.
                 cell.flowRightAlign = true
-                chain.mark, chain.removeFrame, chain.row = cell.frame, remove.frame, row.frame
+                chain.mark, chain.removeFrame = cell.frame, remove.frame
             else
                 chain.frames[i] = cell.frame
                 if name == "sequence" or name == "state" then
@@ -2585,6 +2671,16 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     loadRows()
     showState = stateColumnWanted(rows, buttonNames)
+    setOverrideColumns(showState)
+    -- The marker column only when a row has a marker: a loadout's override on
+    -- a button this page has no row for left an empty slot after every X.
+    if marks then
+        local used = false
+        for _, r in ipairs(rows) do
+            if rowKey(r) and marks[rowKey(r)] then used = true end
+        end
+        if not used then marks = nil end
+    end
 
     local classid = GSE.GetCurrentClassID()
     local classname, classfile = "", nil
@@ -2667,7 +2763,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     local headings = UI:Create("SimpleGroup")
     headings:SetFullWidth(true)
     headings:SetLayout("Flow")
-    if headings.SetFlowGap then headings:SetFlowGap(6) end
+    -- No gap with the State column: the headings wider than their narrowed
+    -- columns ("Action Bar Type", "Backup Key") would wrap the line, and the
+    -- tighten pass centres each heading over its column all the same.
+    if headings.SetFlowGap then headings:SetFlowGap(showState and 0 or 6) end
     if headings.SetFlowPadding then headings:SetFlowPadding(0, 0, 0, 0) end
     if headings.SetFlowHAlign then headings:SetFlowHAlign("CENTER") end
     local function heading(width, icon, text)
@@ -2687,29 +2786,22 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         if textWidth + 6 > width then h:SetWidth(math.ceil(textWidth) + 6) end
         return h
     end
-    local function blank(width)
-        local b = UI:Create("Label")
-        b:SetWidth(width)
-        b:SetText("")
-        return b
-    end
+    -- No heading cells over the +, the X or the marker: a heading is slid
+    -- over its column after layout, so empty ones only took room.
     local headingCells = {
-        add = function() return blank(KB_COL_ADD) end,
         button = function() return heading(AO_COL_BUTTON, Statics.Icons.Button, L["Action Bar Type"]) end,
         key = function() return heading(AO_COL_KEY, nil, L["Main Key"]) end,
         keys = function() return heading(AO_COL_KEYS, nil, L["Backup Key"]) end,
         sequence = function() return heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]) end,
         state = function() return heading(AO_COL_STATE, nil, L["State"]) end,
-        remove = function() return blank(KB_COL_REMOVE) end,
-        mark = function() return blank(KB_COL_MARK) end,
     }
     -- Same order as the row.  Recorded so the tighten pass can slide each
-    -- heading by what its column moved.
+    -- heading by what its column moved; false where a column has none.
     wipe(headingFrames)
-    for _, name in ipairs(columnLayout()) do
-        local cell = headingCells[name]()
-        headings:AddChild(cell)
-        headingFrames[#headingFrames + 1] = cell.frame
+    for i, name in ipairs(columnLayout()) do
+        local cell = headingCells[name] and headingCells[name]()
+        if cell then headings:AddChild(cell) end
+        headingFrames[i] = cell and cell.frame or false
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
@@ -2718,8 +2810,42 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow) end
     local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
     rightContainer:AddChild(headings)
-    rightContainer:AddChild(rowContainer)
-    rightContainer:AddChild(inheritedContainer)
+    -- The rows scroll under a header that stays put: the page's own pane
+    -- never scrolls (its bar is off) and a pane inside it holds the rows,
+    -- sized to the room the header leaves (Larry, 2026-10-30).
+    rowsPane = UI:Create("ScrollFrame")
+    rowsPane:SetFullWidth(true)
+    rowsPane:SetLayout("List")
+    if rowsPane.SetListPadding then rowsPane:SetListPadding(0, 0, 0, 0) end
+    if rowsPane.SetListGap then rowsPane:SetListGap(4) end
+    rowsPane:AddChild(rowContainer)
+    rowsPane:AddChild(inheritedContainer)
+    -- A spec page has no inherited rows: no empty group taking a row's
+    -- worth of room under the rows (its minimum height and two gaps).
+    if not loadout then inheritedContainer:SetHeight(0) end
+    rightContainer:AddChild(rowsPane)
+    if rightContainer.SetScrollBarEnabled then rightContainer:SetScrollBarEnabled(false) end
+    -- The pane ends at the shared row's top (raisePane): its bottom padding
+    -- is the gap to that row, no more.  No right padding: the page never
+    -- scrolls, and the rows pane's bar is already 10 in from its edge.
+    rightContainer:SetListPadding(rightContainer.listPadLeft, rightContainer.listPadTop, 0, 4)
+    -- The pane's height less the header's children, the list's padding and
+    -- a gap per child (the list leaves one after each, the rows pane too).
+    local function fitRowsPane()
+        local frame = rightContainer.frame
+        local room = frame and frame.GetHeight and frame:GetHeight() or 0
+        if room <= 0 then return end
+        local gap = rightContainer.listGap or 0
+        room = room - (rightContainer.listPadTop or 0) - (rightContainer.listPadBottom or 0) - gap
+        for _, child in ipairs(rightContainer.children or {}) do
+            if child ~= rowsPane and child.frame then room = room - (child.frame:GetHeight() or 0) - gap end
+        end
+        room = math.max(KB_ROW_HEIGHT * 2, math.floor(room))
+        if math.abs((rowsPane.height or 0) - room) > 0.5 then rowsPane:SetHeight(room) end
+    end
+    -- Sized now, before its first draw, so its rows never overflow a stub
+    -- height for a frame.
+    fitRowsPane()
 
     -- No Save: changes apply as they are made (markDirty).  The shared row
     -- is pinned to the viewport bottom, centred on the footer's Resources
@@ -2739,8 +2865,11 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             local targetX, frameX = target:GetCenter(), frame:GetCenter()
             if targetX and frameX then dx = targetX - frameX end
         end
+        -- At the wrapper's bottom, below the raised pane (see raisePane).
+        local wrap = rightContainer.parent and rightContainer.parent.frame or frame
         footAnchor:ClearAllPoints()
-        footAnchor:SetPoint("BOTTOM", frame, "BOTTOM", dx, KB_SAVE_INSET)
+        footAnchor:SetPoint("BOTTOM", wrap, "BOTTOM", dx, KB_SAVE_INSET)
+        fitRowsPane()
     end
     pinFoot()
     if C_Timer and C_Timer.After then C_Timer.After(0, pinFoot) end
@@ -2750,11 +2879,22 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     rightContainer:SetCallback("OnRelease", function()
         if sharedRow then sharedRow:Release() end
     end)
+    -- The scroll pane stops above the shared row: its frame is raised off
+    -- its wrapper's bottom by that row's room, so rows scroll the moment
+    -- they reach it and never run under it (Larry, 2026-10-30).  Redone
+    -- after every layout of the wrapper (a Fill, which anchors the pane to
+    -- its whole rect); the shared row itself hangs from the wrapper.
+    local outer = rightContainer.parent
+    if outer and outer.frame and outer.layout == "Fill" then
+        local reserve = KB_SAVE_INSET + (footAnchor:GetHeight() or 0) + sharedRowHeight
+        local function raisePane()
+            local wrap = outer.content or outer.frame
+            rightContainer.frame:SetPoint("BOTTOMRIGHT", wrap, "BOTTOMRIGHT", 0, reserve)
+        end
+        outer.afterLayout = raisePane
+        raisePane()
+    end
 
-    local bottomGutter = UI:Create("Spacer")
-    bottomGutter:SetFullWidth(true)
-    bottomGutter:SetHeight(KB_SAVE_INSET * 2 + 18 + sharedRowHeight)
-    rightContainer:AddChild(bottomGutter)
 
     redraw()
 end
