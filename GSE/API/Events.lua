@@ -699,12 +699,70 @@ end
 -- its cooldown values can be secret in combat, which SetCooldown refuses from
 -- an addon) the object goes to the frame; elsewhere the plain start and
 -- duration.
--- shortcut: no charge or loss-of-control swipe, add if a sequence needs them.
-local function setSpellCooldown(cooldown, spellID)
+-- The active recharge of a spell with charges: a duration object where WoW
+-- has them (Retail), else the plain start, duration and rate. Nothing when
+-- no charge is recharging. On Retail the object's values can be secret in
+-- combat; then it cannot be read as active and only the charge frame, which
+-- takes the object as it is, shows it.
+local function activeRecharge(spellID)
+    if C_Spell and C_Spell.GetSpellChargeDuration then
+        local duration = C_Spell.GetSpellChargeDuration(spellID)
+        local ok, active = pcall(function() return duration and duration:IsActive() and true or false end)
+        if ok and active then return duration end
+        return nil, nil, nil, nil, duration
+    end
+    local start, duration, modRate, active
+    if C_Spell and C_Spell.GetSpellCharges then
+        local charges = C_Spell.GetSpellCharges(spellID)
+        if charges then
+            start, duration, modRate = charges.cooldownStartTime, charges.cooldownDuration, charges.chargeModRate
+            active = charges.isActive
+            if active == nil then active = (charges.currentCharges or 0) < (charges.maxCharges or 0) end
+        end
+    elseif GetSpellCharges then
+        local current, max
+        current, max, start, duration, modRate = GetSpellCharges(spellID)
+        active = current and max and current < max
+    end
+    if active and start and duration then return nil, start, duration, modRate end
+end
+local function setCooldownFrom(frame, object, start, duration, modRate)
+    if object then
+        if frame.SetCooldownFromDurationObject then
+            frame:SetCooldownFromDurationObject(object)
+        else
+            frame:Clear()
+        end
+    elseif start and duration then
+        frame:SetCooldown(start, duration, modRate)
+    else
+        frame:Clear()
+    end
+end
+-- That spell's cooldown on the button's cooldown frame. A charge recharging
+-- goes on the charge frame as Blizzard's ActionButton_ApplyCooldown draws it
+-- (the edge, no swipe or number) and on the cooldown frame too, as a
+-- cooldown with its number: the edge alone shows no time, and a sequence's
+-- user wants to see when the next charge is back (Larry, 2026-10-31); with a
+-- charge left the spell's own cooldown is only the global one, so nothing
+-- showed. Otherwise the spell's own cooldown (the global one included, as
+-- on a spell button). Where WoW has duration objects (Retail; its cooldown
+-- values can be secret in combat, which SetCooldown refuses from an addon)
+-- the object goes to the frame; elsewhere the plain start and duration.
+-- shortcut: no loss-of-control swipe, add if a sequence needs it.
+local function setSpellCooldown(cooldown, spellID, chargeCooldown)
+    local object, start, duration, modRate, idle = activeRecharge(spellID)
+    if chargeCooldown and chargeCooldown.Clear then
+        setCooldownFrom(chargeCooldown, object or idle, start, duration, modRate)
+    end
+    if object or start then
+        setCooldownFrom(cooldown, object, start, duration, modRate)
+        return
+    end
     if C_Spell and C_Spell.GetSpellCooldownDuration and cooldown.SetCooldownFromDurationObject then
-        local duration = C_Spell.GetSpellCooldownDuration(spellID)
-        if duration then
-            cooldown:SetCooldownFromDurationObject(duration)
+        local spellDuration = C_Spell.GetSpellCooldownDuration(spellID)
+        if spellDuration then
+            cooldown:SetCooldownFromDurationObject(spellDuration)
         else
             cooldown:Clear()
         end
@@ -726,11 +784,13 @@ local function applyOverrideCooldown(button)
     -- A real action on the slot wins: its cooldown is the bar's to draw.
     if not overrideShowing(button) then return end
     local spellID = overrideSpell[button]
+    local chargeCooldown = button.chargeCooldown
     applyingCooldown = true
     if spellID then
-        pcall(setSpellCooldown, cooldown, spellID)
+        pcall(setSpellCooldown, cooldown, spellID, chargeCooldown)
     else
         cooldown:Clear()
+        if chargeCooldown and chargeCooldown.Clear then chargeCooldown:Clear() end
     end
     applyingCooldown = nil
 end
@@ -931,6 +991,11 @@ local function hookCooldownKeep(button)
     end
     hooksecurefunc(cooldown, "Clear", reassert)
     hooksecurefunc(cooldown, "SetCooldown", reassert)
+    local chargeCooldown = button.chargeCooldown
+    if chargeCooldown and chargeCooldown.Clear and chargeCooldown.SetCooldown then
+        hooksecurefunc(chargeCooldown, "Clear", reassert)
+        hooksecurefunc(chargeCooldown, "SetCooldown", reassert)
+    end
 end
 -- Blizzard's own range indicator for that spell against the target: the key
 -- text goes red out of range. The client only reports range for a slot that
@@ -1870,6 +1935,7 @@ local function refreshClearedOverrideIcon(button)
     applyOverrideGlow(button)
     applyOverrideAssist(button)
     if button.cooldown and button.cooldown.Clear then button.cooldown:Clear() end
+    if button.chargeCooldown and button.chargeCooldown.Clear then button.chargeCooldown:Clear() end
     if button.Count and button.Count.SetText then button.Count:SetText("") end
     if button.HotKey and _G.ActionButton_UpdateRangeIndicator then pcall(_G.ActionButton_UpdateRangeIndicator, button, false, false) end
     -- A GSE Action Bar button has no slot to repaint from: it goes back to
