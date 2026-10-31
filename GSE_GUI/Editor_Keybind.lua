@@ -1690,8 +1690,13 @@ local function buttonKeysText(buttonName, separator)
     end
     -- ConsolePort's buttons are the pad buttons themselves.
     if #keys == 0 and string.sub(buttonName, 1, 4) == "CPB_" then keys = {string.sub(buttonName, 5)} end
+    -- WoW's short form, as its bar buttons show a key, with the modifiers
+    -- in capitals: A-S-F1, not ALT-SHIFT-F1 or a-s-F1 (Larry, 2026-10-31).
     local shown = {}
-    for _, key in ipairs(keys) do shown[#shown + 1] = GetBindingText and GetBindingText(key) or key end
+    for _, key in ipairs(keys) do
+        local text = GetBindingText and GetBindingText(key, true) or key
+        shown[#shown + 1] = (string.gsub(text, "^([asc%-]+)%-", function(mods) return string.upper(mods) .. "-" end))
+    end
     if #shown > 0 then return table.concat(shown, separator or ", ") end
     local frame = _G[buttonName]
     local hotKey = type(frame) == "table" and ((frame.TextOverlayContainer and frame.TextOverlayContainer.HotKey)
