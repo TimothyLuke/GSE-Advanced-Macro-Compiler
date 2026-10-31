@@ -240,7 +240,9 @@ local function paintState(button, action)
             -- A spell's through GSE's override path: on Retail the start and
             -- duration can be secret, which SetCooldown refuses from an addon,
             -- so the duration object goes to the frame instead.
-            if spellID and GSE.SetSpellCooldown then return GSE.SetSpellCooldown(cooldown, spellID) end
+            if spellID and GSE.SetSpellCooldown then
+                return GSE.SetSpellCooldown(cooldown, spellID, region(button, "chargeCooldown", "ChargeCooldown"))
+            end
             local start, duration, modRate = 0, 0, nil
             if spellID then
                 local info = GSE.GetSpellCooldown(spellID)
@@ -357,6 +359,8 @@ local function paint(button)
         end
         local cooldown = region(button, "cooldown", "Cooldown")
         if cooldown then cooldown:Clear() end
+        local chargeCooldown = region(button, "chargeCooldown", "ChargeCooldown")
+        if chargeCooldown then chargeCooldown:Clear() end
         local count = region(button, "Count", "Count")
         if count then count:SetText("") end
         if name then name:SetText("") end
