@@ -2150,6 +2150,7 @@ function LoadKeyBindings(payload)
     if GSE.isEmpty(GSE_C["KeyBindings"]) then
         GSE_C["KeyBindings"] = {}
     end
+    GSE.RepairBindKeys()
     -- This character's spec-level binds into the shared profiles, once.
     GSE.MigrateToProfiles()
 
