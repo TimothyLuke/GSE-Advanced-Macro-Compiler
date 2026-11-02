@@ -610,6 +610,10 @@ local function inRange(action)
         if result == nil then return nil end
         return result == 1
     elseif itemID and C_Item and C_Item.IsItemInRange then
+        -- In combat WoW blocks this for anything but an enemy, and pcall
+        -- doesn't stop the blocked-action report. No answer leaves the key's
+        -- usual colour.
+        if InCombatLockdown() and not UnitCanAttack("player", "target") then return nil end
         return C_Item.IsItemInRange(itemID, "target")
     end
 end
