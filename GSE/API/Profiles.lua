@@ -241,6 +241,38 @@ function GSE.SpecLoadoutKeyBinds(specKey, create)
     return charTable({ "KeyBindings", tostring(specKey or GSE.CurrentSpecKey()), "LoadOuts" }, create)
 end
 
+-- A bind's key is a string ("5", "F"). One stored as a number ([5] beside
+-- ["F"] in a 3.3.36 report; how it got there is not known) broke the editor's
+-- key sort and would never bind. Kept under its string, unless that is taken.
+local function stringKeys(binds)
+    if type(binds) ~= "table" then return end
+    local numbers = {}
+    for k in pairs(binds) do
+        if type(k) == "number" then numbers[#numbers + 1] = k end
+    end
+    for _, k in ipairs(numbers) do
+        local s = tostring(k)
+        if binds[s] == nil then binds[s] = binds[k] end
+        binds[k] = nil
+    end
+end
+
+--- Every stored keybind's key as a string: this character's spec and loadout
+--- binds, and every shared profile's.
+function GSE.RepairBindKeys()
+    local own = type(GSE_C) == "table" and type(GSE_C.KeyBindings) == "table" and GSE_C.KeyBindings or {}
+    for _, spec in pairs(own) do
+        stringKeys(spec)
+        local loadouts = type(spec) == "table" and spec.LoadOuts or nil
+        for _, binds in pairs(type(loadouts) == "table" and loadouts or {}) do stringKeys(binds) end
+    end
+    for _, byClass in pairs(profiles()) do
+        for _, p in pairs(type(byClass) == "table" and byClass or {}) do
+            stringKeys(type(p) == "table" and p.KeyBindings or nil)
+        end
+    end
+end
+
 --- The spec-level action-bar overrides in force for a spec:
 --- { [buttonKey] = { Bind, State, Sequence } } -- shared or the character's own.
 function GSE.SpecOverrides(specKey, create)
