@@ -2078,7 +2078,7 @@ function GSE.CreateIconControl(action, version, keyPath, sequence, frame)
     local spellinfolist = getActionIconCandidates(action)
 
     lbl:SetCallback("OnClick", function(widget, button)
-        GSE.OpenContextMenu(frame, function(ownerRegion, rootDescription)
+        MenuUtil.CreateContextMenu(frame, function(ownerRegion, rootDescription)
             rootDescription:CreateTitle(L["Select Icon"])
             for _, v in pairs(spellinfolist) do
                 -- The spell as this spec has it (Barbed Shot, not the Steady

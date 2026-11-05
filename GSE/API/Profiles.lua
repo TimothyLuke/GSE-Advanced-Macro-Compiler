@@ -28,7 +28,7 @@ local SETTINGS = {
     msClickRate = true, resetOOC = true,
     MacroResetModifiers = true, ShiftPause = true, CtrlPause = true, AltPause = true,
     SkyRidingBinds = true,
-    showActionBarWatermark = true, showActionBarLabel = true, actionBarOverridePopup = true,
+    showActionBarWatermark = true, showActionBarLabel = true,
     CvarActionButtonState = true,
 }
 GSE.ProfileSettingNames = SETTINGS
@@ -692,6 +692,24 @@ function GSE.InstallProfileSettings()
     if type(defaults) ~= "table" then
         defaults = {}
         rawset(GSEOptions, "ProfileDefaults", defaults)
+    end
+    -- The right-click sequence picker (actionBarOverridePopup) is account-wide
+    -- and on unless turned off. It used to be a profile setting: an off kept in
+    -- the account defaults or any profile stays off; the profile copies go.
+    if rawget(GSEOptions, "actionBarOverridePopup") == nil then
+        local on = true
+        if defaults.actionBarOverridePopup == false then on = false end
+        defaults.actionBarOverridePopup = nil
+        for _, byClass in pairs(profiles()) do
+            for _, p in pairs(type(byClass) == "table" and byClass or {}) do
+                local s = type(p) == "table" and p.Settings
+                if type(s) == "table" then
+                    if s.actionBarOverridePopup == false then on = false end
+                    s.actionBarOverridePopup = nil
+                end
+            end
+        end
+        rawset(GSEOptions, "actionBarOverridePopup", on)
     end
     for k in pairs(SETTINGS) do
         local v = rawget(GSEOptions, k)

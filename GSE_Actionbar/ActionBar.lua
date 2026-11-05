@@ -212,7 +212,11 @@ for index = 1, ns.BUTTON_COUNT do
     -- Before any hook on OnClick: it wraps OnClick, and wrapping sets the
     -- script, which drops the hooks already on it -- the menu's among them.
     ns.SetupActionButton(button)
-    if GSE.ActionButtonMenuHandler then button:HookScript("OnClick", GSE.ActionButtonMenuHandler) end
+    if GSE.HookActionButtonMenu then
+        GSE.HookActionButtonMenu(button)
+    elseif GSE.ActionButtonMenuHandler then
+        button:HookScript("OnClick", GSE.ActionButtonMenuHandler)
+    end
     button:HookScript("OnEnter", emptyTooltip)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
     if bars[barOf(index)].masque then bars[barOf(index)].masque:AddButton(button, nil, "Action") end

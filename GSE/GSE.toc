@@ -76,4 +76,3 @@ API\OneOffEvents.lua
 API\WhatsNew.lua
 API\Events.lua
 API\OverrideKeys.lua
-API\ContextMenu.lua

@@ -2244,7 +2244,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
         button:SetCallback("OnClick", function()
             if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
-            GSE.OpenContextMenu(button.frame, function(_, root)
+            MenuUtil.CreateContextMenu(button.frame, function(_, root)
                 root:CreateTitle(L["Actionbar Buttons"])
                 -- A saved button not on this client right now still shows.
                 if not GSE.isEmpty(model.bind) and not buttonNames[model.bind] then

@@ -2482,15 +2482,18 @@ do
     -- Shared handler: right-click on a GSE-overridden button shows change/clear options;
     -- right-click on an empty action button shows the sequence picker to assign one.
     local function gseEmptyButtonHandler(self, mousebutton, down)
-        if not GSEOptions.actionBarOverridePopup then return end
+        -- On unless turned off.
+        if GSEOptions.actionBarOverridePopup == false then return end
         if InCombatLockdown() then return end
         if mousebutton ~= "RightButton" then return end
-        if down then
-            self.gseABMenuDown = true
-        elseif self.gseABMenuDown then
-            self.gseABMenuDown = nil
-            return
-        end
+        -- One right-click, one menu: OnClick and OnMouseUp both lead here
+        -- (hookMenu), and a client may fire both for the same press.
+        if self.gseABMenuOpenedAt and GetTime() - self.gseABMenuOpenedAt < 0.3 then return end
+        -- Open on the release, as Blizzard's right-click menus do. Opened on
+        -- the press, the menu sees that same press land outside it and closes
+        -- at once (WoW Forever). A bar that sends no release in OnClick still
+        -- gets one through OnMouseUp (hookMenu).
+        if down then return end
 
         local existingSequence = self:GetAttribute("gse-button")
         -- A GSE Action Bar button holding a spell, item or macro is not empty.
@@ -2560,9 +2563,8 @@ do
             end
         end
 
-        -- Through GSE.OpenContextMenu: Blizzard's menu cannot be opened from an
-        -- addon in Forever's gamepad mode (see GSE/API/ContextMenu.lua).
-        GSE.OpenContextMenu(self, function(ownerRegion, rootDescription)
+        self.gseABMenuOpenedAt = GetTime()
+        MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
             if existingSequence then
                 -- gse-button holds the sequence's id; show its label.
                 rootDescription:CreateTitle(L["GSE"] .. ": " .. (GSE.SequenceName(existingSequence) or existingSequence))
@@ -2590,6 +2592,18 @@ do
     -- The GSE Action Bar hooks its own buttons with the same menu.
     GSE.ActionButtonMenuHandler = gseEmptyButtonHandler
 
+    -- The menu opens on a release. A bar registered for presses only sends
+    -- OnClick no release, so OnMouseUp covers it; the handler's guard keeps a
+    -- bar that sends both from opening it twice.
+    local function onMenuMouseUp(self, mousebutton)
+        gseEmptyButtonHandler(self, mousebutton, nil)
+    end
+    local function hookMenu(button)
+        button:HookScript("OnClick", gseEmptyButtonHandler)
+        button:HookScript("OnMouseUp", onMenuMouseUp)
+    end
+    GSE.HookActionButtonMenu = hookMenu
+
     -- Standard Blizzard action bars hook via the global function
     --
     -- Hook the method on the ActionButton metatable instead
@@ -2607,7 +2621,7 @@ do
         for i = 1, 12 do
             local button = _G[prefix..i]
             if button then
-                button:HookScript("OnClick", gseEmptyButtonHandler)
+                hookMenu(button)
             end
         end
     end
@@ -2624,7 +2638,7 @@ do
         if Bartender4 then
             for i = 1, 180 do
                 local btn = _G["BT4Button" .. i]
-                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                if btn then hookMenu(btn) end
             end
         end
 
@@ -2632,7 +2646,7 @@ do
             for bar = 1, 15 do
                 for slot = 1, 12 do
                     local btn = _G["ElvUI_Bar" .. bar .. "Button" .. slot]
-                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                    if btn then hookMenu(btn) end
                 end
             end
         end
@@ -2641,7 +2655,7 @@ do
             for bar = 1, 15 do
                 for slot = 1, 12 do
                     local btn = _G["NDui_ActionBar" .. bar .. "Button" .. slot]
-                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                    if btn then hookMenu(btn) end
                 end
             end
         end
@@ -2657,7 +2671,7 @@ do
                     local btn = _G["EABButton" .. i]
                     if btn and not btn.gseRightClickHooked then
                         btn.gseRightClickHooked = true
-                        btn:HookScript("OnClick", gseEmptyButtonHandler)
+                        hookMenu(btn)
                     end
                 end
             end
@@ -2685,12 +2699,12 @@ do
             -- buttons. On Classic, Dominos reuses the Blizzard frames instead.
             for i = 1, 24 do
                 local btn = _G["DominosActionButton" .. i]
-                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                if btn then hookMenu(btn) end
             end
             -- Retail tops out at DominosActionButton132; Classic goes to 168.
             for i = 73, 168 do
                 local btn = _G["DominosActionButton" .. i]
-                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                if btn then hookMenu(btn) end
             end
             -- Retail-only Dominos-created frames (absent on Classic → skipped).
             local dominosBlizzPrefixes = {
@@ -2705,7 +2719,7 @@ do
             for _, prefix in ipairs(dominosBlizzPrefixes) do
                 for i = 1, 12 do
                     local btn = _G[prefix .. i]
-                    if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                    if btn then hookMenu(btn) end
                 end
             end
         end
@@ -2719,7 +2733,7 @@ do
             }
             for _, name in ipairs(cpbButtons) do
                 local btn = _G[name]
-                if btn then btn:HookScript("OnClick", gseEmptyButtonHandler) end
+                if btn then hookMenu(btn) end
             end
         end
     end)
@@ -2741,7 +2755,7 @@ do
             if isNamedActionButton(child) then
                 if not child.gseRightClickHooked then
                     child.gseRightClickHooked = true
-                    child:HookScript("OnClick", gseEmptyButtonHandler)
+                    hookMenu(child)
                 end
             else
                 hookActionButtonsUnder(child, depth + 1)
