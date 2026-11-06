@@ -94,39 +94,11 @@ _G["BINDING_HEADER_GSE"] = Statics.GSEString
 for bar = 1, 2 do
     _G["BINDING_HEADER_GSEBAR" .. bar] = (string.gsub(string.format(L["GSE Action Bar %d"], bar), "^GSE", Statics.GSEString))
 end
--- WoW lists an addon's sections after its own, in load order. Its own come
--- from KeybindingsOverrides.AddBindingCategories (Blizzard_SettingsDefinitions
--- _Frame), in a fixed order through a callback; the bar's two sections go in
--- through the same callback right after the last stock action bar, so they
--- sit with the bars. Sections with no bindings (the bar not loaded) are not
--- drawn. Where that function is missing (an older Key Bindings screen) the
--- sections stay where WoW puts them.
-local overrides = _G.KeybindingsOverrides
-if overrides and type(overrides.AddBindingCategories) == "function" then
-    local stockBars = {}
-    for _, name in ipairs({"BINDING_HEADER_ACTIONBAR", "BINDING_HEADER_ACTIONBAR2", "BINDING_HEADER_ACTIONBAR3",
-        "BINDING_HEADER_ACTIONBAR4", "BINDING_HEADER_ACTIONBAR5", "BINDING_HEADER_ACTIONBAR6",
-        "BINDING_HEADER_ACTIONBAR7", "BINDING_HEADER_ACTIONBAR8", "BINDING_HEADER_MULTIACTIONBAR"}) do
-        if _G[name] then stockBars[_G[name]] = true end
-    end
-    local addBindingCategories = overrides.AddBindingCategories
-    overrides.AddBindingCategories = function(add, ...)
-        local afterBars = false
-        addBindingCategories(function(key, ...)
-            if afterBars and not stockBars[key] then
-                afterBars = false
-                add(_G.BINDING_HEADER_GSEBAR1)
-                add(_G.BINDING_HEADER_GSEBAR2)
-            end
-            if stockBars[key] then afterBars = true end
-            return add(key, ...)
-        end, ...)
-        if afterBars then
-            add(_G.BINDING_HEADER_GSEBAR1)
-            add(_G.BINDING_HEADER_GSEBAR2)
-        end
-    end
-end
+-- WoW lists these sections after its own, in load order. GSE must not move
+-- them by replacing KeybindingsOverrides.AddBindingCategories: Blizzard calls
+-- that while it builds its Options panel at login, so the whole panel was
+-- built tainted -- and an action bar shown or hidden from Options then left
+-- the bars tainted, blocked in combat (MainActionBar:SetPointBase()).
 
 Statics.SystemVariables = {
     ["GCD"] = function()

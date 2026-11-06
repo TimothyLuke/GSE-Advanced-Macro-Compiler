@@ -76,3 +76,8 @@ API\OneOffEvents.lua
 API\WhatsNew.lua
 API\Events.lua
 API\OverrideKeys.lua
+
+# Development builds only: finds what taints Blizzard's bars and Options panel.
+#@debug@
+API\TaintWatch.lua
+#@end-debug@
