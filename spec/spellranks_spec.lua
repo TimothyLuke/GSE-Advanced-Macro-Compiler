@@ -142,6 +142,47 @@ describe("Spell ranks", function()
       assert.are.equal("/cast !Charge", compile(stored))
     end)
 
+    it("guards only the clauses that carry a !", function()
+      local stored = GSE.UnEscapeString(GSE.TranslateString("/cast [mod:shift] Charge; !Charge", Statics.TranslatorMode.ID))
+      assert.are.equal("/cast [mod:shift] 100; !100", stored)
+      assert.are.equal("/cast [mod:shift] Charge; !Charge", compile(stored))
+    end)
+
+    it("never carries a clause's ! over to the next clause, nor strips one", function()
+      -- Only the first and last clauses are guarded; the middle one must stay
+      -- unguarded, and the last keeps its own.
+      local text = "/cast [mod:alt] !Charge; [mod:ctrl] Frostbolt; !Maul"
+      local stored = GSE.UnEscapeString(GSE.TranslateString(text, Statics.TranslatorMode.ID))
+      local clauses = {}
+      for clause in string.gmatch(stored, "[^;]+") do
+        clauses[#clauses + 1] = clause
+      end
+      assert.are.equal(3, #clauses)
+      assert.is_not_nil(clauses[1]:find("^/cast %[mod:alt%] !%d+$"))
+      assert.is_not_nil(clauses[2]:find("^ %[mod:ctrl%] %d+$"))
+      assert.is_not_nil(clauses[3]:find("^ !%d+$"))
+      assert.are.equal(text, compile(stored))
+    end)
+
+    it("keeps a single ! on a spell it cannot resolve", function()
+      local stored = GSE.UnEscapeString(GSE.TranslateString("/cast [combat] !Nothing Known", Statics.TranslatorMode.ID))
+      assert.are.equal("/cast [combat] !Nothing Known", stored)
+    end)
+
+    it("stores a guarded, ranked form ability behind a conditional", function()
+      local text = "/cast [form:1] !Maul(Rank 1)(Bear)"
+      local stored = GSE.UnEscapeString(GSE.TranslateString(text, Statics.TranslatorMode.ID))
+      assert.are.equal("/cast [form:1] !6807", stored)
+      assert.are.same({"6807(Bear)"}, GSE.GetRankedSpellIDs(text))
+      assert.are.equal(text, compile(stored, {"6807(Bear)"}))
+    end)
+
+    it("does not double the ! guard in a /castsequence", function()
+      local stored = GSE.UnEscapeString(GSE.TranslateString("/castsequence [combat] reset=5 Charge, !Charge", Statics.TranslatorMode.ID))
+      assert.is_nil(stored:find("!!", 1, true))
+      assert.is_not_nil(stored:find("!100", 1, true))
+    end)
+
     it("does not fold a rank's ID into another rank on re-store", function()
       assert.are.equal(837, GSE.GetSpellId(837, Statics.TranslatorMode.ID))
     end)
