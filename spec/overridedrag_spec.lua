@@ -19,6 +19,8 @@ describe("Dragging an overridden action button", function()
     return b
   end
 
+  -- The game's globals go on _G itself: busted runs each spec file in its own
+  -- environment, and code loaded from Events.lua as text reads the real one.
   setup(function()
     saved = {}
     for _, name in ipairs(GLOBALS) do saved[name] = _G[name] end
@@ -28,11 +30,11 @@ describe("Dragging an overridden action button", function()
     local body = assert(src:match("\nlocal function overrideDragStart%(self%)\n(.-)\nend\n"), "overrideDragStart not found")
     dragStart = assert((loadstring or load)("return function(self)\n" .. body .. "\nend"))()
     assert.truthy(src:find('HookScript("OnDragStart", overrideDragStart)', 1, true))
-    InCombatLockdown = function() return combat end
-    GetCursorInfo = function() return cursor end
-    GetCVarBool = function(name) return name == "lockActionBars" and locked end
-    IsModifiedClick = function(name) return name == "PICKUPACTION" and modifier end
-    GSE = {
+    _G.InCombatLockdown = function() return combat end
+    _G.GetCursorInfo = function() return cursor end
+    _G.GetCVarBool = function(name) return name == "lockActionBars" and locked end
+    _G.IsModifiedClick = function(name) return name == "PICKUPACTION" and modifier end
+    _G.GSE = {
       ButtonOverrideSequence = function(name) return name == "ActionButton1" and "seqA" or nil end,
       BeginSequenceDrag = function(sequenceId, from) began = { sequenceId, from } end,
     }
