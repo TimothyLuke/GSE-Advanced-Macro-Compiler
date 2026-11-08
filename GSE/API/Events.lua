@@ -508,6 +508,24 @@ local SHOWGRID_OFF = [[
     local grid = b:GetAttribute("showgrid") or 0
     if math.floor(grid / 262144) % 2 == 1 then b:SetAttribute("showgrid", grid - 262144) end
 ]]
+-- WoW's own "Always Show Buttons" bit (ACTION_BUTTON_SHOW_GRID_REASON_CVAR, 1).
+-- BaseActionButtonMixin:SetShowGrid adds a reason only when the button's grid
+-- is not showing yet, so while GSE's bit is on, WoW never adds its own: at
+-- login the override goes on first. Taking GSE's bit off then left showgrid
+-- at 0 and the bar hid the empty button until a reload. So WoW's bit goes on
+-- before GSE's comes off, where the bar's setting asks for it.
+local SHOWGRID_ALWAYS = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if grid % 2 == 0 then b:SetAttribute("showgrid", grid + 1) end
+]]
+local function barAlwaysShowsButtons(bar)
+    local setting = Enum and Enum.EditModeActionBarSetting and Enum.EditModeActionBarSetting.AlwaysShowButtons
+    if not (setting and bar.GetSettingValueBool) then return false end
+    local ok, always = pcall(bar.GetSettingValueBool, bar, setting)
+    return ok and always == true
+end
 local function setOverrideButtonForcedShown(buttonOrName, shown)
     local btn = type(buttonOrName) == "string" and _G[buttonOrName] or buttonOrName
     if not btn or InCombatLockdown() then return end
@@ -518,6 +536,7 @@ local function setOverrideButtonForcedShown(buttonOrName, shown)
         local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
         if hasBit == (shown and true or false) and (not shown or btn:IsShown()) then return end
         SHBT:SetFrameRef("gseGridButton", btn)
+        if not shown and barAlwaysShowsButtons(btn.bar) then SHBT:Execute(SHOWGRID_ALWAYS) end
         SHBT:Execute(shown and SHOWGRID_ON or SHOWGRID_OFF)
     end
 end
@@ -1412,6 +1431,20 @@ function GSE.SetActionBarKeepIconColour(enabled)
     for Button in pairs(GSE.ButtonOverrides or {}) do guardOverrideIconColour(Button) end
 end
 
+-- Dragging an overridden button picks its sequence up to move it, as dragging
+-- an action off a bar does: with the bars unlocked, or with the Lock Action
+-- Bars key held. Only while the button runs the sequence (type "click"), not
+-- while its bar is swapped for a vehicle's, and not when the drag picked up
+-- something real from the slot. The GSE Action Bar starts its own drag
+-- (Actions.lua).
+local function overrideDragStart(self)
+    if self.gseActionBarButton or InCombatLockdown() or GetCursorInfo() then return end
+    if GetCVarBool("lockActionBars") and not IsModifiedClick("PICKUPACTION") then return end
+    if self:GetAttribute("type") ~= "click" or not self:GetAttribute("gse-button") then return end
+    local sequenceId = GSE.ButtonOverrideSequence(self:GetName())
+    if sequenceId then GSE.BeginSequenceDrag(sequenceId, self) end
+end
+
 -- Non-secure hook that watches attributes written by BAR_SWAP_OAC / BAR_SWAP_ONCLICK.
 -- gse-eff-action > 0  ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ bar has swapped (vehicle/skyriding), show the override icon.
 -- gse-eff-action == 0 ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ back to normal GSE state, restore the macro icon.
@@ -1446,6 +1479,7 @@ local function hookButtonIconUpdates(Button)
         showGSEButtonTooltip(self)
     end)
     _G[Button]:HookScript("OnLeave", restoreIconNow)
+    _G[Button]:HookScript("OnDragStart", overrideDragStart)
 
     _G[Button]:HookScript("OnAttributeChanged", function(self, name, value)
         if not self:GetAttribute("gse-button") then return end
@@ -2477,8 +2511,8 @@ function GSE.CancelSequenceDrag()
 end
 
 -- Start dragging a sequence. Returns false (and says why) when it cannot.
--- fromButton: the GSE Action Bar button it is being dragged off, if any --
--- the drop then moves it, and a drop on nothing takes it off the bar.
+-- fromButton: the action button it is being dragged off, if any -- the drop
+-- then moves it, and a drop on nothing takes it off the bar.
 function GSE.BeginSequenceDrag(sequenceId, fromButton)
     if drag then endDrag() end
     if InCombatLockdown() then
@@ -2492,6 +2526,9 @@ function GSE.BeginSequenceDrag(sequenceId, fromButton)
     ensureDragFrames()
     local thisDrag = { sequenceId = sequenceId, candidates = {}, fromButton = fromButton }
     drag = thisDrag
+    -- Off a button it sounds as an action picked up off a bar does. WoW plays
+    -- that one itself, so SOUNDKIT has no name for it: 837, beside the drop's.
+    if fromButton then PlaySound(837) end
     -- The icon first, at the cursor, so it shows the moment the drag starts.
     dragIcon.texture:SetTexture(GSE.GetSequenceStartIcon(sequenceId) or Statics.Icons.GSE_Logo_Dark)
     local scale = UIParent:GetEffectiveScale()
@@ -2530,7 +2567,10 @@ function GSE.FinishSequenceDrag()
     -- Off a GSE Action Bar button and dropped on nothing: it comes off the
     -- bar, as an action dragged off a bar does.
     if not target then
-        if fromButton then GSE.RemoveActionBarOverride(fromButton:GetName()) end
+        if fromButton then
+            GSE.RemoveActionBarOverride(fromButton:GetName())
+            PlaySound(SOUNDKIT.IG_ABILITY_ICON_DROP)
+        end
         return
     end
     -- A real spell or item in the slot would win over the override and hide it,
@@ -2554,6 +2594,7 @@ function GSE.FinishSequenceDrag()
     local written
     if fromButton then
         written = GSE.MoveActionBarOverride(fromButton:GetName(), target:GetName())
+        PlaySound(SOUNDKIT.IG_ABILITY_ICON_DROP)
     else
         written = GSE.CreateActionBarOverride(target:GetName(), sequenceId)
     end

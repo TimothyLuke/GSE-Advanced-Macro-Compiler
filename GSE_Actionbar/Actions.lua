@@ -450,6 +450,10 @@ local function place(button)
 end
 
 local function pickup(button)
+    -- A CheckButton flips its checked state on every click. The press checked
+    -- it, and the release that flips it back never comes once a drag starts,
+    -- which left its gold ring on the button.
+    button:SetChecked(false)
     if InCombatLockdown() or GetCursorInfo() then return end
     if GetCVarBool("lockActionBars") and not IsModifiedClick("PICKUPACTION") then return end
     local actions = ns.Actions()
