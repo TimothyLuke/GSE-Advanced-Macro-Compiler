@@ -288,10 +288,6 @@ local function translateStringUncached(instring, mode, cleanNewLines, dropAbsolu
                         if not cleanNewLines then
                             etc = string.match(etc, "^%s*(.-)%s*$")
                         end
-                        if string.sub(etc, 1, 1) == "!" then
-                            etc = string.sub(etc, 2)
-                            output = output .. "!"
-                        end
                         local foundspell, returnval =
                             GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false), absolute)
                         if foundspell then
@@ -424,6 +420,14 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
         if not cleanNewLines then
             etc = string.match(etc, "^%s*(.-)%s*$")
         end
+        -- A clause's "!" stops /cast toggling an on-next-swing spell off, so it has
+        -- to survive behind conditionals and after a ";" as well as at the start.
+        local toggleGuard = ""
+        local unguarded = string.match(etc, "^%s*!%s*(.*)$")
+        if unguarded then
+            toggleGuard = "!"
+            etc = unguarded
+        end
         if mode == Statics.TranslatorMode.Current then
             if GSEOptions.showCurrentSpells then
                 local test = tonumber(etc)
@@ -444,13 +448,13 @@ function GSE.TranslateSpell(str, mode, cleanNewLines, absolute)
             --@debug@
             GSE.PrintDebugMessage("Translating Spell ID : " .. etc .. " to " .. foundspell, GNOME)
             --@end-debug@
-            output = output .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
+            output = output .. toggleGuard .. GSEOptions.KEYWORD .. foundspell .. Statics.StringReset
             found = true
         else
             --@debug@
             GSE.PrintDebugMessage("Did not find : " .. etc .. ".  Spell may no longer exist", GNOME)
             --@end-debug@
-            output = output .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
+            output = output .. toggleGuard .. GSEOptions.UNKNOWN .. etc .. Statics.StringReset
         end
     end
     return found, output
