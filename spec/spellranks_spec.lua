@@ -130,6 +130,18 @@ describe("Spell ranks", function()
       assert.is_not_nil(stored:find("] 205$"))
     end)
 
+    it("keeps a clause's ! guard behind a conditional and after a ;", function()
+      local stored = GSE.UnEscapeString(GSE.TranslateString("/cast [combat] !Charge; [mod:alt] !Charge", Statics.TranslatorMode.ID))
+      assert.are.equal("/cast [combat] !100; [mod:alt] !100", stored)
+      assert.are.equal("/cast [combat] !Charge; [mod:alt] !Charge", compile(stored))
+    end)
+
+    it("does not double the ! guard at the start of a /cast", function()
+      local stored = GSE.UnEscapeString(GSE.TranslateString("/cast !Charge", Statics.TranslatorMode.ID))
+      assert.are.equal("/cast !100", stored)
+      assert.are.equal("/cast !Charge", compile(stored))
+    end)
+
     it("does not fold a rank's ID into another rank on re-store", function()
       assert.are.equal(837, GSE.GetSpellId(837, Statics.TranslatorMode.ID))
     end)
