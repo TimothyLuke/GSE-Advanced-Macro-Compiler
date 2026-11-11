@@ -4,8 +4,8 @@ ns.deferred = ns.deferred or {}
 -- ── What a GSE Action Bar button holds ──────────────────────────────────────
 --
 -- A button holds a spell, item, toy, macro or equipment set as any action bar
--- button does: dropped on it, or picked up off it (Shift-drag while WoW's
--- action bars are locked). WoW has no action slot to spare for it -- every one
+-- button does: dropped on it, or dragged off it (no Shift needed, even with
+-- WoW's action bars locked). WoW has no action slot to spare for it -- every one
 -- belongs to a Blizzard bar -- so GSE keeps it, per character and spec, in
 -- GSE_C.ActionBarActions[spec][button], and casts it through the button's own
 -- secure attributes.
@@ -454,8 +454,9 @@ local function pickup(button)
     -- it, and the release that flips it back never comes once a drag starts,
     -- which left its gold ring on the button.
     button:SetChecked(false)
+    -- No Shift needed, whatever WoW's Lock Action Bars says: that setting is
+    -- for WoW's own bars, and the GSE Action Bar drags off as it is.
     if InCombatLockdown() or GetCursorInfo() then return end
-    if GetCVarBool("lockActionBars") and not IsModifiedClick("PICKUPACTION") then return end
     local actions = ns.Actions()
     local old = actions[button.gseIndex]
     if not old then

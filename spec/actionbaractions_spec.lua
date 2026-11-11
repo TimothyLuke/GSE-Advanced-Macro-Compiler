@@ -64,6 +64,35 @@ describe("GSE Action Bar actions", function()
     assert.is_nil(ns.ActionAttributes(nil))
   end)
 
+  it("drags an action or a sequence off with Lock Action Bars on and no Shift held", function()
+    local fh = assert(io.open("GSE_Actionbar/Actions.lua", "r"))
+    local src = fh:read("*a"):gsub("\r\n", "\n")
+    fh:close()
+    local body = assert(src:match("\nlocal function pickup%(button%)\n(.-)\nend\n"), "pickup not found")
+    local picked, began = {}, {}
+    local env = setmetatable({
+      ns = { Actions = ns.Actions, PickupAction = function(a) picked[#picked + 1] = a end },
+      GSE = { BeginSequenceDrag = function(id) began[#began + 1] = id end },
+      changed = function() end,
+      InCombatLockdown = function() return false end,
+      GetCursorInfo = function() return nil end,
+      GetCVarBool = function(name) return name == "lockActionBars" end,
+      IsModifiedClick = function() return false end,
+    }, { __index = _G })
+    local pickup = assert((loadstring or load)("return function(button)\n" .. body .. "\nend"))()
+    setfenv(pickup, env)
+    local function button(index, sequenceId)
+      return { gseIndex = index, SetChecked = function() end,
+        GetAttribute = function(_, name) return name == "gse-button" and sequenceId or nil end }
+    end
+    ns.Actions()[1] = { kind = "macro", name = "Pull" }
+    pickup(button(1))
+    assert.are.same({ { kind = "macro", name = "Pull" } }, picked)
+    assert.is_nil(ns.Actions()[1])
+    pickup(button(2, "seqA"))
+    assert.are.same({ "seqA" }, began)
+  end)
+
   it("keeps a button's action per spec, for this character", function()
     ns.Actions()[1] = { kind = "spell", id = 100 }
     ns.Actions("1")[1] = { kind = "macro", name = "Pull" }
