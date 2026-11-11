@@ -14,7 +14,8 @@ local _, GSE = ...
 -- specID, not the spec index a character's binds were kept by: it is the same
 -- on every character of the class. Where binds are split by spec group rather
 -- than specialisation, Primary's profile is the class's (specID = classID, or
--- the one class-level specialisation) and Secondary's its own (SpecIDForKey).
+-- the one class-level specialisation where the client reports one; always the
+-- class on WoW Forever) and Secondary's its own (SpecIDForKey).
 --
 -- What stays on the character (GSE_C): anything keyed by a talent loadout --
 -- its config id belongs to that character -- and, per spec, whether it has
@@ -157,12 +158,15 @@ function GSE.SpecIDForKey(specKey)
         if type(specID) == "number" and specID > 0 then return specID end
         return nil
     end
-    local base
-    if specialisationCount() == 1 then
+    -- Primary is the class. WoW Forever's spec API answers nothing (its
+    -- GetSpecializationInfo / GetNumSpecializations are nil), so it is never
+    -- asked there; elsewhere a nil answer early in a login still means
+    -- Primary, rather than no profile -- which left every action bar override
+    -- unarmed until the first LoadOverrides after combat.
+    local base = GSE.GetCurrentClassID()
+    if not GSE.IsForever and specialisationCount() == 1 then
         local specID = info and info(1)
-        base = (type(specID) == "number" and specID > 0) and specID or nil
-    else
-        base = GSE.GetCurrentClassID()
+        if type(specID) == "number" and specID > 0 then base = specID end
     end
     if not base then return nil end
     local group = tonumber(specKey) or 1

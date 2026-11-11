@@ -184,6 +184,26 @@ describe("Profiles", function()
       assert.are.equal("1486:2", GSE.SpecIDForKey("2"))
     end)
 
+    it("WoW Forever: Primary is the class, without asking the spec API", function()
+      dualSpec(1, 1)
+      _G.GetNumSpecializations = nil
+      C_SpecializationInfo.GetSpecializationInfo = nil
+      GSE.IsForever = true
+      local ok, err = pcall(function()
+        assert.are.equal(2, GSE.SpecIDForKey("1"))
+        assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+        assert.are.equal("table", type(GSE.Profile("1", true)), "a profile from the first login pass, not nil")
+      end)
+      GSE.IsForever = nil
+      if not ok then error(err, 0) end
+    end)
+
+    it("spec API answering nothing early in a login: Primary, not no profile", function()
+      dualSpec(1, 1)
+      C_SpecializationInfo.GetSpecializationInfo = function() return nil end
+      assert.are.equal(2, GSE.SpecIDForKey("1"))
+    end)
+
     it("Cata to WoD (MoP): spec groups too, though it has three specialisations", function()
       dualSpec(3, 1)
       assert.are.equal("1", GSE.CurrentSpecKey())
