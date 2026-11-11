@@ -290,14 +290,15 @@ local function translateStringUncached(instring, mode, cleanNewLines, dropAbsolu
                         end
                         local foundspell, returnval =
                             GSE.TranslateSpell(etc, mode, (cleanNewLines and cleanNewLines or false), absolute)
-                        if foundspell then
-                            output = output .. returnval
-                        else
-                            --@debug@
+                        --@debug@
+                        if not foundspell then
                             GSE.PrintDebugMessage("Did not find : " .. etc, GNOME)
-                            --@end-debug@
-                            output = output .. etc
                         end
+                        --@end-debug@
+                        -- Found or not, TranslateSpell's output: the same text,
+                        -- with an unknown spell in the UNKNOWN colour rather
+                        -- than plain, so the editor shows it as unknown.
+                        output = output .. returnval
                     else
                         -- Pass it through
                         output = output .. " " .. etc
@@ -953,8 +954,11 @@ function GSE.GetCastableSpell(value, ranks)
         local info = GSE.GetSpellInfo(spellID)
         return (info and cappedRank(info.name, spellID)) or spellID
     end
+    -- A name nothing resolves is still cast as typed: WoW may know it by the
+    -- time the button is pressed (a spell not yet learned or loaded).
     local spell = GSE.GetSpellId(value, Statics.TranslatorMode.ID) or
-        GSE.GetSpellId(value, Statics.TranslatorMode.String)
+        GSE.GetSpellId(value, Statics.TranslatorMode.String) or
+        (type(value) == "string" and value or nil)
     local info = tonumber(spell) and GSE.GetSpellInfo(spell)
     local top = info and knownRanks(info.name)
     return (top and top[#top].spellID) or spell
@@ -1009,6 +1013,14 @@ function GSE.GetSpellId(spellstring, mode, absolute)
             -- cannot resolve is very often a name from someone else's locale,
             -- which is the whole reason those tables are shared.
             spellinfo.spellID = lookupCachedSpellID(spellstring) or spellinfo.spellID
+            -- Neither the client nor any cache knows it: not found, in every
+            -- mode. Display modes used to hand the typed text back as the
+            -- answer, so a spell this character does not have ("Immolation"
+            -- on a warlock who knows Immolate), or a typo, was coloured as a
+            -- known spell in the editor.
+            if GSE.isEmpty(spellinfo.spellID) then
+                return nil
+            end
         else
             -- Numeric spell ID that the client doesn't know about: nothing
             -- meaningful to return. Bail rather than indexing nil below.
