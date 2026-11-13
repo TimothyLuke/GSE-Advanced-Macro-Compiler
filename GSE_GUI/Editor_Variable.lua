@@ -431,11 +431,18 @@ local function showVariableVersion(editframe, name, container, index)
     addEvent:SetLabel(L["Add Trigger Event"])
     addEvent:SetWidth(300)
     if addEvent.SetFlowFillRemaining then addEvent:SetFlowFillRemaining(true) end
-    local eventOrder = {}
-    for key, _ in pairs(Statics.VariableEventList or {}) do
-        table.insert(eventOrder, key)
+    -- The list spans every client; offer GSE's messages and the WoW events
+    -- this client has. A client that cannot say gets the whole list. Any
+    -- other name can still be typed in.
+    local canCheck = C_EventUtils and C_EventUtils.IsEventValid
+    local eventList, eventOrder = {}, {}
+    for key, label in pairs(Statics.VariableEventList or {}) do
+        if not canCheck or Statics.InternalMessages[key] or C_EventUtils.IsEventValid(key) then
+            eventList[key] = label
+            table.insert(eventOrder, key)
+        end
     end
-    addEvent:SetList(Statics.VariableEventList, GSE.SortTableAlphabetical(eventOrder))
+    addEvent:SetList(eventList, GSE.SortTableAlphabetical(eventOrder))
     addEvent:SetPlaceholder(L["Pick one, or type an event's name and press Enter"])
     addEvent:SetDisabled(not isEventEnabled)
     addEvent:SetCallback(

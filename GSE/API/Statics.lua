@@ -740,6 +740,9 @@ Statics.InternalMessages = {
 -- Full event list for variable event callbacks.
 -- Flat key=value table for native dropdown SetList() / SetMultiselect().
 -- GSE internal messages are prefixed with "[GSE] " in the display value.
+-- It spans every client GSE supports (UNIT_SPELLCAST_EMPOWER_* is Retail
+-- only, LEARNED_SPELL_IN_TAB is pre-11.0); the variable editor offers only
+-- the ones the running client knows (Editor_Variable.lua).
 Statics.VariableEventList = {
     -- GSE Internal Messages
     ["GSE_SEQUENCE_UPDATED"]              = "[GSE] GSE_SEQUENCE_UPDATED",
@@ -789,6 +792,8 @@ Statics.VariableEventList = {
     -- FriendList
     ["FRIENDLIST_UPDATE"]                 = "FRIENDLIST_UPDATE",
     -- Group / Party / Raid
+    ["GROUP_JOINED"]                      = "GROUP_JOINED",
+    ["GROUP_LEFT"]                        = "GROUP_LEFT",
     ["GROUP_ROSTER_UPDATE"]               = "GROUP_ROSTER_UPDATE",
     ["PARTY_LEADER_CHANGED"]              = "PARTY_LEADER_CHANGED",
     ["PARTY_MEMBERS_CHANGED"]             = "PARTY_MEMBERS_CHANGED",
@@ -798,9 +803,14 @@ Statics.VariableEventList = {
     -- Item / Bag
     ["BAG_UPDATE"]                        = "BAG_UPDATE",
     ["BAG_UPDATE_COOLDOWN"]               = "BAG_UPDATE_COOLDOWN",
+    ["BAG_UPDATE_DELAYED"]                = "BAG_UPDATE_DELAYED",
     ["ITEM_LOCK_CHANGED"]                 = "ITEM_LOCK_CHANGED",
+    ["PLAYER_EQUIPMENT_CHANGED"]          = "PLAYER_EQUIPMENT_CHANGED",
+    -- Fires for weapon enchants (poisons, imbues) as well as gear.
+    ["UNIT_INVENTORY_CHANGED"]            = "UNIT_INVENTORY_CHANGED",
     -- Map / Zone
     ["ZONE_CHANGED"]                      = "ZONE_CHANGED",
+    ["ZONE_CHANGED_INDOORS"]              = "ZONE_CHANGED_INDOORS",
     ["ZONE_CHANGED_NEW_AREA"]             = "ZONE_CHANGED_NEW_AREA",
     ["PLAYER_DIFFICULTY_CHANGED"]         = "PLAYER_DIFFICULTY_CHANGED",
     -- Player State
@@ -810,6 +820,30 @@ Statics.VariableEventList = {
     ["PLAYER_LOGIN"]                      = "PLAYER_LOGIN",
     ["PLAYER_LOGOUT"]                     = "PLAYER_LOGOUT",
     ["PLAYER_XP_UPDATE"]                  = "PLAYER_XP_UPDATE",
+    ["PLAYER_UPDATE_RESTING"]             = "PLAYER_UPDATE_RESTING",
+    ["PLAYER_FLAGS_CHANGED"]              = "PLAYER_FLAGS_CHANGED",
+    ["PLAYER_MOUNT_DISPLAY_CHANGED"]      = "PLAYER_MOUNT_DISPLAY_CHANGED",
+    ["PLAYER_STARTED_MOVING"]             = "PLAYER_STARTED_MOVING",
+    ["PLAYER_STOPPED_MOVING"]             = "PLAYER_STOPPED_MOVING",
+    ["PLAYER_CONTROL_GAINED"]             = "PLAYER_CONTROL_GAINED",
+    ["PLAYER_CONTROL_LOST"]               = "PLAYER_CONTROL_LOST",
+    ["LOSS_OF_CONTROL_ADDED"]             = "LOSS_OF_CONTROL_ADDED",
+    ["LOSS_OF_CONTROL_UPDATE"]            = "LOSS_OF_CONTROL_UPDATE",
+    ["MODIFIER_STATE_CHANGED"]            = "MODIFIER_STATE_CHANGED",
+    -- Forms / Stealth
+    ["UPDATE_SHAPESHIFT_FORM"]            = "UPDATE_SHAPESHIFT_FORM",
+    ["UPDATE_SHAPESHIFT_FORMS"]           = "UPDATE_SHAPESHIFT_FORMS",
+    ["UPDATE_STEALTH"]                    = "UPDATE_STEALTH",
+    -- Pet
+    ["PET_BAR_UPDATE"]                    = "PET_BAR_UPDATE",
+    ["UNIT_PET"]                          = "UNIT_PET",
+    -- Totems
+    ["PLAYER_TOTEM_UPDATE"]               = "PLAYER_TOTEM_UPDATE",
+    -- Stats
+    ["COMBAT_RATING_UPDATE"]              = "COMBAT_RATING_UPDATE",
+    ["MASTERY_UPDATE"]                    = "MASTERY_UPDATE",
+    ["UNIT_ATTACK_SPEED"]                 = "UNIT_ATTACK_SPEED",
+    ["UNIT_STATS"]                        = "UNIT_STATS",
     -- Player Combat
     ["PLAYER_REGEN_DISABLED"]             = "PLAYER_REGEN_DISABLED",
     ["PLAYER_REGEN_ENABLED"]              = "PLAYER_REGEN_ENABLED",
@@ -828,20 +862,42 @@ Statics.VariableEventList = {
     -- Spells / Cooldowns
     ["SPELL_UPDATE_CHARGES"]              = "SPELL_UPDATE_CHARGES",
     ["SPELL_UPDATE_COOLDOWN"]             = "SPELL_UPDATE_COOLDOWN",
+    ["SPELL_UPDATE_USABLE"]               = "SPELL_UPDATE_USABLE",
     ["SPELLS_CHANGED"]                    = "SPELLS_CHANGED",
+    ["LEARNED_SPELL_IN_SKILL_LINE"]       = "LEARNED_SPELL_IN_SKILL_LINE",
+    ["LEARNED_SPELL_IN_TAB"]              = "LEARNED_SPELL_IN_TAB",
+    ["UNIT_SPELLCAST_CHANNEL_START"]      = "UNIT_SPELLCAST_CHANNEL_START",
+    ["UNIT_SPELLCAST_CHANNEL_STOP"]       = "UNIT_SPELLCAST_CHANNEL_STOP",
+    ["UNIT_SPELLCAST_CHANNEL_UPDATE"]     = "UNIT_SPELLCAST_CHANNEL_UPDATE",
+    ["UNIT_SPELLCAST_DELAYED"]            = "UNIT_SPELLCAST_DELAYED",
+    ["UNIT_SPELLCAST_EMPOWER_START"]      = "UNIT_SPELLCAST_EMPOWER_START",
+    ["UNIT_SPELLCAST_EMPOWER_STOP"]       = "UNIT_SPELLCAST_EMPOWER_STOP",
     ["UNIT_SPELLCAST_FAILED"]             = "UNIT_SPELLCAST_FAILED",
     ["UNIT_SPELLCAST_INTERRUPTED"]        = "UNIT_SPELLCAST_INTERRUPTED",
+    ["UNIT_SPELLCAST_SENT"]               = "UNIT_SPELLCAST_SENT",
     ["UNIT_SPELLCAST_START"]              = "UNIT_SPELLCAST_START",
     ["UNIT_SPELLCAST_STOP"]               = "UNIT_SPELLCAST_STOP",
     ["UNIT_SPELLCAST_SUCCEEDED"]          = "UNIT_SPELLCAST_SUCCEEDED",
     -- Target
     ["PLAYER_TARGET_CHANGED"]             = "PLAYER_TARGET_CHANGED",
+    ["PLAYER_FOCUS_CHANGED"]              = "PLAYER_FOCUS_CHANGED",
+    ["UPDATE_MOUSEOVER_UNIT"]             = "UPDATE_MOUSEOVER_UNIT",
+    ["NAME_PLATE_UNIT_ADDED"]             = "NAME_PLATE_UNIT_ADDED",
+    ["NAME_PLATE_UNIT_REMOVED"]           = "NAME_PLATE_UNIT_REMOVED",
     -- Unit
     ["UNIT_AURA"]                         = "UNIT_AURA",
+    ["UNIT_COMBAT"]                       = "UNIT_COMBAT",
+    ["UNIT_ENTERED_VEHICLE"]              = "UNIT_ENTERED_VEHICLE",
+    ["UNIT_EXITED_VEHICLE"]               = "UNIT_EXITED_VEHICLE",
+    ["UNIT_FLAGS"]                        = "UNIT_FLAGS",
     ["UNIT_HEALTH"]                       = "UNIT_HEALTH",
     ["UNIT_MAXHEALTH"]                    = "UNIT_MAXHEALTH",
     ["UNIT_POWER_UPDATE"]                 = "UNIT_POWER_UPDATE",
+    ["UNIT_POWER_FREQUENT"]               = "UNIT_POWER_FREQUENT",
+    ["UNIT_MAXPOWER"]                     = "UNIT_MAXPOWER",
     ["UNIT_DISPLAYPOWER"]                 = "UNIT_DISPLAYPOWER",
+    ["UNIT_TARGET"]                       = "UNIT_TARGET",
+    ["UNIT_THREAT_SITUATION_UPDATE"]      = "UNIT_THREAT_SITUATION_UPDATE",
 }
 
 -- =========================================================================
