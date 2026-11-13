@@ -2463,6 +2463,7 @@ function GSE.CreateEditor()
             end
             self.Sequence = nil
             self.SequenceName = nil
+            self.ElementKind, self.ElementName = nil, nil
             self.Raid = nil
             self.PVP = nil
             self.Mythic = nil
@@ -2732,7 +2733,7 @@ function GSE.CreateEditor()
         if editframe.frame and editframe.frame.StopMovingOrSizing then
             editframe.frame:StopMovingOrSizing()
         end
-        minWidgetTitle:SetText(formatMinWidgetTitle(editframe.SequenceName))
+        minWidgetTitle:SetText(formatMinWidgetTitle(editframe.ElementName or editframe.SequenceName))
         minimizedWidget.previewWasVisible = editframe.PreviewFrame and editframe.PreviewFrame:IsVisible()
         if editframe.PreviewFrame then
             editframe.PreviewFrame:Hide()
@@ -8029,6 +8030,32 @@ function GSE.CreateEditor()
     editframe.BuildVersionLabel = BuildVersionLabel
     editframe.GUIDrawMacroEditor = GUIDrawMacroEditor
 
+    -- What the right-hand pane is showing, when it is not a sequence: kind
+    -- "variable" or "macro", and its name. Kept apart from SequenceName on
+    -- purpose. A sequence stays loaded while other pages are visited -- coming
+    -- back to it only reloads when SequenceID changes -- so SequenceName must
+    -- still be that sequence's name when it is shown again; a variable page
+    -- that wrote its own name there had the sequence shown, and saved, under
+    -- the variable's name. A sequence page clears it (nil, nil). Defined
+    -- before the page modules below are installed, as they call it.
+    function editframe:SetOpenElement(kind, name)
+        self.ElementKind = kind
+        self.ElementName = name
+    end
+
+    -- Whether an update for ref (an id or a name) is about what is open here.
+    -- A macro is never matched: it writes every change as it is made, so its
+    -- updates arrive in bursts, and the pending-save check in
+    -- remoteSequenceUpdated already says "Saved" for the first and stays quiet
+    -- for the rest. Matched here, each after the first would read "modified in
+    -- other window". (A method, not a local: CreateEditor is long enough that
+    -- Lua 5.1's limit of 200 locals per function is worth staying clear of.)
+    function editframe:ShowsElement(ref, seqName)
+        if self.ElementKind == "macro" then return false end
+        if self.ElementKind == "variable" then return seqName == self.ElementName end
+        return (self.SequenceID ~= nil and ref == self.SequenceID) or seqName == self.SequenceName
+    end
+
     -- Install refactored modules ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â each overrides the matching editframe method
     -- with a cleanly separated implementation. The original closure versions above
     -- remain as a safety fallback and are superseded by these calls.
@@ -8042,7 +8069,7 @@ function GSE.CreateEditor()
     -- name (VARIABLE_UPDATED); the status line shows the label either way.
     function editframe:remoteSequenceUpdated(ref)
         local seqName = GSE.SequenceName(ref) or ref
-        if (editframe.SequenceID ~= nil and ref == editframe.SequenceID) or seqName == editframe.SequenceName then
+        if editframe:ShowsElement(ref, seqName) then
             if editframe.save then
                 editframe.pendingSaveName = nil
                 editframe:SetStatusText(seqName .. " " .. L["Saved"])
@@ -8339,6 +8366,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     editor.SequenceID       = id
     editor.SequenceName     = name
     editor.OrigSequenceName = name
+    editor.ElementKind, editor.ElementName = nil, nil
     editor.newname          = nil
     editor.Sequence         = sequence
     editor.ClassID          = classid
@@ -8445,6 +8473,7 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.SequenceID = id
     editor.SequenceName = sequenceName
     editor.OrigSequenceName = sequenceName
+    editor.ElementKind, editor.ElementName = nil, nil
     editor.newname = nil
     editor.Sequence = sequence
     editor.ClassID = classid

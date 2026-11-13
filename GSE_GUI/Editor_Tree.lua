@@ -1306,6 +1306,8 @@ end
 
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, id)
     if #unique < 3 then return end
+    -- A sequence page: updates are matched by SequenceID/SequenceName again.
+    if editframe.SetOpenElement then editframe:SetOpenElement(nil, nil) end
     -- The node carries the id; the label is for the user.
     local sequencename = GSE.SequenceName(id, tonumber(classid)) or tostring(id)
     -- ponytail: never load a corrupt/broken seq into the editor — the decode
