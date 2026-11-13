@@ -103,7 +103,11 @@ function GSE.GetMacroEditorTextLength(text)
             table.insert(countedLines, line)
         end
     end
-    return string.len(table.concat(countedLines, "\n"))
+    -- WoW's macro editor counts letters, not bytes (MacroFrameText letters="255",
+    -- GetNumLetters): a Cyrillic letter is two bytes but one of the 255.
+    local body = table.concat(countedLines, "\n")
+    if strlenutf8 then return strlenutf8(body) end
+    return select(2, body:gsub("[^\128-\191]", ""))
 end
 -- WoW's macro parser reads `#showtooltip` / `#show` as icon-and-tooltip
 -- directives. GSE never puts a sequence action through that parser -- an
