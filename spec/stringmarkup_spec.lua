@@ -163,6 +163,17 @@ describe("StringFunctions: text", function()
       assert.equals(0, GSE.GetMacroEditorTextLength(""))
       assert.equals(0, GSE.GetMacroEditorTextLength(nil))
     end)
+
+    -- WoW's macro editor counts letters: a Cyrillic letter is two bytes in
+    -- UTF-8 but one of the 255.
+    it("counts a letter once, however many bytes it takes", function()
+      local saved = _G.strlenutf8
+      _G.strlenutf8 = nil
+      assert.equals(19, GSE.GetMacroEditorTextLength("/cast Удар грома\n/y"))
+      _G.strlenutf8 = function(s) return #s * 100 end
+      assert.equals(500, GSE.GetMacroEditorTextLength("/y Ж"))
+      _G.strlenutf8 = saved
+    end)
   end)
 
   describe("GSE.StoreMacroEditorText", function()
