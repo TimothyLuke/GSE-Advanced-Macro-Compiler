@@ -183,6 +183,9 @@ local function saveVariable(editframe, draft)
         return false
     end
     editframe:SetStatusText(L["Save pending for "] .. saveName)
+    -- This window's own save, as the sequence Save marks it: the update that
+    -- comes back reads "Saved", not "modified in other window".
+    editframe.save = true
     variable.LastUpdated = GSE.GetTimestamp()
     -- The build that saved it, as the sequence editor stamps
     -- MetaData.GSEVersion.
