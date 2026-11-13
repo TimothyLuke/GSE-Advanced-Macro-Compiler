@@ -435,14 +435,14 @@ local function showVariableVersion(editframe, name, container, index)
     -- this client has. A client that cannot say gets the whole list. Any
     -- other name can still be typed in.
     local canCheck = C_EventUtils and C_EventUtils.IsEventValid
-    local eventList, eventOrder = {}, {}
+    local eventChoices, eventOrder = {}, {}
     for key, label in pairs(Statics.VariableEventList or {}) do
         if not canCheck or Statics.InternalMessages[key] or C_EventUtils.IsEventValid(key) then
-            eventList[key] = label
+            eventChoices[key] = label
             table.insert(eventOrder, key)
         end
     end
-    addEvent:SetList(eventList, GSE.SortTableAlphabetical(eventOrder))
+    addEvent:SetList(eventChoices, GSE.SortTableAlphabetical(eventOrder))
     addEvent:SetPlaceholder(L["Pick one, or type an event's name and press Enter"])
     addEvent:SetDisabled(not isEventEnabled)
     addEvent:SetCallback(
