@@ -1419,6 +1419,21 @@ end
 -- Button Bindings: the same panel shape as keybinds.
 -- ---------------------------------------------------------------------------
 local AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 175, 110, 110, 150, 180
+-- Set per panel: with the State column a row is seven cells, 805 wide at the
+-- widths above, and the editor at its narrowest leaves the rows 676 (measured
+-- in game), so State and the X wrapped to a second line.  These fit it.
+-- The row's inset from the pane's left edge and the scrollbar's: the + and
+-- the X off the edges.
+local AO_ROW_INSET = 6
+-- The gap after the + and before the X; the rest of the row has none.
+local AO_ADD_GAP, AO_REMOVE_GAP = 6, 10
+local function setOverrideColumns(withState)
+    if withState then
+        AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 150, 80, 80, 120, 140
+    else
+        AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 175, 110, 110, 150, 180
+    end
+end
 local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEY + AO_COL_KEYS + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
 
 -- Every action button this client can override, name -> name.  One scan per
@@ -1675,8 +1690,13 @@ local function buttonKeysText(buttonName, separator)
     end
     -- ConsolePort's buttons are the pad buttons themselves.
     if #keys == 0 and string.sub(buttonName, 1, 4) == "CPB_" then keys = {string.sub(buttonName, 5)} end
+    -- WoW's short form, as its bar buttons show a key, with the modifiers
+    -- in capitals: A-S-F1, not ALT-SHIFT-F1 or a-s-F1 (Larry, 2026-10-31).
     local shown = {}
-    for _, key in ipairs(keys) do shown[#shown + 1] = GetBindingText and GetBindingText(key) or key end
+    for _, key in ipairs(keys) do
+        local text = GetBindingText and GetBindingText(key, true) or key
+        shown[#shown + 1] = (string.gsub(text, "^([asc%-]+)%-", function(mods) return string.upper(mods) .. "-" end))
+    end
     if #shown > 0 then return table.concat(shown, separator or ", ") end
     local frame = _G[buttonName]
     local hotKey = type(frame) == "table" and ((frame.TextOverlayContainer and frame.TextOverlayContainer.HotKey)
@@ -1684,6 +1704,69 @@ local function buttonKeysText(buttonName, separator)
     local text = hotKey and hotKey.GetText and hotKey:GetText()
     if text and text ~= "" and text ~= RANGE_INDICATOR then return text end
     return nil
+end
+
+-- The binding action WoW's Key Bindings lists for a button: the one
+-- buttonKeysText reads keys from or, unbound, the one its bar registers.
+-- Blizzard's bars bind by command; LibActionButton bars (Bartender4,
+-- Dominos, EllesmereUI) name theirs on the button; the rest bind a click.
+local function bindingActionFor(buttonName)
+    if GSE.isEmpty(buttonName) or not GetBindingKey then return nil end
+    local prefix, num = string.match(buttonName, "^(.-)(%d+)$")
+    local candidates = {}
+    if prefix and BAR_COMMANDS[prefix] then candidates[#candidates + 1] = BAR_COMMANDS[prefix] .. num end
+    local frame = _G[buttonName]
+    local command = type(frame) == "table" and (frame.commandName
+        or (frame.GetAttribute and frame:GetAttribute("commandName")))
+    if type(command) == "string" and command ~= "" then candidates[#candidates + 1] = command end
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":LeftButton"
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":Keybind"
+    for _, action in ipairs(candidates) do
+        if bindingKeys(action) then return action end
+    end
+    return candidates[1]
+end
+
+-- The Key Bindings section a binding action is listed under, named as the
+-- page names it: the category WoW's bindings table gives the action, read
+-- through its BINDING_HEADER_ string the way the page does; nil for an
+-- action the table does not list (a bar addon binding a click on its frame).
+local function bindingHeaderFor(action)
+    if not (action and GetNumBindings and GetBinding) then return nil end
+    for i = 1, GetNumBindings() do
+        local listed, cat = GetBinding(i)
+        if listed == action then
+            if not cat then return BINDING_HEADER_OTHER end
+            local header = _G[cat]
+            return type(header) == "string" and header or cat
+        end
+    end
+    return nil
+end
+
+-- Open WoW's own Key Bindings page at the section holding a binding action,
+-- expanded, where the key is set: GSE never writes a bar's binding itself.
+-- The page scrolls to a section by its name; expanded is set on the
+-- section's own initializer before the page draws, since the section reads
+-- that at Init and an addon's section starts collapsed.  An action with no
+-- section opens the page at its top.  False where the client has no
+-- Settings panel to open, and in combat, where opening it is protected.
+local function openWoWKeyBindingsFor(action)
+    if not (Settings and Settings.OpenToCategory and Settings.KEYBINDINGS_CATEGORY_ID) then return false end
+    if InCombatLockdown() then return false end
+    local header = bindingHeaderFor(action)
+    local category = header and SettingsPanel and SettingsPanel.GetCategory
+        and SettingsPanel:GetCategory(Settings.KEYBINDINGS_CATEGORY_ID)
+    local layout = category and SettingsPanel.GetLayout and SettingsPanel:GetLayout(category)
+    local initializers = layout and layout.GetInitializers and layout:GetInitializers()
+    for _, initializer in ipairs(initializers or {}) do
+        local data = rawget(initializer, "data")
+        if type(data) == "table" and data.bindingsCategories and data.name == header then
+            data.expanded = true
+        end
+    end
+    Settings.OpenToCategory(Settings.KEYBINDINGS_CATEGORY_ID, header)
+    return true
 end
 
 -- A LibActionButton button's states; Blizzard's main bar's and Dominos'
@@ -1779,15 +1862,106 @@ do
         for _, refresh in ipairs(activeKeyRefreshers or {}) do pcall(refresh) end
     end)
 end
+-- Pressing a key for a bar button from this page, through Blizzard's own
+-- Quick Keybind Mode.  The mode is entered if it is not on -- the page stays
+-- up -- and the cell's slot (1 the key, 2 the backup) is armed on
+-- Blizzard's listener (KeybindListener, Blizzard_Keybindings.lua), the way
+-- hovering a bar button in the mode arms its command.  The next key press
+-- is Blizzard's to bind, and its bar's Okay keeps it or Cancel drops it;
+-- GSE writes no binding.  Not in combat: the mode shows every bar's grid.
+-- Leaving a mode entered from here reopens the Settings panel (Blizzard
+-- assumes that is where it came from, QuickKeybindFrameMixin:OnHide), so
+-- that is closed again; and the rows re-read their keys whenever the
+-- listener lets go, so a cell reads "Press a key..." only while it listens.
+-- Print Screen does nothing while Quick Keybind Mode is up. A key pressed
+-- there goes to Blizzard's listener, armed from this page (listenForKey) and
+-- so tainted, and for Print Screen it asks for a screenshot (RunBinding),
+-- which WoW refuses from tainted code: ADDON_ACTION_FORBIDDEN on GSE_GUI.
+-- It is never a key to bind there either. A keyboard frame over the mode's
+-- own takes Print Screen and passes every other key on; it shows only with
+-- the mode, out of combat (setting what a frame passes on is blocked in
+-- combat, and a frame left taking keys then would take them all).
+local printScreenSink
+local function installPrintScreenSink(mode)
+    if printScreenSink or not (mode and mode.HookScript) then return end
+    local sink = CreateFrame("Frame", nil, UIParent)
+    sink:SetFrameStrata("FULLSCREEN_DIALOG")
+    sink:SetSize(1, 1)
+    sink:SetPoint("TOPLEFT")
+    sink:Hide()
+    sink:EnableKeyboard(true)
+    sink:SetPropagateKeyboardInput(true)
+    sink:SetScript("OnKeyDown", function(self, key)
+        if InCombatLockdown() then return end
+        self:SetPropagateKeyboardInput(key ~= "PRINTSCREEN")
+    end)
+    sink:SetScript("OnKeyUp", function(self)
+        if not InCombatLockdown() then self:SetPropagateKeyboardInput(true) end
+    end)
+    local function follow()
+        if mode:IsShown() and not InCombatLockdown() then
+            sink:SetPropagateKeyboardInput(true)
+            sink:Show()
+        else
+            sink:Hide()
+        end
+    end
+    mode:HookScript("OnShow", follow)
+    mode:HookScript("OnHide", follow)
+    sink:RegisterEvent("PLAYER_REGEN_DISABLED")
+    sink:RegisterEvent("PLAYER_REGEN_ENABLED")
+    sink:SetScript("OnEvent", follow)
+    printScreenSink = sink
+    follow()
+end
+local quickKeybindHooked, quickKeybindFromHere, listenOwner = nil, nil, {}
+local function listenForKey(action, slot)
+    local mode, listener = _G.QuickKeybindFrame, _G.KeybindListener
+    if not (action and mode and mode.Show and listener and listener.StartListening) then return false end
+    if InCombatLockdown() then return false end
+    installPrintScreenSink(mode)
+    local function refreshRows()
+        for _, refresh in ipairs(activeKeyRefreshers or {}) do pcall(refresh) end
+    end
+    if not quickKeybindHooked and mode.HookScript then
+        quickKeybindHooked = true
+        mode:HookScript("OnHide", function()
+            if not quickKeybindFromHere then return end
+            quickKeybindFromHere = nil
+            if SettingsPanel and SettingsPanel.Close then pcall(SettingsPanel.Close, SettingsPanel, true) end
+            refreshRows()
+        end)
+        if EventRegistry and EventRegistry.RegisterCallback then
+            EventRegistry:RegisterCallback("KeybindListener.StoppedListening", refreshRows, listenOwner)
+        end
+    end
+    if not (KeybindFrames_InQuickKeybindMode and KeybindFrames_InQuickKeybindMode()) then
+        quickKeybindFromHere = true
+        mode:Show()
+    end
+    listener:StartListening(action, slot)
+    return true
+end
+-- A GSE Action Bar button's keys are GSE's own binding (GSE_Actionbar's
+-- Bindings.xml): when its row goes, so do they, as the old direct keybinds'
+-- did.  Another bar's key is that bar's and stays.  Out of combat only:
+-- SetBinding is blocked there.  True when any key was cleared.
+local function clearOwnBarKeys(buttonName)
+    if GSE.isEmpty(buttonName) or string.sub(buttonName, 1, 9) ~= "GSEButton" then return false end
+    if InCombatLockdown() or not (SetBinding and SaveBindings and GetCurrentBindingSet) then return false end
+    local action = bindingActionFor(buttonName)
+    local keys = action and {bindingKeys(action)} or {}
+    if #keys == 0 then return false end
+    for _, key in ipairs(keys) do SetBinding(key) end
+    SaveBindings(GetCurrentBindingSet())
+    return true
+end
 showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     specialization = tostring(specialization or defaultSpecIndex())
 
     local rows = {}
-    local saveButton, rowContainer, inheritedContainer, redraw
+    local rowContainer, inheritedContainer, rowsPane, redraw
     local showState
-    -- A row removed here came off the bar at once and has not been saved: left
-    -- that way, the pane puts the bar back as saved when it closes.
-    local releasedUnsaved = false
     -- One per shown row (activeKeyRefreshers).
     local keyRefreshers = {}
     activeKeyRefreshers = keyRefreshers
@@ -1835,46 +2009,107 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- One row; true once it is placed. Runs right after each layout of the
     -- row (row.afterLayout), in the same frame, so a resize never draws the
     -- loose row first; and from tightenRows. A second run finds nothing.
+    -- A cell's width without laying out its row: the row is laid out once,
+    -- after every cell has its width.
+    local function setCellWidth(widget, width)
+        widget.width = width
+        widget.frame:SetWidth(width)
+        if widget.OnWidthSet then widget:OnWidthSet(width) end
+    end
+    -- The row runs from the scroll pane's left edge to the scrollbar's left
+    -- edge, kept clear whether or not the bar shows, with no gaps between
+    -- cells: the button, key and sequence cells share the width left over
+    -- (Larry, 2026-10-30).
+    local function rowArea()
+        local pane = rowContainer
+        while pane and not pane.scrollbar do pane = pane.parent end
+        if not (pane and pane.frame and pane.scrollbar) then return nil end
+        local left, right = pane.frame:GetLeft(), pane.scrollbar:GetLeft()
+        if not (left and right) then return nil end
+        return left + AO_ROW_INSET, right - AO_ROW_INSET
+    end
     local function tightenChain(chain)
         -- Skip until the layout has actually placed the row (under
         -- UI:SuspendLayout the frames have no points yet).
         if not (chain.frames[1].GetLeft and chain.frames[1]:GetLeft()) then return false end
-        local carried = 0
-        for i = 1, #chain.frames - 1 do
+        local frames, row = chain.frames, chain.rowWidget
+        -- A width or padding changed: lay the row out again, which runs this
+        -- again (row.afterLayout); bounded, so it can never loop.
+        local function relayout()
+            if (chain.depth or 0) >= 3 then return false end
+            chain.depth = (chain.depth or 0) + 1
+            row:DoLayout()
+            chain.depth = chain.depth - 1
+            return true
+        end
+        -- Not on a row the layout wrapped, whose cells are not left to right.
+        local function inOrder()
+            for i = 2, #frames do
+                local l, prev = frames[i]:GetLeft(), frames[i - 1]:GetLeft()
+                if not (l and prev and l > prev) then return false end
+            end
+            return #frames > 1
+        end
+        local areaLeft, areaRight = rowArea()
+        local rowLeft, rowRight = chain.row:GetLeft(), chain.row:GetRight()
+        if areaLeft and areaRight and rowLeft and rowRight then
+            -- The row's frame stops at the row list's padding; the layout's
+            -- own padding, negative, runs the cells out past it.
+            local padLeft, padRight = areaLeft - rowLeft, rowRight - areaRight
+            if math.abs((row.flowPadLeft or 0) - padLeft) > 0.5
+                or math.abs((row.flowPadRight or 0) - padRight) > 0.5 then
+                row.flowPadLeft, row.flowPadRight = padLeft, padRight
+                if relayout() then return true end
+            end
+            -- Narrowed (a resize) so far the row wrapped: from the column
+            -- widths again, which fit the narrowest editor.
+            if not inOrder() then
+                for i, cell in ipairs(chain.grow) do setCellWidth(cell, chain.base[i]) end
+                if relayout() then return true end
+            end
+        end
+        for i = 1, #frames - 1 do
             local edge = chain.edges[i]
-            local nextFrame = chain.frames[i + 1]
+            local nextFrame = frames[i + 1]
             if edge and edge.frame and edge.frame.GetRight and nextFrame.GetLeft then
                 local visibleRight, nextLeft = edge.frame:GetRight(), nextFrame:GetLeft()
                 if visibleRight and nextLeft then
                     local slack = nextLeft - (visibleRight + (edge.pad or 0) + KB_ICON_GAP)
                     if slack > 0.5 then
-                        for j = i + 1, #chain.frames do slideLeft(chain.frames[j], slack) end
-                        carried = carried + slack
+                        for j = i + 1, #frames do slideLeft(frames[j], slack) end
                     end
                 end
             end
         end
-        -- The row shrank by `carried`; give half back so the tightened
-        -- row is centred where the loose one was.
-        if carried > 0.5 then
-            for _, frame in ipairs(chain.frames) do slideLeft(frame, -carried / 2) end
+        if areaLeft and areaRight and inOrder() then
+            -- The X ends at the area's right edge, or the loadout marker
+            -- does, right after it.
+            if chain.mark then areaRight = areaRight - chain.mark:GetWidth() end
+            -- The only gaps: after the + and before the X, the latter clear
+            -- of the State dropdown's art, which runs past its frame.
+            for j = 2, #frames do slideLeft(frames[j], -AO_ADD_GAP) end
+            slideLeft(frames[#frames], -AO_REMOVE_GAP)
+            local spare = (areaRight - areaLeft) - (frames[#frames]:GetRight() - frames[1]:GetLeft())
+            if math.abs(spare) > 0.5 then
+                -- Shared out from the column widths, so another pass gives
+                -- the same widths; the two key cells pay for the gaps.
+                local total, base = 0, 0
+                for i, cell in ipairs(chain.grow) do
+                    total, base = total + cell.width, base + chain.base[i]
+                end
+                local share = (total + spare + AO_ADD_GAP + AO_REMOVE_GAP - base) / #chain.grow
+                for i, cell in ipairs(chain.grow) do
+                    local pay = chain.payGaps[i] and (AO_ADD_GAP + AO_REMOVE_GAP) / 2 or 0
+                    setCellWidth(cell, math.max(1, chain.base[i] + share - pay))
+                end
+                if relayout() then return true end
+            end
+            local shift = frames[1]:GetLeft() - areaLeft
+            for _, frame in ipairs(frames) do slideLeft(frame, shift) end
         end
         if chain.mark and chain.removeFrame then
             chain.mark:ClearAllPoints()
-            chain.mark:SetPoint("LEFT", chain.removeFrame, "RIGHT", KB_ICON_GAP, 0)
-            -- The layout centred the row without the marker; centre
-            -- it with the marker, so the marker takes room from the
-            -- left margin instead of running off the right edge. A
-            -- row wider than its frame starts at the frame's left.
-            local left = chain.frames[1]:GetLeft()
-            local right = chain.removeFrame:GetRight()
-            local rowLeft, rowRight = chain.row:GetLeft(), chain.row:GetRight()
-            if left and right and rowLeft and rowRight then
-                right = right + KB_ICON_GAP + chain.mark:GetWidth()
-                local by = (left + right) / 2 - (rowLeft + rowRight) / 2
-                if right - left > rowRight - rowLeft then by = left - rowLeft end
-                for _, frame in ipairs(chain.frames) do slideLeft(frame, by) end
-            end
+            chain.mark:SetPoint("LEFT", chain.removeFrame, "RIGHT", 0, 0)
         end
         return true
     end
@@ -1885,7 +2120,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         if not first then return end
         for i, headingFrame in ipairs(headingFrames) do
             local control, edge = first.frames[i], first.edges[i]
-            if control and headingFrame.GetCenter and control.GetLeft then
+            if control and headingFrame and headingFrame.GetCenter and control.GetLeft then
                 local left = control:GetLeft()
                 local right = edge and edge.frame and edge.frame.GetRight and edge.frame:GetRight()
                 right = right and (right + (edge.pad or 0)) or (control.GetRight and control:GetRight())
@@ -1940,8 +2175,19 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
     end
 
+    -- Every change applies on the spot: the rows are written and the bar
+    -- re-armed on the next frame, so a change and the redraw it brings apply
+    -- once.  In combat the write waits for PLAYER_REGEN_ENABLED (an override
+    -- is a secure attribute), and keeps waiting if the pane closes first.
+    local apply
+    local applyQueued, applyPending, combatWatcher = false, false, nil
     local function markDirty()
-        if saveButton then saveButton:SetDisabled(false) end
+        if applyQueued then return end
+        applyQueued = true
+        C_Timer.After(0, function()
+            applyQueued = false
+            apply()
+        end)
     end
 
     local function sequenceList()
@@ -1967,38 +2213,42 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         return r.bind
     end
 
-    local function save()
+    apply = function()
         if InCombatLockdown() then
-            GSE.Print(L["Button Bindings"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+            if not applyPending then
+                applyPending = true
+                GSE.Print(L["Applied when combat ends."], L["Button Bindings"])
+                combatWatcher = combatWatcher or CreateFrame("Frame")
+                combatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+                combatWatcher:SetScript("OnEvent", function(self)
+                    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+                    applyPending = false
+                    apply()
+                end)
+            end
             return
         end
-        local seen = {}
-        for _, r in ipairs(rows) do
-            local key = rowKey(r)
-            if key then
-                if seen[key] then
-                    GSE.Print(string.format(L["%s is overridden more than once.  Change or remove one before saving."], key))
-                    return
-                end
-                seen[key] = true
-            end
-        end
-
+        applyPending = false
         local scope = overrideScope(specialization, loadout, true)
         for k, v in pairs(scope) do
             if type(v) == "table" then scope[k] = nil end
         end
-        -- A row with a button and no sequence, or a sequence and no button,
-        -- is still being filled in: kept on screen and said, below.
-        local incomplete = {}
+        -- One row per button and state: a second row for the same is left
+        -- out and said.  A row with a button and no sequence, or the reverse,
+        -- is still being filled in: left on screen, applied once it is whole.
+        local seen = {}
         for _, r in ipairs(rows) do
             local key = rowKey(r)
-            if key and not GSE.isEmpty(r.seq) then
+            if key and seen[key] then
+                GSE.Print(string.format(L["%s is overridden more than once.  The second row is not applied."], key),
+                    L["Button Bindings"])
+            elseif key and not GSE.isEmpty(r.seq) then
+                seen[key] = true
                 local state = r.state
                 if state == "Default" or state == stateDefaultFor(r.bind) then state = nil end
                 scope[key] = {Bind = r.bind, State = state, Sequence = r.seq}
-            elseif key or not GSE.isEmpty(r.seq) then
-                incomplete[#incomplete + 1] = r
+            elseif key then
+                seen[key] = true
             end
         end
         if loadout and not next(scope) then
@@ -2010,23 +2260,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         ownOverrideReload = true
         GSE.ReloadOverrides()
         ownOverrideReload = false
-        releasedUnsaved = false
         for _, r in ipairs(rows) do
             local rowButton = not GSE.isEmpty(r.seq) and GSE.StoredSequenceId(r.seq)
             if rowButton and _G[rowButton] and GSE.UpdateIcon then GSE.UpdateIcon(_G[rowButton]) end
         end
-        if saveButton then saveButton:SetDisabled(true) end
-        loadRows()
-        -- Put the half-set rows back, so Save never makes a row disappear, and
-        -- say what each one is still missing.
-        for _, r in ipairs(incomplete) do
-            table.insert(rows, r)
-            GSE.Print(string.format(L["%s was not saved: it still needs a %s."],
-                GSE.isEmpty(r.bind) and sequenceLabel(r.seq) or buttonLabel(r.bind),
-                GSE.isEmpty(r.bind) and L["Actionbar Button"] or L["Sequence"]), L["Button Bindings"])
-        end
-        if #incomplete > 0 and saveButton then saveButton:SetDisabled(false) end
-        redraw()
         editframe.ManageTree()
     end
 
@@ -2049,7 +2286,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local row = UI:Create("SimpleGroup")
         row:SetFullWidth(true)
         row:SetLayout("Flow")
-        if row.SetFlowGap then row:SetFlowGap(6) end
+        if row.SetFlowGap then row:SetFlowGap(0) end -- no gaps: tightenChain
         if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
         if row.SetFlowVAlign then row:SetFlowVAlign("CENTER") end
         if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
@@ -2064,6 +2301,11 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 if #rows >= KB_MAX_ROWS then return end
                 table.insert(rows, {})
                 redraw()
+                -- The new row in view: once past the pane's bottom, the
+                -- pane scrolls to its end.  In the same frame as the redraw
+                -- (the row heights are known at once), so the row is never
+                -- drawn below first.
+                if rowsPane and rowsPane.SetScroll then rowsPane:SetScroll(math.huge) end
             end)
             addSlot:SetCallback("OnEnter", function()
                 GSE.CreateToolTip(L["Add"],
@@ -2088,8 +2330,12 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- below the dropdown's centre line (Larry, 2026-09-08).
         remove.flowYOffset = 2
         remove:SetCallback("OnEnter", function()
-            -- The only row is cleared, not removed; say which.
+            -- The only row is cleared, not removed; say which.  A GSE Action
+            -- Bar button's keys go with it.
             local text = #rows <= 1 and L["Clear this row."] or L["Remove this row."]
+            if not GSE.isEmpty(model.bind) and string.sub(model.bind, 1, 9) == "GSEButton" then
+                text = text .. "\n" .. L["Its keys are cleared too."]
+            end
             GSE.CreateToolTip(L["Remove"], text, editframe)
         end)
         remove:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
@@ -2100,23 +2346,16 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             else
                 table.remove(rows, index)
             end
-            -- The bar loses the override now, as it gains one the moment it is
-            -- assigned there; Save makes it permanent.  Not while another row
-            -- still names the button (a state of its own).
-            local bind, stillUsed = model.bind, false
-            for _, r in ipairs(rows) do
-                if r.bind == bind then stillUsed = true end
-            end
-            if not GSE.isEmpty(bind) and not stillUsed and GSE.ReleaseActionBarOverride
-                and GSE.ReleaseActionBarOverride(bind) then
-                releasedUnsaved = true
-            end
+            clearOwnBarKeys(model.bind)
             markDirty()
             redraw()
         end)
 
         local state = showState and UI:Create("Dropdown")
-        if state then state:SetWidth(AO_COL_STATE) end
+        -- Blizzard's dropdown art runs about 6 past its frame on each side
+        -- (measured in game); 12 narrower, its box is as wide as the State
+        -- heading above it.  A further 12 is the row's inset either side.
+        if state then state:SetWidth(AO_COL_STATE - 12 - 2 * AO_ROW_INSET) end
         local function refreshStates()
             if not state then return end
             local states, order = stateListFor(model.bind, model.state)
@@ -2139,22 +2378,40 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
 
         -- The button's key and its backup key: its first binding in WoW's Key
-        -- Bindings, then the rest, as that panel lists them.  Shown only: keys
-        -- are set in WoW's own Key Bindings, and the row follows (UPDATE_BINDINGS).
-        local function keyCell(width)
-            local cell = UI:Create("InteractiveLabel")
+        -- Bindings, then the rest, as that panel lists them.  Blizzard sets
+        -- them: a click arms Blizzard's Quick Keybind listener for the cell's
+        -- slot (listenForKey) and the next key press is its to bind; the row
+        -- follows (UPDATE_BINDINGS).  Where that cannot run, the Key Bindings
+        -- page at the button.
+        local function keyCell(width, slot)
+            local cell = UI:Create("Button")
             cell:SetWidth(width)
-            cell:SetJustifyH("CENTER")
-            cell:SetJustifyV("MIDDLE")
+            cell:SetHeight(KB_ROW_HEIGHT)
             cell:SetCallback("OnEnter", function()
-                local hint = L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."]
+                local hint = L["Click, then press the key: WoW's Quick Keybind Mode binds it, and Okay on its bar keeps it."]
                 local all = buttonKeysText(model.bind, "\n")
                 GSE.CreateToolTip(L["Key"], all and (all .. "\n\n" .. hint) or hint, editframe)
             end)
             cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+            cell:SetCallback("OnClick", function()
+                GSE.ClearTooltip(editframe)
+                if GSE.isEmpty(model.bind) then return end
+                -- Neither way runs in combat: the mode shows every bar's
+                -- grid and the Settings panel is protected.
+                if InCombatLockdown() then
+                    GSE.Print(ERR_NOT_IN_COMBAT, L["Button Bindings"])
+                    return
+                end
+                local action = bindingActionFor(model.bind)
+                if listenForKey(action, slot) then
+                    cell:SetText(L["Press a key..."])
+                    return
+                end
+                openWoWKeyBindingsFor(action)
+            end)
             return cell
         end
-        local key, keys = keyCell(AO_COL_KEY), keyCell(AO_COL_KEYS)
+        local key, keys = keyCell(AO_COL_KEY, 1), keyCell(AO_COL_KEYS, 2)
         local refreshButtonText
         -- WoW's keys for the button: the first, then every further one.
         local function keyTexts()
@@ -2171,15 +2428,17 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 -- through the |A..|a markup prints it as text.
                 cell:SetText(sizeGlyphs(text, 22))
             else
-                if text then text = fitText(cell.text, text, width - 4) end
-                cell:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
+                if text then text = fitText(cell.text, text, width - 12) end
+                cell:SetText(text or NOT_BOUND)
             end
-            cell:SetHeight(KB_ROW_HEIGHT)
         end
         local function refreshKeys()
             local first, second = keyTexts()
             fillKeyCell(key, AO_COL_KEY, first)
             fillKeyCell(keys, AO_COL_KEYS, second)
+            -- No button yet, nothing to bind: greyed until one is picked.
+            key:SetDisabled(GSE.isEmpty(model.bind))
+            keys:SetDisabled(GSE.isEmpty(model.bind))
             if refreshButtonText then refreshButtonText() end
         end
         -- A key set in WoW's Key Bindings while the pane is open shows at once.
@@ -2339,7 +2598,9 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local mark = marks and loadoutMark(editframe, rowKey(model) and marks[rowKey(model)] or nil)
         local cells = {add = addSlot, button = button, key = key, keys = keys, sequence = sequence, state = state,
             remove = remove, mark = mark}
-        local chain = {frames = {}, edges = {}}
+        local chain = {frames = {}, edges = {}, row = row.frame, rowWidget = row,
+            grow = {button, key, keys, sequence}, base = {AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_SEQ},
+            payGaps = {false, true, true, false}}
         for i, name in ipairs(columnLayout()) do
             local cell = cells[name]
             if name == "mark" then
@@ -2348,7 +2609,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 -- pane, so the layout wrapped it under the row; pinned to the
                 -- right it never wraps, and tightenRows anchors it to the X.
                 cell.flowRightAlign = true
-                chain.mark, chain.removeFrame, chain.row = cell.frame, remove.frame, row.frame
+                chain.mark, chain.removeFrame = cell.frame, remove.frame
             else
                 chain.frames[i] = cell.frame
                 if name == "sequence" or name == "state" then
@@ -2415,6 +2676,16 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
 
     loadRows()
     showState = stateColumnWanted(rows, buttonNames)
+    setOverrideColumns(showState)
+    -- The marker column only when a row has a marker: a loadout's override on
+    -- a button this page has no row for left an empty slot after every X.
+    if marks then
+        local used = false
+        for _, r in ipairs(rows) do
+            if rowKey(r) and marks[rowKey(r)] then used = true end
+        end
+        if not used then marks = nil end
+    end
 
     local classid = GSE.GetCurrentClassID()
     local classname, classfile = "", nil
@@ -2485,12 +2756,6 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         loadoutRow = centeredRow(loadoutLabel)
     end
 
-    saveButton = UI:Create("Button")
-    saveButton:SetText(L["Save"])
-    saveButton:SetWidth(120)
-    saveButton:SetDisabled(true)
-    saveButton:SetCallback("OnClick", save)
-
     rowContainer = UI:Create("SimpleGroup")
     rowContainer:SetFullWidth(true)
     rowContainer:SetLayout("List")
@@ -2503,7 +2768,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     local headings = UI:Create("SimpleGroup")
     headings:SetFullWidth(true)
     headings:SetLayout("Flow")
-    if headings.SetFlowGap then headings:SetFlowGap(6) end
+    -- No gap with the State column: the headings wider than their narrowed
+    -- columns ("Action Bar Type", "Backup Key") would wrap the line, and the
+    -- tighten pass centres each heading over its column all the same.
+    if headings.SetFlowGap then headings:SetFlowGap(showState and 0 or 6) end
     if headings.SetFlowPadding then headings:SetFlowPadding(0, 0, 0, 0) end
     if headings.SetFlowHAlign then headings:SetFlowHAlign("CENTER") end
     local function heading(width, icon, text)
@@ -2523,29 +2791,22 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         if textWidth + 6 > width then h:SetWidth(math.ceil(textWidth) + 6) end
         return h
     end
-    local function blank(width)
-        local b = UI:Create("Label")
-        b:SetWidth(width)
-        b:SetText("")
-        return b
-    end
+    -- No heading cells over the +, the X or the marker: a heading is slid
+    -- over its column after layout, so empty ones only took room.
     local headingCells = {
-        add = function() return blank(KB_COL_ADD) end,
         button = function() return heading(AO_COL_BUTTON, Statics.Icons.Button, L["Action Bar Type"]) end,
         key = function() return heading(AO_COL_KEY, nil, L["Main Key"]) end,
         keys = function() return heading(AO_COL_KEYS, nil, L["Backup Key"]) end,
         sequence = function() return heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]) end,
         state = function() return heading(AO_COL_STATE, nil, L["State"]) end,
-        remove = function() return blank(KB_COL_REMOVE) end,
-        mark = function() return blank(KB_COL_MARK) end,
     }
     -- Same order as the row.  Recorded so the tighten pass can slide each
-    -- heading by what its column moved.
+    -- heading by what its column moved; false where a column has none.
     wipe(headingFrames)
-    for _, name in ipairs(columnLayout()) do
-        local cell = headingCells[name]()
-        headings:AddChild(cell)
-        headingFrames[#headingFrames + 1] = cell.frame
+    for i, name in ipairs(columnLayout()) do
+        local cell = headingCells[name] and headingCells[name]()
+        if cell then headings:AddChild(cell) end
+        headingFrames[i] = cell and cell.frame or false
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
@@ -2554,15 +2815,54 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow) end
     local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
     rightContainer:AddChild(headings)
-    rightContainer:AddChild(rowContainer)
-    rightContainer:AddChild(inheritedContainer)
-
-    -- Save pinned to the viewport bottom, centred on the footer's Resources
-    -- button; identical mechanism to the keybind panel.
-    local KB_SAVE_INSET = 8
-    local function pinSave()
+    -- The rows scroll under a header that stays put: the page's own pane
+    -- never scrolls (its bar is off) and a pane inside it holds the rows,
+    -- sized to the room the header leaves (Larry, 2026-10-30).
+    rowsPane = UI:Create("ScrollFrame")
+    rowsPane:SetFullWidth(true)
+    rowsPane:SetLayout("List")
+    if rowsPane.SetListPadding then rowsPane:SetListPadding(0, 0, 0, 0) end
+    if rowsPane.SetListGap then rowsPane:SetListGap(4) end
+    rowsPane:AddChild(rowContainer)
+    rowsPane:AddChild(inheritedContainer)
+    -- A spec page has no inherited rows: no empty group taking a row's
+    -- worth of room under the rows (its minimum height and two gaps).
+    if not loadout then inheritedContainer:SetHeight(0) end
+    rightContainer:AddChild(rowsPane)
+    if rightContainer.SetScrollBarEnabled then rightContainer:SetScrollBarEnabled(false) end
+    -- The pane ends at the shared row's top (raisePane): its bottom padding
+    -- is the gap to that row, no more.  No right padding: the page never
+    -- scrolls, and the rows pane's bar is already 10 in from its edge.
+    rightContainer:SetListPadding(rightContainer.listPadLeft, rightContainer.listPadTop, 0, 4)
+    -- The pane's height less the header's children, the list's padding and
+    -- a gap per child (the list leaves one after each, the rows pane too).
+    local function fitRowsPane()
         local frame = rightContainer.frame
-        if not (frame and saveButton and saveButton.frame) then return end
+        local room = frame and frame.GetHeight and frame:GetHeight() or 0
+        if room <= 0 then return end
+        local gap = rightContainer.listGap or 0
+        room = room - (rightContainer.listPadTop or 0) - (rightContainer.listPadBottom or 0) - gap
+        for _, child in ipairs(rightContainer.children or {}) do
+            if child ~= rowsPane and child.frame then room = room - (child.frame:GetHeight() or 0) - gap end
+        end
+        room = math.max(KB_ROW_HEIGHT * 2, math.floor(room))
+        if math.abs((rowsPane.height or 0) - room) > 0.5 then rowsPane:SetHeight(room) end
+    end
+    -- Sized now, before its first draw, so its rows never overflow a stub
+    -- height for a frame.
+    fitRowsPane()
+
+    -- No Save: changes apply as they are made (markDirty).  The shared row
+    -- is pinned to the viewport bottom, centred on the footer's Resources
+    -- button, where Save stands on the keybind panel; its anchor lives on
+    -- the ScrollFrame's own frame, which is not pooled, so it goes away with
+    -- the pane rather than leaking into another panel.
+    local KB_SAVE_INSET = 8
+    local footAnchor = rightContainer.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    footAnchor:SetText("")
+    local function pinFoot()
+        local frame = rightContainer.frame
+        if not frame then return end
         local dx = 0
         local resources = (editframe.sectionFooterChildrenCache or {})[1]
         local target = resources and resources.frame
@@ -2570,39 +2870,36 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             local targetX, frameX = target:GetCenter(), frame:GetCenter()
             if targetX and frameX then dx = targetX - frameX end
         end
-        saveButton.frame:ClearAllPoints()
-        saveButton.frame:SetPoint("BOTTOM", frame, "BOTTOM", dx, KB_SAVE_INSET)
+        -- At the wrapper's bottom, below the raised pane (see raisePane).
+        local wrap = rightContainer.parent and rightContainer.parent.frame or frame
+        footAnchor:ClearAllPoints()
+        footAnchor:SetPoint("BOTTOM", wrap, "BOTTOM", dx, KB_SAVE_INSET)
+        fitRowsPane()
     end
-    saveButton.frame:SetParent(rightContainer.frame)
-    saveButton.frame:SetFrameLevel(rightContainer.frame:GetFrameLevel() + 10)
-    saveButton.frame:Show()
-    -- One line over Save, anchored to the button so it rides the pin.  Lives
-    -- on the ScrollFrame's own frame, which is not pooled, so it goes away
-    -- with the pane rather than leaking into another panel.
-    local saveHint = rightContainer.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    saveHint:SetPoint("BOTTOM", saveButton.frame, "TOP", 0, 4)
-    saveHint:SetText(L["Set All of your Binds and Click Save!"])
-    pinSave()
-    if C_Timer and C_Timer.After then C_Timer.After(0, pinSave) end
-    if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinSave) end
+    pinFoot()
+    if C_Timer and C_Timer.After then C_Timer.After(0, pinFoot) end
+    if rightContainer.frame.HookScript then rightContainer.frame:HookScript("OnSizeChanged", pinFoot) end
     refitWithPane(rightContainer, tightenRows)
-    local sharedRowHeight = sharedRow and pinSharedRow(rightContainer, saveHint, sharedRow) or 0
+    local sharedRowHeight = sharedRow and pinSharedRow(rightContainer, footAnchor, sharedRow) or 0
     rightContainer:SetCallback("OnRelease", function()
-        saveButton:Release()
         if sharedRow then sharedRow:Release() end
-        -- Rows removed and never saved: the bar goes back to what is saved.
-        if releasedUnsaved and not InCombatLockdown() then
-            releasedUnsaved = false
-            ownOverrideReload = true
-            GSE.ReloadOverrides()
-            ownOverrideReload = false
-        end
     end)
+    -- The scroll pane stops above the shared row: its frame is raised off
+    -- its wrapper's bottom by that row's room, so rows scroll the moment
+    -- they reach it and never run under it (Larry, 2026-10-30).  Redone
+    -- after every layout of the wrapper (a Fill, which anchors the pane to
+    -- its whole rect); the shared row itself hangs from the wrapper.
+    local outer = rightContainer.parent
+    if outer and outer.frame and outer.layout == "Fill" then
+        local reserve = KB_SAVE_INSET + (footAnchor:GetHeight() or 0) + sharedRowHeight
+        local function raisePane()
+            local wrap = outer.content or outer.frame
+            rightContainer.frame:SetPoint("BOTTOMRIGHT", wrap, "BOTTOMRIGHT", 0, reserve)
+        end
+        outer.afterLayout = raisePane
+        raisePane()
+    end
 
-    local bottomGutter = UI:Create("Spacer")
-    bottomGutter:SetFullWidth(true)
-    bottomGutter:SetHeight(saveButton.frame:GetHeight() + KB_SAVE_INSET * 2 + 18 + sharedRowHeight)
-    rightContainer:AddChild(bottomGutter)
 
     redraw()
 end

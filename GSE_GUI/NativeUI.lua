@@ -3286,6 +3286,13 @@ local function createScrollFrame()
     widget.content = content
     widget.scrollframe = scrollFrame
     widget.scrollbar = getScrollBar(scrollFrame)
+    -- The template's handler shows the bar and sets its range from the
+    -- client's figure; the bar follows UpdateScroll's range instead (see
+    -- getScrollRange).  UpdateScroll does not move the scroll child, so the
+    -- range does not change under it: no re-entry.
+    scrollFrame:SetScript("OnScrollRangeChanged", function()
+        if widget.UpdateScroll and widget.parent then widget:UpdateScroll() end
+    end)
     -- The scrollFrame above calls SetClipsChildren(true), which clips child rendering
     -- to its own rectangle. UIPanelScrollFrameTemplate parents its ScrollBar to the
     -- scrollFrame and anchors it just outside the right edge -- inside the
@@ -3354,8 +3361,18 @@ local function createScrollFrame()
         if scrollFrame.UpdateScrollChildRect then scrollFrame:UpdateScrollChildRect() end
         local contentHeight = safeHeight(content, 1)
         local viewportHeight = safeHeight(scrollFrame, safeHeight(frame, 1))
-        local manualRange = math.max(0, contentHeight - viewportHeight)
-        local nativeRange = scrollFrame.GetVerticalScrollRange and (scrollFrame:GetVerticalScrollRange() or 0) or 0
+        -- Whole units, as Blizzard's ScrollFrame_OnScrollRangeChanged floors
+        -- its range: content sized to the viewport can come out a hair taller
+        -- (a 457 viewport, a 457.00006 content), and that showed a scrollbar
+        -- with nothing to scroll.
+        local manualRange = math.floor(math.max(0, contentHeight - viewportHeight))
+        -- The layout sizes the content itself (finishLayout), so content less
+        -- viewport IS the range.  The client's own figure is only a fallback
+        -- for a pane whose sizes are not known yet: a pane nested in another
+        -- pane's content reported 15 with content and viewport both 143, and
+        -- that showed a bar and scrolled the rows under the headings.
+        if contentHeight > 1 and viewportHeight > 1 then return manualRange end
+        local nativeRange = scrollFrame.GetVerticalScrollRange and math.floor(scrollFrame:GetVerticalScrollRange() or 0) or 0
         if nativeRange > 0 and manualRange > 0 then return math.min(nativeRange, manualRange) end
         return math.max(nativeRange, manualRange)
     end
