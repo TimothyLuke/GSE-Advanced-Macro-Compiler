@@ -8060,7 +8060,12 @@ function GSE.CreateEditor()
                 )
             end
         elseif seqName == editframe.pendingSaveName then
+            -- A save under a new name (a rename) comes back here, not above:
+            -- SequenceName still holds the old one. It is this window's save
+            -- all the same, so its flag goes too -- left set, it would turn the
+            -- next change made in another window into "Saved".
             editframe.pendingSaveName = nil
+            editframe.save = nil
             editframe:SetStatusText(seqName .. " " .. L["Saved"])
             if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editframe) end
             C_Timer.After(
