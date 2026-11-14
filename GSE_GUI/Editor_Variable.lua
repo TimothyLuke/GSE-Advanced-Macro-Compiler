@@ -183,6 +183,9 @@ local function saveVariable(editframe, draft)
         return false
     end
     editframe:SetStatusText(L["Save pending for "] .. saveName)
+    -- This window's own save, as the sequence Save marks it: the update that
+    -- comes back reads "Saved", not "modified in other window".
+    editframe.save = true
     variable.LastUpdated = GSE.GetTimestamp()
     -- The build that saved it, as the sequence editor stamps
     -- MetaData.GSEVersion.
@@ -234,7 +237,7 @@ end
 -- The variable's Configuration page: what it is called, who wrote it, where
 -- it loads, which version runs where, and what uses it.
 local function showVariable(editframe, name, container)
-    editframe.SequenceName = name
+    editframe:SetOpenElement("variable", name)
     local currentKey = name ~= "NEWVARIABLES" and name or nil
     local draft = variableDraft(editframe, name)
     local variable = draft.variable
@@ -379,7 +382,7 @@ end
 -- One version's page: its label, the events it runs on, its function, and a
 -- box to try it in. Returns the version shown (the first, when `index` is gone).
 local function showVariableVersion(editframe, name, container, index)
-    editframe.SequenceName = name
+    editframe:SetOpenElement("variable", name)
     local draft = variableDraft(editframe, name)
     local variable = draft.variable
     index = tonumber(index) or 1
@@ -646,7 +649,7 @@ end
 -- (MetaData.Notes, read-only once GSE.Tools has rendered Help), with a Save
 -- as on its Configuration page. height: the room the page has.
 local function showVariableNotes(editframe, name, container, height)
-    editframe.SequenceName = name
+    editframe:SetOpenElement("variable", name)
     local draft = variableDraft(editframe, name)
     local meta = draft.variable.MetaData
     GSE.GUI.DrawNotesPage(editframe, container, {

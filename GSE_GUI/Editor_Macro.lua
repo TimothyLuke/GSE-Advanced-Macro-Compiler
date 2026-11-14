@@ -188,6 +188,7 @@ local function showMacro(editframe, node, container, index)
     local version = element and element.Versions[selected]
     local managed = element and element.Managed or false
     editframe.activeMacroName = node.name
+    editframe:SetOpenElement("macro", node.name)
 
     -- Write the stored macro back to WoW (and stamp it) after a change.
     local function commit()
@@ -594,6 +595,7 @@ local function showMacroNotes(editframe, node, container, height)
     end
     GSE.UpgradeMacro(element, node.name)
     editframe.activeMacroName = node.name
+    editframe:SetOpenElement("macro", node.name)
     local meta = element.MetaData
     GSE.GUI.DrawNotesPage(editframe, container, {
         meta = meta,
