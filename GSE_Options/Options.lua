@@ -121,11 +121,11 @@ function GSE.OpenRegisteredOptionsPanel(editor)
         -- or strata override, since forcing those put the panel above its own
         -- dropdown popout menus (they render at DIALOG) and made the menus
         -- appear behind the panel.
-        local opened = pcall(Settings.OpenToCategory, GSE.MenuCategoryID)
-        if SettingsPanel and SettingsPanel.OpenToCategory then
-            pcall(SettingsPanel.OpenToCategory, SettingsPanel, GSE.MenuCategoryID)
-        end
-        return opened
+        -- Settings.OpenToCategory only: WoW opens the panel from its own
+        -- event, untainted. Calling SettingsPanel:OpenToCategory as well ran
+        -- the panel's code as GSE_Options, and an action bar shown or hidden
+        -- from Options afterwards was blocked in combat.
+        return (pcall(Settings.OpenToCategory, GSE.MenuCategoryID))
     end
 
     return false
