@@ -419,6 +419,22 @@ local function InstallSettingsLabelButtonFix()
     settingsLabelButtonFixInstalled = true
 end
 
+-- WoW's CreateSettingsCheckboxWithButtonInitializer, line for line, without
+-- its initializer:AddSearchTags(buttonText). Run from addon code, that tag is
+-- tainted, and WoW's Options search reads every tag of every row on every
+-- search: the search then ran as GSE_Options and the Discord rows in its
+-- results were blocked (ADDON_ACTION_FORBIDDEN IsUserOAuthed()).
+-- Settings.CreateSettingInitializer still tags the row with its setting's
+-- name, untainted.
+local function CreateCheckboxWithButtonInitializer(setting, buttonText, buttonClick, evaluateState, clickRequiresSet, tooltip)
+    local data = Settings.CreateSettingInitializerData(setting, nil, tooltip)
+    data.buttonText = buttonText
+    data.OnButtonClick = buttonClick
+    data.OnEvaluateState = evaluateState
+    data.clickRequiresSet = clickRequiresSet
+    return Settings.CreateSettingInitializer("SettingsCheckboxWithButtonControlTemplate", data)
+end
+
 local function CreateGSESettingsLabelButtonInitializer(category, settingID, label, buttonText, buttonClick, tooltip)
     InstallSettingsLabelButtonFix()
 
@@ -431,9 +447,9 @@ local function CreateGSESettingsLabelButtonInitializer(category, settingID, labe
     local setting = Settings.RegisterProxySetting(category, settingID, Settings.VarType.Boolean, label, false, getValue, setValue)
     local initializer
     if GSE.GameMode > 10 then
-        initializer = CreateSettingsCheckboxWithButtonInitializer(setting, buttonText, buttonClick, nil, false, tooltip)
+        initializer = CreateCheckboxWithButtonInitializer(setting, buttonText, buttonClick, nil, false, tooltip)
     else
-        initializer = CreateSettingsCheckboxWithButtonInitializer(setting, buttonText, buttonClick, false, tooltip)
+        initializer = CreateCheckboxWithButtonInitializer(setting, buttonText, buttonClick, false, tooltip)
     end
 
     local data = initializer and initializer.GetData and initializer:GetData()
@@ -447,9 +463,8 @@ local function CreateGSESettingsLabelButtonInitializer(category, settingID, labe
         data.gseButtonText = buttonText
         data.gseButtonClick = buttonClick
     end
-    if initializer and initializer.AddSearchTags then
-        initializer:AddSearchTags(label)
-    end
+    -- No initializer:AddSearchTags(label): the row is already tagged with its
+    -- setting's name, which is label. See CreateCheckboxWithButtonInitializer.
     return initializer
 end
 
@@ -1071,9 +1086,9 @@ local function CreateGSEModernCustomColorInitializer(category, setting, tooltip)
 
     local initializer
     if GSE.GameMode > 10 then
-        initializer = CreateSettingsCheckboxWithButtonInitializer(setting, "Pick Color", OpenModernCustomColorPicker, nil, false, tooltip)
+        initializer = CreateCheckboxWithButtonInitializer(setting, "Pick Color", OpenModernCustomColorPicker, nil, false, tooltip)
     else
-        initializer = CreateSettingsCheckboxWithButtonInitializer(setting, "Pick Color", OpenModernCustomColorPicker, false, tooltip)
+        initializer = CreateCheckboxWithButtonInitializer(setting, "Pick Color", OpenModernCustomColorPicker, false, tooltip)
     end
 
     local data = initializer and initializer.GetData and initializer:GetData()
@@ -1082,9 +1097,8 @@ local function CreateGSEModernCustomColorInitializer(category, setting, tooltip)
         data.gseCustomColorText = "Custom Color"
         data.gseButtonText = ""
     end
-    if initializer and initializer.AddSearchTags then
-        initializer:AddSearchTags("Custom Color")
-    end
+    -- No initializer:AddSearchTags: the setting is already named "Custom
+    -- Color". See CreateCheckboxWithButtonInitializer.
     return initializer
 end
 
@@ -1599,6 +1613,25 @@ local function AddActionBarIconColourOption(optionsCategory)
     end
 end
 
+-- Sits a row under another one without initializer:SetParentInitializer.
+-- Called from addon code that writes a tainted parentInitializer, and WoW's
+-- Options search reads it off every row a search matches. A first letter
+-- that matched one of GSE's child rows ran the search as GSE_Options and left
+-- the list tainted, and the Discord rows of the next searches were blocked
+-- (ADDON_ACTION_FORBIDDEN IsUserOAuthed()).
+--
+-- This indents the row the same way. With enabledWhen it is greyed out while
+-- that returns false, checked again whenever the parent's setting changes.
+-- WoW reads all three only while it draws the row itself.
+local function NestUnder(init, parent, enabledWhen)
+    if not (init and parent) then return end
+    if init.Indent then init:Indent() end
+    if not enabledWhen then return end
+    if init.AddModifyPredicate then init:AddModifyPredicate(enabledWhen) end
+    local setting = parent.GetSetting and parent:GetSetting()
+    if setting and init.AddEvaluateStateCVar then init:AddEvaluateStateCVar(setting:GetVariable()) end
+end
+
 -- On by default: chat says when a key stops running a sequence on an action
 -- bar button. See GSE/API/OverrideKeys.lua. Under parent, beside the other
 -- report, but never greyed out by it: it watches the keys of any bar.
@@ -1612,9 +1645,7 @@ local function AddActionBarKeyChangesOption(optionsCategory, parent)
         end
         local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarReportKeyChanges", Settings.VarType.Boolean, L["Report Key Changes"], true, GetValue, SetValue)
         local init = Settings.CreateCheckbox(optionsCategory, setting, L["Say in chat when the key on an action bar button with a sequence on it is cleared or bound to something else, so the sequence no longer runs from that key."])
-        if init and init.SetParentInitializer and parent then
-            init:SetParentInitializer(parent, function() return true end)
-        end
+        NestUnder(init, parent)
     end
 end
 
@@ -3108,9 +3139,7 @@ function GSE:CreateConfigPanels()
                     end)
                 local init = Settings.CreateCheckbox(generalOptions, setting,
                     L["Say in chat when an override binding takes a key bound to a GSE button, so the button stops running -- another addon's, WoW's own for a vehicle or mount, or GSE's Skyriding / Vehicle Keybinds -- and again when the key is back."])
-                if init and init.SetParentInitializer and moduleSwitch then
-                    init:SetParentInitializer(moduleSwitch, GSE.ActionBarActive)
-                end
+                NestUnder(init, moduleSwitch, GSE.ActionBarActive)
             end
         end
         AddActionBarKeyChangesOption(generalOptions, moduleSwitch)
