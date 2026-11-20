@@ -246,6 +246,19 @@ describe("Stance, form and stealth pages on other bars", function()
     assert.are.equal("gse7", onClick(button, { bonus = 1 }))
   end)
 
+  -- DaylightUI: the slot is the "action" attribute, paged by its own driver.
+  it("runs a row on the page DaylightUI's bar 1 is showing", function()
+    local button = { id = 0, attributes = { ["gse-secure"] = true, ["gse-default"] = true, ["gse-page-8"] = true,
+      action = 85 } }
+    assert.are.equal("gse8", onClick(button, { bonus = 1 }), "Prowl: page 8")
+    button.attributes.action = 1
+    assert.is_nil(onClick(button, { bonus = 0 }))
+    assert.are.equal("click", button.attributes.type)
+    button.attributes.action = 2
+    assert.is_nil(onClick(button, { bonus = 0, slots = { [2] = "spell" } }), "a real action wins")
+    assert.are.equal("action", button.attributes.type)
+  end)
+
   it("runs a row on a page a bar addon's own driver chose (EllesmereUI: Cat Form on 5)", function()
     local button = { id = 1, attributes = { ["gse-secure"] = true, ["gse-default"] = true, ["gse-page-5"] = true,
       actionpage = 5 } }
@@ -366,5 +379,51 @@ describe("A bar's pages by name", function()
     -- Paging off: no driver, and the bar is not asked to build one.
     options.enabled = false
     assert.is_nil(GSE.ButtonPageDriver("BT4Button1"))
+  end)
+
+  -- DaylightUI's bars are its own buttons (DaylightUIBar<bar>Button<n>): the
+  -- slot is the "action" attribute, bar 1 pages by DaylightUI's own driver, and
+  -- a key presses the game's hidden button, not the one on show.
+  local src = readSource("GSE/API/Events.lua")
+  it("knows a DaylightUI button, and the bar it is on", function()
+    local fn = body(src, "local function daylightUIBar%(buttonName%)", "\nend\n")
+    local daylightUIBar = assert((loadstring or load)(fn .. "end return daylightUIBar"))()
+    assert.are.equal(1, daylightUIBar("DaylightUIBar1Button12"))
+    assert.are.equal(8, daylightUIBar("DaylightUIBar8Button1"))
+    assert.is_nil(daylightUIBar("DaylightUIBarKeys"))
+    assert.is_nil(daylightUIBar("ActionButton1"))
+    assert.is_nil(daylightUIBar(nil))
+  end)
+
+  it("sends a DaylightUI button's key to the button, and repaints after DaylightUI's paint", function()
+    local apply = body(src, "local function overrideActionButton%(savedBind, force, pinnedStates%)", "\nend\n")
+    assert.truthy(apply:find('(string.sub(Button, 1, 9) == "EABButton" or isDaylightUIButton)', 1, true),
+      "the key is re-pointed at the visible button")
+    assert.truthy(apply:find("if isDaylightUIButton then hookDaylightUIPaint() end", 1, true))
+    local paint = body(src, "local function hookDaylightUIPaint%(%)", "\nend\n")
+    assert.truthy(paint:find('me.Paint("actionbutton"', 1, true), "through DaylightUI's plugin API")
+  end)
+
+  it("lets a row be pinned to a form on DaylightUI's bar 1 with its driver unseen", function()
+    local pages = body(src, "function GSE.ButtonPagesWithForms%(buttonName%)", "\nend\n")
+    assert.truthy(pages:find("if daylightUIBar(buttonName) == 1 then return true end", 1, true))
+  end)
+
+  it("names DaylightUI's pages, a held page's tag left off", function()
+    start()
+    local driver = "[overridebar] 33; [vehicleui] 31; [possessbar] 31; [shapeshift] 32; "
+      .. "[mod:shift,bonusbar:1] 13:f1; [mod:shift] 13; [bar:2] 2; "
+      .. "[bonusbar:1,stealth] 8; [bonusbar:1] 7; [bonusbar:3] 9; [bonusbar:4] 10; [bonusbar:5] 11; 1"
+    assert.are.equal("Prowl", named(driver, "8"))
+    assert.are.equal("Cat Form", named(driver, "7"))
+    assert.are.equal("Bear Form", named(driver, "9"))
+    assert.are.equal("Shift + Cat Form / Shift", named(driver, "13"))
+    for _, page in ipairs({ "33", "31", "32", "2", "11", "1" }) do assert.is_nil(named(driver, page)) end
+    local _, default = GSE.PageDriverNames(driver, "DRUID")
+    assert.are.equal("1", default)
+    -- "Change with forms and stances" off: every form stays on page 1.
+    local names, own = GSE.PageDriverNames("[bonusbar:1] 1:f1; [bonusbar:3] 1:f2; 1", "DRUID")
+    assert.are.equal("1", own)
+    assert.are.same({ "Cat Form", "Bear Form" }, names["1"])
   end)
 end)

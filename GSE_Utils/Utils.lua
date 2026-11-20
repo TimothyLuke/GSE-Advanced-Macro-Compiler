@@ -2683,6 +2683,17 @@ do
             end
         end
 
+        -- DaylightUI builds all eight bars' buttons while it loads. Tested
+        -- for by frame, as EllesmereUI's are.
+        if _G["DaylightUIBar1Button1"] then
+            for bar = 1, 8 do
+                for slot = 1, 12 do
+                    local btn = _G["DaylightUIBar" .. bar .. "Button" .. slot]
+                    if btn then hookMenu(btn) end
+                end
+            end
+        end
+
         if Dominos then
             -- Dominos frame-name mapping differs between retail and Classic, so
             -- hook every pattern either flavour can use; the `if btn` guard makes

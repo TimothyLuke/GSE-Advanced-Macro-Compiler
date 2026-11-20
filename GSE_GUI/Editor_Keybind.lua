@@ -1496,6 +1496,14 @@ local function actionButtonNames()
     for i = 1, 180 do
         if _G["EABButton" .. i] then buttonlist["EABButton" .. i] = "EABButton" .. i end
     end
+    -- DaylightUI's action bars: its own frames too, DaylightUIBar<bar>Button<n>.
+    -- Each bar groups under its own "DaylightUIBar<bar>Button" submenu.
+    for bar = 1, 8 do
+        for i = 1, 12 do
+            local name = "DaylightUIBar" .. bar .. "Button" .. i
+            if _G[name] then buttonlist[name] = name end
+        end
+    end
     -- The GSE Action Bar's buttons, while it is on.
     for _, name in ipairs(GSE.ActionBarButtonNames and GSE.ActionBarButtonNames() or {}) do
         if _G[name] then buttonlist[name] = name end

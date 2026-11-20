@@ -231,6 +231,15 @@ local function isBonusPaged(button)
     return n ~= nil and n <= 12 and button.SetShowGridInsecure == nil
 end
 
+-- DaylightUI's action bars are its own buttons, DaylightUIBar<1-8>Button<1-12>,
+-- each with its slot in the "action" attribute. The bar a button is on, or nil
+-- for any other button.
+local function daylightUIBar(buttonName)
+    return type(buttonName) == "string"
+        and tonumber(string.match(buttonName, "^DaylightUIBar(%d+)Button%d+$")) or nil
+end
+GSE.DaylightUIBar = daylightUIBar
+
 -- asDefault: the button's Default row, which runs on every page no pinned row
 -- holds (gse-default). Re-arming without it leaves that as it was.
 local function secureArmGSEButton(button, sequenceName, asDefault)
@@ -406,6 +415,9 @@ function GSE.ButtonPagesWithForms(buttonName)
     if type(button) ~= "table" or button.gseActionBarButton then return false end
     if button.SetShowGridInsecure ~= nil then return true end
     if GSE.ButtonPageDriver(buttonName) then return true end
+    -- DaylightUI's bar 1 pages by a driver it sets up while it loads, before
+    -- GSE is there to see it; unseen, its forms are on Blizzard's pages (7-10).
+    if daylightUIBar(buttonName) == 1 then return true end
     return isBonusPaged(button)
 end
 
@@ -1563,8 +1575,31 @@ local function hookActionButtonUpdate()
     end)
 end
 
--- EllesmereUI routes action-bar keybinds to native engine commands instead of
--- clicking the visible EABButton frame, so route those keys back through the
+-- DaylightUI paints its buttons itself, from the action slot: an override's
+-- slot is empty, so each paint hides the icon GSE drew. Its plugin API runs a
+-- function after every paint of a button (Paint, "actionbutton", API 1.5);
+-- the override's icon goes back on there.
+local daylightUIPaintHooked = false
+local function hookDaylightUIPaint()
+    if daylightUIPaintHooked then return end
+    local api = type(_G.DaylightUI) == "table" and _G.DaylightUI.API
+    if type(api) ~= "table" or type(api.For) ~= "function" then return end
+    if api.major ~= 1 or (tonumber(api.minor) or 0) < 5 then return end
+    local me = api.For("GSE")
+    if type(me) ~= "table" or type(me.Paint) ~= "function" then return end
+    daylightUIPaintHooked = true
+    me.Paint("actionbutton", function(button)
+        if type(button) ~= "table" or not button.GetAttribute then return end
+        -- Only while the button runs a sequence: not on a page no row is
+        -- for, and not under a real action or a vehicle's bar.
+        if button:GetAttribute("type") ~= "click" or not overrideSequence(button) then return end
+        repaintGSEOverrideButton(button)
+    end)
+end
+
+-- EllesmereUI and DaylightUI route action-bar keybinds to native engine
+-- commands instead of clicking the visible button frame (DaylightUI's keys
+-- press the game's hidden buttons), so route those keys back through the
 -- button frame when GSE owns the override.
 local GSE_EABBindOwner = CreateFrame("Frame", "GSE_EABBindOwner", UIParent)
 
@@ -1596,7 +1631,9 @@ local function overrideActionButton(savedBind, force, pinnedStates)
     local SequenceLabel = GSE.SequenceName(savedBind.Sequence) or Sequence
     local state = savedBind.State or GSE.LABDefaultState(Button)
     _G[Button]:SetAttribute("gse-button", Sequence)
-    if string.sub(Button, 1, 9) == "EABButton" and not InCombatLockdown() then
+    local isDaylightUIButton = daylightUIBar(Button) ~= nil
+    if isDaylightUIButton then hookDaylightUIPaint() end
+    if (string.sub(Button, 1, 9) == "EABButton" or isDaylightUIButton) and not InCombatLockdown() then
         local cmd = _G[Button].commandName
         if cmd then
             local k1, k2 = GetBindingKey(cmd)
@@ -1605,7 +1642,7 @@ local function overrideActionButton(savedBind, force, pinnedStates)
         else
             --@debug@
             GSE.PrintDebugMessage(
-                "EllesmereUI button " .. Button .. " has no commandName; keybind override not applied",
+                "Button " .. Button .. " has no commandName; keybind override not applied",
                 "EVENTS"
             )
             --@end-debug@

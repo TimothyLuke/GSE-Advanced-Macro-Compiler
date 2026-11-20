@@ -427,7 +427,8 @@ end
 function GSE.PageDriverNames(driver, classfile)
     local names, default = {}, nil
     for clause in string.gmatch(tostring(driver or "") .. ";", "([^;]*);") do
-        local page = clause:match("(%d+)%s*$")
+        -- DaylightUI tags a page with the form or page under it ("13:f1").
+        local page = clause:match("(%d+):?%w*%s*$")
         if page and not string.find(clause, "[", 1, true) then default = default or page end
         if page then
             for group in string.gmatch(clause, "%[([^%]]*)%]") do
