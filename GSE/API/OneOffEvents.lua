@@ -11,6 +11,20 @@ if not GSE_C.Updates then
 end
 
 function GSE.PerformOneOffEvents()
+    if GSE.isEmpty(GSEOptions.Updates) then
+        GSEOptions.Updates = {}
+    end
+    -- A dual-spec client's profiles are kept by spec group, 1 for Primary and
+    -- 2 for Secondary (#2225); they were kept by the class, and on WoW Forever
+    -- before 3.3.39 by its class-level specialisation, which that update left
+    -- behind. Every class's are moved here, once for the account -- the
+    -- profiles are shared by every character -- before anything below reads a
+    -- setting a profile carries.
+    if GSE.isEmpty(GSEOptions.Updates["profileSpecGroups"]) then
+        GSE.MoveProfilesToSpecGroups()
+        GSEOptions.Updates["profileSpecGroups"] = true
+    end
+
     if GSE.isEmpty(GSEOptions.msClickRate) then
         GSEOptions.msClickRate = 250
     end

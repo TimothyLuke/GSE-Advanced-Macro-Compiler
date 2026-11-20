@@ -83,12 +83,12 @@ describe("Profiles", function()
     end)
 
     -- Decided by what the client can do (Profiles.lua), not its version.
-    it("is per class on a client without specialisations, with the class for a spec", function()
+    it("is per class on a client without specialisations, as its one spec group", function()
       _G.GetNumSpecializations = nil
       _G.C_SpecializationInfo = nil
       loginAs({ ["1"] = { ["CTRL-1"] = "seqA" } })
       GSE.MigrateToProfiles()
-      assert.are.same({ ["CTRL-1"] = "seqA" }, GSEStore.profile[2][2].KeyBindings)
+      assert.are.same({ ["CTRL-1"] = "seqA" }, GSEStore.profile[2][1].KeyBindings)
     end)
   end)
 
@@ -179,37 +179,166 @@ describe("Profiles", function()
       assert.are.equal("1", specs[1].key)
       assert.are.equal("Primary", specs[1].label)
       assert.are.equal("Secondary", specs[2].label)
-      -- Primary keeps the profile the class always had; Secondary its own.
-      assert.are.equal(1486, GSE.SpecIDForKey("1"))
-      assert.are.equal("1486:2", GSE.SpecIDForKey("2"))
+      -- A profile is kept by its spec group: 1 Primary, 2 Secondary.
+      assert.are.equal(1, GSE.SpecIDForKey("1"))
+      assert.are.equal(2, GSE.SpecIDForKey("2"))
     end)
 
-    it("WoW Forever: Primary is the class, without asking the spec API", function()
+    it("WoW Forever: Primary is 1 and Secondary 2, without asking the spec API", function()
       dualSpec(1, 1)
       _G.GetNumSpecializations = nil
       C_SpecializationInfo.GetSpecializationInfo = nil
       GSE.IsForever = true
       local ok, err = pcall(function()
-        assert.are.equal(2, GSE.SpecIDForKey("1"))
-        assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+        assert.are.equal(1, GSE.SpecIDForKey("1"))
+        assert.are.equal(2, GSE.SpecIDForKey("2"))
         assert.are.equal("table", type(GSE.Profile("1", true)), "a profile from the first login pass, not nil")
+        assert.are.equal(GSEStore.profile[2][1], GSE.Profile("1"))
       end)
       GSE.IsForever = nil
       if not ok then error(err, 0) end
     end)
 
+    -- #2225: a spec-group client's profiles are kept by the group -- 1 Primary,
+    -- 2 Secondary. They were kept by the class (2, "2:2"), and on WoW Forever
+    -- until 3.3.39 by the class-level specialisation (1486, "1486:2"), which
+    -- that update stopped reading: every bind saved before it was lost.
+    describe("profiles onto their spec groups, once (#2225)", function()
+      local function onForever(fn)
+        dualSpec(1, 1)
+        -- Early in a login: the spec API answers nothing.
+        C_SpecializationInfo.GetSpecializationInfo = function() return nil end
+        GSE.IsForever = true
+        local ok, err = pcall(fn)
+        GSE.IsForever = nil
+        if not ok then error(err, 0) end
+      end
+      local function saved(key, sequence)
+        return { KeyBindings = { [key] = sequence },
+          ActionBarBinds = { B1 = { Bind = "B1", Sequence = sequence } }, Settings = { msClickRate = 100 } }
+      end
+
+      it("Forever: what 3.3.38 saved is read again, Primary and Secondary", function()
+        onForever(function()
+          GSEStore.profile = { [9] = { [1490] = saved("F", "seqA"), ["1490:2"] = saved("G", "seqB") } }
+          _G.UnitClass = function() return "Warlock", "WARLOCK", 9 end
+          assert.is_true(GSE.MoveProfilesToSpecGroups())
+          assert.are.same({ F = "seqA" }, GSE.SpecKeyBinds("1"))
+          assert.are.equal("seqA", GSE.SpecOverrides("1").B1.Sequence)
+          assert.are.equal(100, GSEStore.profile[9][1].Settings.msClickRate)
+          assert.are.same({ G = "seqB" }, GSE.SpecKeyBinds("2"))
+          local keys = {}
+          for k in pairs(GSEStore.profile[9]) do keys[#keys + 1] = tostring(k) end
+          table.sort(keys)
+          assert.are.same({ "1", "2" }, keys)
+        end)
+      end)
+
+      it("Forever: what was set up again on 3.3.39 stays, the older fills in the rest", function()
+        onForever(function()
+          GSEStore.profile = { [9] = {
+            [1490] = { KeyBindings = { F = "seqA", G = "seqOld" }, ActionBarBinds = { B1 = { Bind = "B1", Sequence = "seqA" } } },
+            [9] = { KeyBindings = { G = "seqNew" }, Settings = { msClickRate = 80 } },
+          } }
+          GSE.MoveProfilesToSpecGroups()
+          local p = GSEStore.profile[9][1]
+          assert.are.same({ F = "seqA", G = "seqNew" }, p.KeyBindings)
+          assert.are.equal("seqA", p.ActionBarBinds.B1.Sequence)
+          assert.are.equal(80, p.Settings.msClickRate)
+          assert.is_nil(GSEStore.profile[9][1490])
+          assert.is_nil(GSEStore.profile[9][9])
+        end)
+      end)
+
+      it("every class in the one pass, whoever logs in", function()
+        onForever(function()
+          GSEStore.profile = { [9] = { [1490] = saved("F", "seqA") }, [8] = { [1482] = saved("H", "seqM") },
+            [11] = { [11] = saved("J", "seqD"), ["11:2"] = saved("K", "seqE") } }
+          GSE.MoveProfilesToSpecGroups()
+          assert.are.same({ F = "seqA" }, GSEStore.profile[9][1].KeyBindings)
+          assert.are.same({ H = "seqM" }, GSEStore.profile[8][1].KeyBindings)
+          assert.are.same({ J = "seqD" }, GSEStore.profile[11][1].KeyBindings)
+          assert.are.same({ K = "seqE" }, GSEStore.profile[11][2].KeyBindings)
+          assert.is_nil(GSEStore.profile[11][11])
+          assert.is_nil(GSEStore.profile[11]["11:2"])
+        end)
+      end)
+
+      -- Classes 1 and 2 are kept by a number that is also a spec group.
+      it("a Warrior's Primary stays at 1, and a Paladin's leaves 2 for its Secondary", function()
+        dualSpec(3, 1)
+        GSEStore.profile = {
+          [1] = { [1] = saved("F", "warPrimary"), ["1:2"] = saved("G", "warSecondary") },
+          [2] = { [2] = saved("H", "palPrimary"), ["2:2"] = saved("J", "palSecondary") },
+        }
+        assert.is_true(GSE.MoveProfilesToSpecGroups())
+        assert.are.same({ F = "warPrimary" }, GSEStore.profile[1][1].KeyBindings)
+        assert.are.same({ G = "warSecondary" }, GSEStore.profile[1][2].KeyBindings)
+        assert.are.same({ H = "palPrimary" }, GSEStore.profile[2][1].KeyBindings)
+        assert.are.same({ J = "palSecondary" }, GSEStore.profile[2][2].KeyBindings)
+        assert.is_nil(GSEStore.profile[1]["1:2"])
+        assert.is_nil(GSEStore.profile[2]["2:2"])
+      end)
+
+      it("a Paladin with no Secondary saved leaves 2 empty", function()
+        dualSpec(3, 1)
+        GSEStore.profile = { [2] = { [2] = saved("H", "palPrimary") } }
+        GSE.MoveProfilesToSpecGroups()
+        assert.are.same({ H = "palPrimary" }, GSEStore.profile[2][1].KeyBindings)
+        assert.is_nil(GSEStore.profile[2][2])
+      end)
+
+      it("Forever, two old ids for a class: the one the client names, the other left", function()
+        onForever(function()
+          GSEStore.profile = { [9] = { [1490] = saved("F", "seqA"), [70] = saved("H", "seqR") } }
+          C_SpecializationInfo.GetSpecializationInfoForClassID = function(classID) return classID == 9 and 1490 or nil end
+          GSE.MoveProfilesToSpecGroups()
+          C_SpecializationInfo.GetSpecializationInfoForClassID = nil
+          assert.are.same({ F = "seqA" }, GSEStore.profile[9][1].KeyBindings)
+          assert.are.same({ H = "seqR" }, GSEStore.profile[9][70].KeyBindings)
+        end)
+      end)
+
+      it("only Forever has an old id: another client's other numbers are left", function()
+        dualSpec(3, 1)
+        GSEStore.profile = { [9] = { [9] = saved("F", "seqA"), [1490] = saved("H", "seqX") } }
+        GSE.MoveProfilesToSpecGroups()
+        assert.are.same({ F = "seqA" }, GSEStore.profile[9][1].KeyBindings)
+        assert.are.same({ H = "seqX" }, GSEStore.profile[9][1490].KeyBindings)
+      end)
+
+      it("Retail keeps its profiles by specialisation: nothing moves", function()
+        GSEStore.profile = { [2] = { [70] = saved("F", "seqA") } }
+        assert.is_false(GSE.MoveProfilesToSpecGroups())
+        assert.are.same({ F = "seqA" }, GSEStore.profile[2][70].KeyBindings)
+      end)
+
+      -- OneOffEvents.lua cannot be loaded here, so this reads the gate out of
+      -- it: one flag for the account, set whether or not anything moved, as a
+      -- second run would take a Paladin's Secondary for its Primary.
+      it("is run once for the account, not once a character", function()
+        local fh = assert(io.open("GSE/API/OneOffEvents.lua", "r"))
+        local src = fh:read("*a"):gsub("\r\n", "\n")
+        fh:close()
+        assert.truthy(src:find('    if GSE.isEmpty(GSEOptions.Updates["profileSpecGroups"]) then\n'
+          .. '        GSE.MoveProfilesToSpecGroups()\n'
+          .. '        GSEOptions.Updates["profileSpecGroups"] = true\n', 1, true))
+        assert.is_nil(src:find("GSE_C.Updates.profileSpecGroups", 1, true))
+      end)
+    end)
+
     it("spec API answering nothing early in a login: Primary, not no profile", function()
       dualSpec(1, 1)
       C_SpecializationInfo.GetSpecializationInfo = function() return nil end
-      assert.are.equal(2, GSE.SpecIDForKey("1"))
+      assert.are.equal(1, GSE.SpecIDForKey("1"))
     end)
 
     it("Cata to WoD (MoP): spec groups too, though it has three specialisations", function()
       dualSpec(3, 1)
       assert.are.equal("1", GSE.CurrentSpecKey())
       assert.are.equal(2, #GSE.BindingSpecs())
-      assert.are.equal(2, GSE.SpecIDForKey("1"), "the class, as before WoD")
-      assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+      assert.are.equal(1, GSE.SpecIDForKey("1"), "the spec group, not a specialisation")
+      assert.are.equal(2, GSE.SpecIDForKey("2"))
     end)
 
     it("TBC / Wrath / Era with dual spec: talent groups, no specialisations", function()
@@ -221,8 +350,8 @@ describe("Profiles", function()
       local ok, err = pcall(function()
         assert.are.equal("2", GSE.CurrentSpecKey())
         assert.are.equal(2, #GSE.BindingSpecs())
-        assert.are.equal(2, GSE.SpecIDForKey("1"), "the class, as it always was")
-        assert.are.equal("2:2", GSE.SpecIDForKey("2"))
+        assert.are.equal(1, GSE.SpecIDForKey("1"))
+        assert.are.equal(2, GSE.SpecIDForKey("2"))
       end)
       _G.SetActiveTalentGroup, _G.GetNumTalentGroups, _G.GetActiveTalentGroup = nil, nil, nil
       if not ok then error(err, 0) end
@@ -257,14 +386,14 @@ describe("Profiles", function()
       local specs = GSE.BindingSpecs()
       assert.are.equal(1, #specs)
       assert.are.equal("Primary", specs[1].label)
-      assert.are.equal(1486, GSE.SpecIDForKey("1"))
+      assert.are.equal(1, GSE.SpecIDForKey("1"))
     end)
 
     it("MoP with three specialisations and one group: still Primary, not the specialisation", function()
       dualSpec(3, 1, 1)
       assert.are.equal("1", GSE.CurrentSpecKey(), "not \"3\" -- learning dual spec must not move the binds")
       assert.are.equal(1, #GSE.BindingSpecs())
-      assert.are.equal(2, GSE.SpecIDForKey("1"))
+      assert.are.equal(1, GSE.SpecIDForKey("1"))
     end)
 
     it("a client with one spec group and no specialisations: one", function()
@@ -272,7 +401,7 @@ describe("Profiles", function()
       _G.C_SpecializationInfo = nil
       assert.are.equal("1", GSE.CurrentSpecKey())
       assert.are.equal(1, #GSE.BindingSpecs())
-      assert.are.equal(2, GSE.SpecIDForKey("1"))
+      assert.are.equal(1, GSE.SpecIDForKey("1"))
     end)
 
     it("Primary and Secondary keep separate binds; Secondary starts empty", function()

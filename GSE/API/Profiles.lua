@@ -13,9 +13,9 @@ local _, GSE = ...
 --
 -- specID, not the spec index a character's binds were kept by: it is the same
 -- on every character of the class. Where binds are split by spec group rather
--- than specialisation, Primary's profile is the class's (specID = classID, or
--- the one class-level specialisation where the client reports one; always the
--- class on WoW Forever) and Secondary's its own (SpecIDForKey).
+-- than specialisation (a dual-spec client), it is the group: 1 is Primary's
+-- profile and 2 Secondary's (SpecIDForKey) -- profile[9][1] and profile[9][2]
+-- for a Warlock.
 --
 -- What stays on the character (GSE_C): anything keyed by a talent loadout --
 -- its config id belongs to that character -- and, per spec, whether it has
@@ -146,10 +146,8 @@ end
 --- The specID a spec key names for the current character, or nil when WoW has
 --- not said yet (early in a login). A shared profile is kept by it.
 ---
---- By spec group, Primary keeps the id the class's profile always had, so
---- nothing moves: the class where it has several specialisations or none, the
---- one class-level specialisation where that is all there is (Forever).
---- Another group gets one of its own, and starts empty.
+--- By spec group it is the group's number: 1 for Primary, 2 for Secondary.
+--- No API is asked, so it is known from the first moment of a login (#2166).
 function GSE.SpecIDForKey(specKey)
     local info = specInfoApi()
     if not hasSpecGroups() and specialisationCount() > 1 then
@@ -158,19 +156,7 @@ function GSE.SpecIDForKey(specKey)
         if type(specID) == "number" and specID > 0 then return specID end
         return nil
     end
-    -- Primary is the class. WoW Forever's spec API answers nothing (its
-    -- GetSpecializationInfo / GetNumSpecializations are nil), so it is never
-    -- asked there; elsewhere a nil answer early in a login still means
-    -- Primary, rather than no profile -- which left every action bar override
-    -- unarmed until the first LoadOverrides after combat.
-    local base = GSE.GetCurrentClassID()
-    if not GSE.IsForever and specialisationCount() == 1 then
-        local specID = info and info(1)
-        if type(specID) == "number" and specID > 0 then base = specID end
-    end
-    if not base then return nil end
-    local group = tonumber(specKey) or 1
-    return group <= 1 and base or (tostring(base) .. ":" .. group)
+    return math.max(1, math.floor(tonumber(specKey) or 1))
 end
 
 local function profiles()
@@ -650,6 +636,97 @@ function GSE.SetSharedProfile(specKey, shared)
     local overrides = charTable({ "ActionBarBinds", "Specialisations", specKey }, true)
     for k, v in pairs(p.ActionBarBinds or {}) do overrides[k] = copy(v) end
     charTable({ "ProfileOptOut" }, true)[specKey] = true
+end
+
+-- What a profile holds, by part.
+local PROFILE_PARTS = { "KeyBindings", "ActionBarBinds", "Settings" }
+
+-- Two profiles for the same spec group as one: newer as it is, older filling
+-- in what it lacks.
+local function mergeProfiles(newer, older)
+    if type(newer) ~= "table" then return type(older) == "table" and older or nil end
+    if type(older) ~= "table" then return newer end
+    for _, part in ipairs(PROFILE_PARTS) do
+        if type(newer[part]) ~= "table" then
+            newer[part] = older[part]
+        else
+            for k, v in pairs(type(older[part]) == "table" and older[part] or {}) do
+                if newer[part][k] == nil then newer[part][k] = v end
+            end
+        end
+    end
+    return newer
+end
+
+-- One class's profiles onto their spec groups. They were kept by the class
+-- (9, and "9:2" for Secondary) and, on WoW Forever until 3.3.39, by the one
+-- class-level specialisation the client reports (1490, "1490:2").
+local function moveClassToSpecGroups(classID, byClass)
+    -- Forever's old id: the number that is not the class. With more than one,
+    -- the one the client names for the class, or none of them.
+    local oldID, several
+    if GSE.IsForever then
+        for key in pairs(byClass) do
+            local id = type(key) == "number" and key or tonumber(string.match(tostring(key), "^(%d+):%d+$"))
+            if id and id ~= classID then
+                if oldID and oldID ~= id then several = true end
+                oldID = id
+            end
+        end
+        if several then
+            local forClass = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfoForClassID
+                or GetSpecializationInfoForClassID
+            local ok, specID = pcall(function() return forClass and forClass(classID, 1) end)
+            oldID = ok and type(specID) == "number" and specID ~= classID and byClass[specID] and specID or nil
+        end
+    end
+    -- Every group's profile is worked out before any is put back: a Paladin's
+    -- Primary sits at [2], where its Secondary goes.
+    local groups, from = {}, {}
+    local function take(key, group)
+        if byClass[key] == nil then return end
+        groups[group] = mergeProfiles(groups[group], byClass[key])
+        from[#from + 1] = key
+    end
+    local function takeFor(id)
+        take(id, 1)
+        local keys = {}
+        for key in pairs(byClass) do
+            local group = type(key) == "string" and tonumber(string.match(key, "^" .. id .. ":(%d+)$"))
+            if group then keys[key] = group end
+        end
+        for key, group in pairs(keys) do take(key, group) end
+    end
+    -- The class's first: what was set up since 3.3.39 stays as it is.
+    takeFor(classID)
+    if oldID then takeFor(oldID) end
+    for _, key in ipairs(from) do byClass[key] = nil end
+    for group, profile in pairs(groups) do byClass[group] = profile end
+end
+
+--- Once for the account (GSEOptions.Updates.profileSpecGroups, from
+--- PerformOneOffEvents), wherever profiles are kept by spec group -- every
+--- client but Retail, whose profiles are by specialisation: every class's profiles onto
+--- their spec groups, 1 for Primary and 2 for Secondary (#2225). The profiles
+--- are shared by every character, so the one pass does every class, whoever
+--- logs in first.
+---
+--- This is also what brings back the keybinds, action bar overrides and
+--- settings WoW Forever lost in 3.3.39, which changed the id Primary was kept
+--- by (1490 to 9 for a Warlock) and left the saved profiles behind: both are
+--- read here, and anything set up again since wins.
+---
+--- Not to be run twice: after it a Paladin's [2] is its Secondary, not its
+--- Primary. Returns whether it ran.
+function GSE.MoveProfilesToSpecGroups()
+    -- As SpecIDForKey decides it.
+    if not hasSpecGroups() and specialisationCount() > 1 then return false end
+    for classID, byClass in pairs(profiles()) do
+        if type(classID) == "number" and type(byClass) == "table" then
+            moveClassToSpecGroups(classID, byClass)
+        end
+    end
+    return true
 end
 
 --- Move this character's spec-level binds and overrides into the shared
