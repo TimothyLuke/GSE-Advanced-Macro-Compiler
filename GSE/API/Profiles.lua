@@ -646,12 +646,19 @@ local PROFILE_PARTS = { "KeyBindings", "ActionBarBinds", "Settings" }
 local function mergeProfiles(newer, older)
     if type(newer) ~= "table" then return type(older) == "table" and older or nil end
     if type(older) ~= "table" then return newer end
+    local defaults = type(GSEOptions) == "table" and rawget(GSEOptions, "ProfileDefaults")
     for _, part in ipairs(PROFILE_PARTS) do
         if type(newer[part]) ~= "table" then
             newer[part] = older[part]
         else
             for k, v in pairs(type(older[part]) == "table" and older[part] or {}) do
-                if newer[part][k] == nil then newer[part][k] = v end
+                local mine = newer[part][k]
+                -- A table setting is copied from the account's the first time
+                -- it is read (InstallProfileSettings), so one still matching
+                -- it was never chosen in the newer profile: the older's was.
+                local unchosen = part == "Settings" and type(mine) == "table"
+                    and type(defaults) == "table" and same(mine, defaults[k])
+                if mine == nil or unchosen then newer[part][k] = v end
             end
         end
     end
