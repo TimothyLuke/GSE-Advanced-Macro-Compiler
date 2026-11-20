@@ -250,6 +250,24 @@ describe("Profiles", function()
         end)
       end)
 
+      -- Reading a table setting on 3.3.39 copied the account's into the
+      -- class's profile. That copy is nobody's choice; the one under the id
+      -- 3.3.38 saved by is.
+      it("Forever: a table setting chosen on 3.3.38 beats the account's copy 3.3.39 made", function()
+        onForever(function()
+          GSEOptions.SkyRidingBinds = {}
+          GSE.InstallProfileSettings()
+          GSEStore.profile = { [9] = {
+            [1490] = { Settings = { MacroResetModifiers = { LeftShift = true }, SkyRidingBinds = { X = "old" } } },
+            [9] = { Settings = { MacroResetModifiers = { LeftShift = false }, SkyRidingBinds = { X = "edited" } } },
+          } }
+          GSE.MoveProfilesToSpecGroups()
+          local s = GSEStore.profile[9][1].Settings
+          assert.is_true(s.MacroResetModifiers.LeftShift, "the one chosen on 3.3.38")
+          assert.are.equal("edited", s.SkyRidingBinds.X, "one changed since 3.3.39 is kept")
+        end)
+      end)
+
       it("every class in the one pass, whoever logs in", function()
         onForever(function()
           GSEStore.profile = { [9] = { [1490] = saved("F", "seqA") }, [8] = { [1482] = saved("H", "seqM") },
