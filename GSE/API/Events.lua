@@ -2724,10 +2724,11 @@ local function enableActionBarForKeybinds()
     end
     if not hasKeys then return end
     GSEOptions.ActionBarAutoEnabled = true
-    -- The bar's starting state: hidden, its keys working. Only where the
-    -- player has never turned the bar on or off, so nothing they chose is
-    -- undone.
-    if GSEOptions.ActionBarEnabled == nil then GSEOptions.ActionBarStartHidden = true end
+    -- The bar's starting state: hidden, its keys working. Whenever GSE is the
+    -- one turning it on -- never set, or turned off before -- so a bar the
+    -- player had switched off does not reappear on screen. A bar they already
+    -- have on keeps the visibility they gave it.
+    if GSEOptions.ActionBarEnabled ~= true then GSEOptions.ActionBarStartHidden = true end
     -- What's New explains it (GSE.ShowUpdateNotes, below).
     GSEOptions.ActionBarEnabled = true
 end
