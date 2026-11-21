@@ -1603,6 +1603,71 @@ end
 -- button frame when GSE owns the override.
 local GSE_EABBindOwner = CreateFrame("Frame", "GSE_EABBindOwner", UIParent)
 
+-- The buttons whose keys are routed this way (name -> where the button keeps
+-- its binding command: true for the commandName attribute, Dominos'; false
+-- for the commandName field, EllesmereUI's and DaylightUI's), and the keys
+-- now routed (key -> button name).
+local routedButtons, routedKeys = {}, {}
+
+local function routedCommand(Button)
+    local button = _G[Button]
+    if not button then return nil end
+    if routedButtons[Button] then return button:GetAttribute("commandName") end
+    return button.commandName
+end
+
+-- Route Button's keys, as they are bound now, through the button frame.
+-- Returns false for a button with no binding command.
+local function routeButtonKeys(Button, fromAttribute)
+    routedButtons[Button] = fromAttribute and true or false
+    local cmd = routedCommand(Button)
+    if not cmd then return false end
+    local k1, k2 = GetBindingKey(cmd)
+    for _, key in ipairs({ k1, k2 }) do
+        SetOverrideBindingClick(GSE_EABBindOwner, true, key, Button)
+        routedKeys[key] = Button
+    end
+    return true
+end
+
+-- A key bound or cleared in WoW's Key Bindings moves at once: the routes
+-- were only laid when the overrides were rebuilt, so a new key ran nothing
+-- and a cleared one went on running the sequence until some other event
+-- rebuilt them (Larry, EllesmereUI, 2026-11-21). Laying a route fires
+-- UPDATE_BINDINGS itself, so nothing is touched unless a key has moved. In
+-- combat nothing can be routed; the overrides are rebuilt when it ends.
+local function rerouteButtonKeys()
+    GSE_EABBindOwner.reroutePending = nil
+    if InCombatLockdown() then return end
+    local wanted, moved = {}, false
+    for Button in pairs(routedButtons) do
+        local cmd = routedCommand(Button)
+        if cmd then
+            local k1, k2 = GetBindingKey(cmd)
+            for _, key in ipairs({ k1, k2 }) do wanted[key] = Button end
+        end
+    end
+    for key, Button in pairs(wanted) do
+        if routedKeys[key] ~= Button then moved = true end
+    end
+    for key in pairs(routedKeys) do
+        if not wanted[key] then moved = true end
+    end
+    if not moved then return end
+    ClearOverrideBindings(GSE_EABBindOwner)
+    routedKeys = {}
+    for key, Button in pairs(wanted) do
+        SetOverrideBindingClick(GSE_EABBindOwner, true, key, Button)
+        routedKeys[key] = Button
+    end
+end
+GSE_EABBindOwner:RegisterEvent("UPDATE_BINDINGS")
+GSE_EABBindOwner:SetScript("OnEvent", function(self)
+    if self.reroutePending or not next(routedButtons) then return end
+    self.reroutePending = true
+    C_Timer.After(0, rerouteButtonKeys)
+end)
+
 -- pinnedStates: the states of this button that other rows pin, which a
 -- Default row (no State) leaves to them.
 local function overrideActionButton(savedBind, force, pinnedStates)
@@ -1634,12 +1699,7 @@ local function overrideActionButton(savedBind, force, pinnedStates)
     local isDaylightUIButton = daylightUIBar(Button) ~= nil
     if isDaylightUIButton then hookDaylightUIPaint() end
     if (string.sub(Button, 1, 9) == "EABButton" or isDaylightUIButton) and not InCombatLockdown() then
-        local cmd = _G[Button].commandName
-        if cmd then
-            local k1, k2 = GetBindingKey(cmd)
-            if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Button) end
-            if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Button) end
-        else
+        if not routeButtonKeys(Button) then
             --@debug@
             GSE.PrintDebugMessage(
                 "Button " .. Button .. " has no commandName; keybind override not applied",
@@ -1696,14 +1756,7 @@ local function overrideActionButton(savedBind, force, pinnedStates)
             -- non-priority proxy binding regardless of apply order. Cleared and
             -- re-applied on every LoadOverrides via GSE_EABBindOwner. ButtonForge
             -- is excluded -- it is not affected and has no such proxy.
-            if isDominosButton then
-                local cmd = _G[Button]:GetAttribute("commandName")
-                if cmd then
-                    local k1, k2 = GetBindingKey(cmd)
-                    if k1 then SetOverrideBindingClick(GSE_EABBindOwner, true, k1, Button) end
-                    if k2 then SetOverrideBindingClick(GSE_EABBindOwner, true, k2, Button) end
-                end
-            end
+            if isDominosButton then routeButtonKeys(Button, true) end
             -- Arm type/clickbutton + the secure gate from inside the secure
             -- environment so GSE seeds no taint (issue #1931).
             armRow(_G[Button], Button, Sequence, savedBind.State)
@@ -2115,6 +2168,7 @@ local function LoadOverrides(force)
     end
     if not InCombatLockdown() then
         ClearOverrideBindings(GSE_EABBindOwner)
+        routedButtons, routedKeys = {}, {}
         -- Remember which buttons are currently overridden so we can repaint the
         -- real icon on any that end up cleared (not re-armed) by this pass.
         local clearedCandidates = {}
