@@ -1519,7 +1519,9 @@ local function layoutFlow(container)
         end
         local height = childHeight(container, child, safeHeight(content, container.height or 1))
         local rightAligned = child.flowRightAlign or child.flowRightAligned
-        if not rightAligned and x > padLeft and (x + width) > (contentWidth - padRight) then
+        -- flowNoWrap: one line whatever the width (Editor_Keybind's Button
+        -- Bindings row, which narrows its own columns to fit instead).
+        if not container.flowNoWrap and not rightAligned and x > padLeft and (x + width) > (contentWidth - padRight) then
             rows[#rows + 1] = row
             y = y - row.height - rowGap
             x = padLeft
@@ -1589,6 +1591,9 @@ local function layoutFlow(container)
 end
 
 doLayout = function(container)
+    -- A caller's chance to size the children for the width this layout has
+    -- (set child.width, not SetWidth, which lays the parent out again).
+    if container.beforeLayout then container.beforeLayout(container) end
     if container.layout == "Fill" then
         layoutFill(container)
     elseif container.layout == "Flow" then
