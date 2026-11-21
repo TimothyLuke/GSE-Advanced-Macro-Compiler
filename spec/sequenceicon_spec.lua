@@ -200,9 +200,9 @@ describe("Sequence step icon", function()
     end
     -- "/cast [stance] Ambush" over "/cast [nostealth] Kingsbane".
     local block = { "/cast [stance] Barbed Shot", "/cast [nostealth] Kill Command" }
-    assert.are.equal(106, icon(unpack(block)), "out of stealth: the line that fires there")
+    assert.are.equal(106, icon((unpack or table.unpack)(block)), "out of stealth: the line that fires there")
     stealthed = true
-    assert.are.equal(105, icon(unpack(block)), "in stealth: the stealth line")
+    assert.are.equal(105, icon((unpack or table.unpack)(block)), "in stealth: the stealth line")
     assert.are.equal(105, icon("/cast [nostealth] Kill Command", "/cast [stealth] Barbed Shot"), "and with the lines the other way round")
     -- Whichever way round the lines are, and for a form by its number.
     stealthed = false

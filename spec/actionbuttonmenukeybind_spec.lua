@@ -199,7 +199,7 @@ describe("action button right-click menu: more than one state", function()
     assert.is_true(w.now())
     assert.are.equal(1, w.applied)
     assert.is_false(w.now(), "nothing waiting")
-    local handler = menu:sub(assert(menu:find("local function gseEmptyButtonHandler(self, mousebutton, down)", 1, true)))
+    local handler = menu:sub((assert(menu:find("local function gseEmptyButtonHandler(self, mousebutton, down)", 1, true))))
     local first = assert(handler:find("if applyStateTicks() then", 1, true))
     local reads = assert(handler:find('local existingSequence = self:GetAttribute("gse-button")', 1, true))
     assert.is_true(first < reads, "before the menu reads what is on the buttons")
@@ -395,7 +395,7 @@ describe("action button right-click menu: more than one state", function()
   end)
 
   it("watches a menu that offers States, from the state it opened in, and tags its pickers", function()
-    local handler = menu:sub(assert(menu:find("local function gseEmptyButtonHandler(self, mousebutton, down)", 1, true)))
+    local handler = menu:sub((assert(menu:find("local function gseEmptyButtonHandler(self, mousebutton, down)", 1, true))))
     assert.truthy(handler:find("        local function generator(ownerRegion, rootDescription)\n", 1, true))
     assert.truthy(handler:find("        if not rebuildOpenMenu(self, generator, pickerRows) then\n"
       .. "            placeReopenedMenu(self, MenuUtil.CreateContextMenu(self, generator))\n"
