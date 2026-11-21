@@ -8496,10 +8496,13 @@ local function SelectLastAreaNode(editor, area)
 end
 
 function GSE.ShowKeyBindings()
+    -- The editor has a Bindings area only where GSE binds keys to sequences
+    -- itself (Editor_Keybind.lua, buildKeybindMenu); anywhere else this opens
+    -- the editor where it was.
+    if not GSE.KeybindingsEnabled() then return GSE.ShowSequences() end
     local editor = GSE.CreateEditor()
     editor.ManageTree()
     -- Down to the class node, wherever the tree's grouping puts Bindings.
-    GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("AO"))
     GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("KB"))
     SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")

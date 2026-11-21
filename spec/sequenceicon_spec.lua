@@ -15,6 +15,9 @@ describe("Sequence step icon", function()
     ["Cat Form"] = { name = "Cat Form", iconID = 107, spellID = 768 },
     ["Call Pet 1"] = { name = "Call Pet 1", iconID = 108, spellID = 883 },
     ["Wailing Arrow"] = { name = "Wailing Arrow", iconID = 109, spellID = 466930 },
+    ["Sprint"] = { name = "Sprint", iconID = 110, spellID = 2983 },
+    -- Sprint's second rank, by its number alone: a client in another language.
+    ["Sprinten"] = { name = "Sprinten", iconID = 111, spellID = 8696 },
   }
   local byID = {}
   for _, info in pairs(known) do
@@ -141,6 +144,16 @@ describe("Sequence step icon", function()
     assert.are.equal(108, icon("/cast Call Pet 1"))
   end)
 
+  it("ranks Sprint with the forms: below a modifier's spell, above a pet", function()
+    start()
+    knows("Sprint", "Sprinten", "Barbed Shot", "Kill Command", "Call Pet 1")
+    assert.are.equal(106, icon("/cast Sprint", "/cast Kill Command"))
+    assert.are.equal(105, icon("/cast Sprint", "/cast [mod:alt] Barbed Shot"))
+    assert.are.equal(110, icon("/cast Call Pet 1", "/cast Sprint"))
+    assert.are.equal(110, icon("/cast Sprint"), "alone, it is still the block's icon")
+    assert.are.equal(106, icon("/cast Sprinten", "/cast Kill Command"), "by its spell, whatever it is called")
+  end)
+
   it("ranks a spell this character can cast above one it can't", function()
     start()
     knows("Kill Command", "Exhilaration")
@@ -169,6 +182,65 @@ describe("Sequence step icon", function()
     -- A form that would fire now still ranks below a spell.
     stealthed = false
     assert.are.equal(106, icon("/cast [nostealth] Cat Form; Kill Command"))
+  end)
+
+  it("follows the stance, form or stealth across lines (Larry, 2026-11-21)", function()
+    start()
+    knows("Barbed Shot", "Kill Command", "Exhilaration", "Call Pet 1")
+    local stealthed, combat = false, false
+    _G.SecureCmdOptionParse = function(options)
+      local conditions, rest = options:match("^%s*%[([^%]]*)%]%s*(.*)$")
+      if not conditions then return options end
+      local holds = { stealth = stealthed, nostealth = not stealthed, stance = stealthed, nostance = not stealthed,
+        ["form:1"] = stealthed, combat = combat, ["mod:shift"] = false }
+      for condition in conditions:gmatch("[^,]+") do
+        if holds[condition] == false then return nil end
+      end
+      return rest
+    end
+    -- "/cast [stance] Ambush" over "/cast [nostealth] Kingsbane".
+    local block = { "/cast [stance] Barbed Shot", "/cast [nostealth] Kill Command" }
+    assert.are.equal(106, icon((unpack or table.unpack)(block)), "out of stealth: the line that fires there")
+    stealthed = true
+    assert.are.equal(105, icon((unpack or table.unpack)(block)), "in stealth: the stealth line")
+    assert.are.equal(105, icon("/cast [nostealth] Kill Command", "/cast [stealth] Barbed Shot"), "and with the lines the other way round")
+    -- Whichever way round the lines are, and for a form by its number.
+    stealthed = false
+    assert.are.equal(106, icon("/cast [nostealth] Kill Command", "/cast [stealth] Barbed Shot"))
+    assert.are.equal(106, icon("/cast [form:1] Barbed Shot", "/cast Kill Command"))
+    -- A line for another stance comes after what can be cast as the character
+    -- stands, a modifier's spell and a pet among them...
+    assert.are.equal(102, icon("/cast [stealth] Barbed Shot", "/cast [mod:shift] Exhilaration"))
+    assert.are.equal(108, icon("/cast [stealth] Barbed Shot", "/cast Call Pet 1"))
+    -- ...and before what the character cannot cast at all.
+    assert.are.equal(105, icon("/cast [stealth] Barbed Shot", "/cast Wailing Arrow"))
+    -- Alone, it is still the block's icon.
+    assert.are.equal(105, icon("/cast [stealth] Barbed Shot"))
+    -- A clause with a way to fire in this stance is not for another one.
+    assert.are.equal(105, icon("/cast [stealth][combat] Barbed Shot", "/cast [nostealth] Kill Command"))
+    -- Combat is not a stance: a line waiting on combat still shows at rest,
+    -- over a line below it (#2188), in the stance it asks for.
+    assert.are.equal(105, icon("/cast [combat] Barbed Shot", "/cast Kill Command"))
+    assert.are.equal(105, icon("/cast [combat,nostealth] Barbed Shot", "/cast Kill Command"))
+    assert.are.equal(106, icon("/cast [combat,stealth] Barbed Shot", "/cast Kill Command"))
+    -- Within a line, as before: the clause for this stance.
+    assert.are.equal(106, icon("/cast [stealth] Barbed Shot; [combat] Kill Command"))
+    -- And that clause is the line's, waiting on combat, over a line below it.
+    assert.are.equal(106, icon("/cast [stealth] Barbed Shot; [combat] Kill Command", "/cast Exhilaration"))
+  end)
+
+  it("looks at the icons again as a stance, form or stealth changes", function()
+    local fh = assert(io.open("GSE/API/Events.lua", "r"))
+    local events = fh:read("*a"):gsub("\r\n", "\n")
+    fh:close()
+    local s = assert(events:find("local function stanceChanged()", 1, true))
+    local body = events:sub(s, assert(events:find("\nend\n", s, true)))
+    assert.truthy(body:find("queueCurrentSpellIconRefresh(true)", 1, true), "at once")
+    assert.truthy(body:find("\n    queueCurrentSpellIconRefresh()\n", 1, true), "and once the form has caught up")
+    for _, event in ipairs({ "UPDATE_STEALTH", "UPDATE_SHAPESHIFT_FORM" }) do
+      assert.truthy(events:find("GSE." .. event .. " = stanceChanged", 1, true), event)
+      assert.truthy(events:find('GSE:RegisterEvent("' .. event .. '")', 1, true), event .. " not registered")
+    end
   end)
 
   it("shows the block's own icon even when its spells can't be cast", function()

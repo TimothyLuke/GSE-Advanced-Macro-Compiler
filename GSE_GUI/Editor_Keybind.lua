@@ -498,9 +498,17 @@ local function buildKeybindMenu()
         end
     end
 
-    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE
-    -- Action Bar carries the keys): Button Bindings only.
-    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
+    -- Button Bindings are set on the buttons themselves: their right-click
+    -- menu puts a sequence on a talent loadout and a stance, and opens the
+    -- button's key (GSE_Utils, Utils.lua). So the editor has no page for them.
+    -- What is left is the Keybindings pages, where GSE still binds keys to
+    -- sequences itself; where it does not (WoW Forever and Retail 12.1.7, or
+    -- the GSE Action Bar carries the keys) the editor has no Bindings node at
+    -- all, and this returns nil.
+    -- The Button Bindings page's code below (showOverridePanel and its
+    -- helpers) is left as it was, unreached.
+    table.remove(tree, 1)
+    if not GSE.KeybindingsEnabled() then return nil end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -1809,6 +1817,77 @@ end
 -- shape.  Fold the two into one once this panel has been confirmed on the
 -- same terms the keybind one was; refactoring a panel Larry has just signed
 -- off on to save 120 lines is the wrong trade today.
+-- The binding action WoW's Key Bindings lists for a button: the one
+-- buttonKeysText reads keys from or, unbound, the one its bar registers.
+-- Blizzard's bars bind by command; LibActionButton bars (Bartender4,
+-- Dominos, EllesmereUI) name theirs on the button; the rest bind a click.
+local function bindingActionFor(buttonName)
+    if GSE.isEmpty(buttonName) or not GetBindingKey then return nil end
+    local prefix, num = string.match(buttonName, "^(.-)(%d+)$")
+    local candidates = {}
+    if prefix and BAR_COMMANDS[prefix] then candidates[#candidates + 1] = BAR_COMMANDS[prefix] .. num end
+    local frame = _G[buttonName]
+    local command = type(frame) == "table" and (frame.commandName
+        or (frame.GetAttribute and frame:GetAttribute("commandName")))
+    if type(command) == "string" and command ~= "" then candidates[#candidates + 1] = command end
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":LeftButton"
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":Keybind"
+    for _, action in ipairs(candidates) do
+        if bindingKeys(action) then return action end
+    end
+    return candidates[1]
+end
+
+-- The Key Bindings section a binding action is listed under, named as the
+-- page names it: the category WoW's bindings table gives the action, read
+-- through its BINDING_HEADER_ string the way the page does; nil for an
+-- action the table does not list (a bar addon binding a click on its frame).
+local function bindingHeaderFor(action)
+    if not (action and GetNumBindings and GetBinding) then return nil end
+    for i = 1, GetNumBindings() do
+        local listed, cat = GetBinding(i)
+        if listed == action then
+            if not cat then return BINDING_HEADER_OTHER end
+            local header = _G[cat]
+            return type(header) == "string" and header or cat
+        end
+    end
+    return nil
+end
+
+-- Open WoW's own Key Bindings page at the section holding a binding action,
+-- expanded, where the key is set: GSE never writes a bar's binding itself.
+-- The page scrolls to a section by its name; expanded is set on the
+-- section's own initializer before the page draws, since the section reads
+-- that at Init and an addon's section starts collapsed.  An action with no
+-- section opens the page at its top.  False where the client has no
+-- Settings panel to open, and in combat, where opening it is protected.
+local function openWoWKeyBindingsFor(action)
+    if not (Settings and Settings.OpenToCategory and Settings.KEYBINDINGS_CATEGORY_ID) then return false end
+    if InCombatLockdown() then return false end
+    local header = bindingHeaderFor(action)
+    local category = header and SettingsPanel and SettingsPanel.GetCategory
+        and SettingsPanel:GetCategory(Settings.KEYBINDINGS_CATEGORY_ID)
+    local layout = category and SettingsPanel.GetLayout and SettingsPanel:GetLayout(category)
+    local initializers = layout and layout.GetInitializers and layout:GetInitializers()
+    for _, initializer in ipairs(initializers or {}) do
+        local data = rawget(initializer, "data")
+        if type(data) == "table" and data.bindingsCategories and data.name == header then
+            data.expanded = true
+        end
+    end
+    Settings.OpenToCategory(Settings.KEYBINDINGS_CATEGORY_ID, header)
+    return true
+end
+
+--- Open WoW's Key Bindings at a button's section, where its key is set. For
+--- the action buttons' right-click menu (GSE_Utils, Utils.lua), which reaches
+--- it through GSE.GUICall: this file loads on demand.
+function GSE.GUIOpenButtonKeyBindings(buttonName)
+    if GSE.isEmpty(buttonName) then return false end
+    return openWoWKeyBindingsFor(bindingActionFor(buttonName))
+end
+
 local showOverridePanel
 -- The open Button Bindings panel's rows re-read their keys when WoW's
 -- bindings change, so a key set in WoW's own Key Bindings shows at once.
