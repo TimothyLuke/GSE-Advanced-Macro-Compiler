@@ -289,6 +289,20 @@ function GSE.ActiveBindingLoadout()
     return tostring(key)
 end
 
+--- The current spec's saved talent loadouts, in the order WoW lists them:
+--- { { id = "123", name = "Raid" }, ... }, id as the loadout tables key it.
+--- None on a client without them.
+function GSE.BindingLoadouts()
+    local out = {}
+    if not (GSE.HasTalentLoadouts() and C_ClassTalents.GetConfigIDsBySpecID) then return out end
+    local ok, ids = pcall(C_ClassTalents.GetConfigIDsBySpecID, GSE.GetCurrentSpecID())
+    for _, id in ipairs(ok and ids or {}) do
+        local info = C_Traits and C_Traits.GetConfigInfo and C_Traits.GetConfigInfo(id)
+        out[#out + 1] = { id = tostring(id), name = (info and info.name) or tostring(id) }
+    end
+    return out
+end
+
 --- A talent loadout's action-bar overrides for a spec, always the character's
 --- own: { [buttonKey] = { Bind, State, Sequence } }.
 function GSE.SpecLoadoutOverrides(specKey, loadout, create)
@@ -300,11 +314,14 @@ end
 --- The state a LibActionButton bar's button is in with no stance, form or
 --- stealth: the one a Default row (no State) is saved for. Bartender4 counts
 --- its states from 0, ConsolePort has none, NDui pages from 2, the rest from 1.
+--- An ElvUI bar's is its own page, the bar's number: bar 3 sits in state 3, so
+--- with "1" a sequence put on it was saved for a State of its own that no
+--- list named, and not as the bar's Default.
 function GSE.LABDefaultState(buttonName)
     if string.sub(buttonName, 1, 3) == "BT4" then return "0" end
     if string.sub(buttonName, 1, 4) == "CPB_" then return "" end
     if string.sub(buttonName, 1, 5) == "NDui_" then return "2" end
-    return "1"
+    return string.match(buttonName, "^ElvUI_Bar(%d+)Button%d+$") or "1"
 end
 
 -- ── What a bar's pages are for ──────────────────────────────────────────────
@@ -324,10 +341,48 @@ if hooksecurefunc and RegisterStateDriver then
             pageDrivers[frame] = values
         end
     end)
+    -- And each one taken off again (DaylightUI, a bar 2-8 whose paging the
+    -- player removed): the bar is on one page from then on.
+    if UnregisterStateDriver then
+        hooksecurefunc("UnregisterStateDriver", function(frame, state)
+            if state == "page" and type(frame) == "table" then pageDrivers[frame] = nil end
+        end)
+    end
+end
+
+-- DaylightUI registers its bars' drivers while it loads, before GSE is there
+-- to see them, and keeps the rule nowhere on the bar. Its action bar module
+-- builds the rule on request, the same function it registers from: bar 1's
+-- (forms by [form:N] for a druid and a priest, Moonkin Form and Shadowform
+-- among them), and a bar 2-8's where the player set one. A rule registered
+-- since GSE loaded was seen above, and is the one in use. Nil for any other
+-- button, a bar on one page, and a DaylightUI that cannot be asked.
+local function daylightUIPageRule(buttonName)
+    local num = GSE.DaylightUIBar and GSE.DaylightUIBar(buttonName)
+    local DUI = num and _G.DaylightUI
+    local mod = type(DUI) == "table" and type(DUI.GetModule) == "function" and DUI:GetModule("ActionBars")
+    local ns = type(mod) == "table" and mod.enabled and mod.ns
+    local bars, paging = type(ns) == "table" and ns.Bars, type(ns) == "table" and ns.Paging
+    if type(bars) ~= "table" or type(paging) ~= "table" or type(bars.DEFS) ~= "table" then return nil end
+    for _, def in ipairs(bars.DEFS) do
+        if def.num == num then
+            local holder = type(bars.holders) == "table" and bars.holders[def.key]
+            if holder and pageDrivers[holder] then return pageDrivers[holder] end
+            local rule
+            if def.key == "main" then rule = paging.Rule() else rule = paging.BarRule(def) end
+            if type(rule) ~= "string" then return nil end
+            if holder then pageDrivers[holder] = rule end
+            return rule
+        end
+    end
 end
 
 local function readPageDriver(frame)
     if pageDrivers[frame] then return pageDrivers[frame] end
+    -- EllesmereUI registers its bars' through a RegisterStateDriver it took
+    -- before GSE loaded, which the hook above never sees. It keeps the
+    -- conditions on the bar, as they are now (false: a bar on one page).
+    if type(frame._eabPagingConds) == "string" then return frame._eabPagingConds end
     -- One set before GSE loaded: ElvUI keeps its bar's on the bar...
     local page = frame.GetAttribute and frame:GetAttribute("page")
     if type(page) == "string" and string.find(page, "[", 1, true) then return page end
@@ -343,6 +398,8 @@ end
 --- The page driver of the bar a button is on, or nil.
 function GSE.ButtonPageDriver(buttonName)
     local frame = buttonName and _G[buttonName]
+    local asked, rule = pcall(daylightUIPageRule, buttonName)
+    if asked and rule then return rule end
     for _ = 1, 3 do
         frame = type(frame) == "table" and frame.GetParent and frame:GetParent()
         if not frame then return nil end
@@ -370,9 +427,14 @@ local function spellName(spellID)
     return info and info.name
 end
 
+-- Whether bonus bar n comes up for a class on this client (set below, with
+-- the pages they come up on).
+local clientBonusBar
+
 -- One [..] group of a driver as a name: "Bear Form", "Shift + Cat Form".
--- Nil for a vehicle, Skyriding or a page switched by hand.
-local function describePageConditions(group, classfile)
+-- Nil for a vehicle, Skyriding or a page switched by hand -- and, with
+-- onlyClientBars, for a bonus bar the class has none of on this client.
+local function describePageConditions(group, classfile, onlyClientBars)
     local bonus, form, stealth, modifier, target
     for raw in string.gmatch(group, "[^,]+") do
         local test = string.lower(raw:match("^%s*(.-)%s*$"))
@@ -380,6 +442,7 @@ local function describePageConditions(group, classfile)
         local n = tonumber(test:match("^bonusbar:(%d+)$"))
         if n then
             if n < 1 or n > 4 then return nil end
+            if onlyClientBars and not clientBonusBar(classfile, n) then return nil end
             bonus = n
         end
         n = tonumber(test:match("^form:(%d+)$") or test:match("^stance:(%d+)$"))
@@ -391,12 +454,15 @@ local function describePageConditions(group, classfile)
     end
 
     local name
-    if bonus and stealth and classfile == "DRUID" then
+    if (bonus or form) and stealth and classfile == "DRUID" then
         name = spellName(PROWL)
     elseif bonus then
         name = spellName(BONUS_BAR_SPELLS[classfile] and BONUS_BAR_SPELLS[classfile][bonus])
     elseif form and GetShapeshiftFormInfo then
         name = spellName(select(4, GetShapeshiftFormInfo(form)))
+        -- A priest's Shadowform is form 1 to a macro condition and has no
+        -- place on the stance bar to be named from (DaylightUI pages by it).
+        if not name and form == 1 and classfile == "PRIEST" then name = spellName(BONUS_BAR_SPELLS.PRIEST[1]) end
     elseif stealth then
         name = spellName(classfile == "DRUID" and PROWL or STEALTH)
     end
@@ -410,7 +476,11 @@ end
 
 --- What a driver puts on each page: { [page] = { name, ... } }, in its order,
 --- and the page it gives when no condition holds (the bar's own).
-function GSE.PageDriverNames(driver, classfile)
+--- onlyClientBars: leave out a page the driver sends a bonus bar to that the
+--- class has none of on this client. EllesmereUI on WoW Forever sends all
+--- four for every class, and a form that brings up no bar is no State to
+--- choose (Moonkin Form and Shadowform there).
+function GSE.PageDriverNames(driver, classfile, onlyClientBars)
     local names, default = {}, nil
     for clause in string.gmatch(tostring(driver or "") .. ";", "([^;]*);") do
         -- DaylightUI tags a page with the form or page under it ("13:f1").
@@ -418,7 +488,7 @@ function GSE.PageDriverNames(driver, classfile)
         if page and not string.find(clause, "[", 1, true) then default = default or page end
         if page then
             for group in string.gmatch(clause, "%[([^%]]*)%]") do
-                local name = describePageConditions(group, classfile)
+                local name = describePageConditions(group, classfile, onlyClientBars)
                 if name then
                     names[page] = names[page] or {}
                     local seen = false
@@ -440,10 +510,140 @@ function GSE.DriverStateForPage(buttonName, page)
     local driver = GSE.ButtonPageDriver(buttonName)
     if not (driver and page and page >= 1 and page <= 10) then return nil end
     local _, classfile = UnitClass("player")
-    local names, default = GSE.PageDriverNames(driver, classfile)
+    local names, default = GSE.PageDriverNames(driver, classfile, true)
     local key = tostring(page)
     if key ~= default and names[key] then return key end
     return nil
+end
+
+-- A LibActionButton button's states; Blizzard's main bar's and Dominos'
+-- stance, form and stealth pages (7-10); and the state a row is saved for
+-- (saved), so it is never lost from the list.
+local BONUS_PAGES = {"7", "8", "9", "10"}
+-- The form, stance or stealth that puts a class on each of those pages
+-- (6 + its bonus bar, SpellShapeshiftForm.BonusActionBar). Soar brings up the
+-- Skyriding bar (11), so it names no page.
+-- A spell this client doesn't have names nothing; the page shows its number.
+local FORM_PAGES = {
+    DRUID = {["7"] = 768, ["9"] = 5487},
+    ROGUE = {["7"] = 1784},
+}
+-- Only a form that brings up a bar on this client is a State to choose
+-- (Larry, 2026-11-20). Tree of Life has one in The Burning Crusade and none
+-- from Mists of Pandaria on (Wrath and Cataclysm are left as they were, named);
+-- Moonkin Form has one from The Burning Crusade on, but not on WoW Forever;
+-- Shadow Dance from Wrath of the Lich King to Mists of Pandaria.
+if GSE.GameMode < 5 then FORM_PAGES.DRUID["8"] = 33891 end
+if GSE.GameMode >= 2 and not GSE.IsForever then FORM_PAGES.DRUID["10"] = 24858 end
+if GSE.GameMode >= 3 and GSE.GameMode <= 5 then FORM_PAGES.ROGUE["8"] = 51713 end
+-- Warriors' stances page the bar up to Cataclysm, and on WoW Forever; from
+-- Mists of Pandaria on they leave it where it is.
+if GSE.GameMode < 5 or GSE.IsForever then
+    FORM_PAGES.WARRIOR = {["7"] = 2457, ["8"] = 71, ["9"] = 2458}
+end
+-- Shadowform has a bar of its own from The Burning Crusade to Mists of
+-- Pandaria; on Classic Era, WoW Forever and Retail it leaves the bar where it
+-- is. A monk's stances have theirs in Mists of Pandaria, the one client with
+-- them. Unnamed, those bars were no State to choose, and a Default row stays
+-- off them.
+if GSE.GameMode >= 2 and GSE.GameMode <= 5 then
+    FORM_PAGES.PRIEST = {["7"] = 15473}
+end
+if GSE.GameMode == 5 then
+    FORM_PAGES.MONK = {["7"] = 103985, ["8"] = 115069, ["9"] = 115070}
+end
+-- A warrior where stances turn the bar, and a monk, is never out of a stance:
+-- the bar they play on is always a stance bar. Their stance pages, or nil for
+-- every other class and client.
+local ALWAYS_IN_STANCE = { WARRIOR = true, MONK = true }
+local function alwaysStancePages()
+    local classfile = GetClassInfo and select(2, GetClassInfo(GSE.GetCurrentClassID()))
+    return classfile and ALWAYS_IN_STANCE[classfile] and FORM_PAGES[classfile] or nil
+end
+clientBonusBar = function(classfile, n)
+    local pages = classfile and FORM_PAGES[classfile]
+    return pages ~= nil and pages[tostring(6 + n)] ~= nil
+end
+-- A button's states by name, "Cat Form / Prowl", the page number left out
+-- (Larry, 2026-11-20: "show just Stealth, hide the page number"): from its bar's page
+-- driver (GSE.PageDriverNames), where the bar addon lets the player choose
+-- the pages; Blizzard's main bar and Dominos by the pages above. A state
+-- nothing names shows its number.
+local function stateNamer(buttonName)
+    local classfile = GetClassInfo and select(2, GetClassInfo(GSE.GetCurrentClassID()))
+    -- Not Dominos' driver: it pages by states of its own ("[bonusbar:1]cat;
+    -- base"), which name no page, and with it no page had a name. Its pages
+    -- are counted as Blizzard's are (GSE.OverrideStatesFor).
+    local frame = buttonName and _G[buttonName]
+    local dominos = type(frame) == "table" and frame.SetShowGridInsecure ~= nil
+    local driver = not dominos and GSE.ButtonPageDriver and GSE.ButtonPageDriver(buttonName)
+    -- A LibActionButton bar's states are its own, each named as its driver
+    -- has it; any other bar's are the pages a stance brings up here.
+    local lab = type(frame) == "table" and frame.state_types ~= nil
+    local names = driver and GSE.PageDriverNames(driver, classfile, not lab)
+    return function(k)
+        local name
+        if names then
+            name = names[k] and table.concat(names[k], " / ")
+        elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
+            local spell = classfile and FORM_PAGES[classfile] and FORM_PAGES[classfile][k]
+            local info = spell and GSE.GetSpellInfo(spell)
+            name = info and info.name
+        end
+        return name or k
+    end
+end
+-- The pages a stance, form, stealth or modifier turns a button's bar to, as
+-- State keys ("7"), or nil for a bar that turns to none: a bar paging by its
+-- own driver (EllesmereUI, DaylightUI), the pages it sends a form or modifier
+-- to; Blizzard's main bar and Dominos, 7-10. Not a LibActionButton bar,
+-- whose states are its own. The State choices and the Default row's stance
+-- pages (GSE.ButtonStancePages) are both made from this.
+local function statePages(buttonName, frame)
+    if not (GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName)) then return nil end
+    local driver = frame.SetShowGridInsecure == nil and GSE.ButtonPageDriver(buttonName)
+    if not driver then return BONUS_PAGES end
+    local _, classfile = UnitClass("player")
+    local names, default = GSE.PageDriverNames(driver, classfile, true)
+    local pages = {}
+    for page = 1, 10 do
+        local key = tostring(page)
+        if key ~= default and names[key] then pages[#pages + 1] = key end
+    end
+    return pages
+end
+--- A button's states to put a sequence on: { [state] = label }, and the
+--- states in order, Default first -- or nil when it has only the one. The
+--- Button Bindings' State column and the action buttons' right-click menu.
+function GSE.OverrideStatesFor(buttonName, saved)
+    local frame = buttonName and _G[buttonName]
+    local states, order = {["Default"] = "Default"}, {"Default"}
+    local stateLabel = stateNamer(buttonName)
+    local function add(k)
+        if k ~= nil and not states[k] then
+            states[k] = stateLabel(k)
+            table.insert(order, k)
+        end
+    end
+    if frame and frame.state_types then
+        local default = GSE.LABDefaultState(buttonName)
+        for k in pairs(frame.state_types) do
+            if k ~= default and k ~= buttonName then add(k) end
+        end
+    else
+        for _, k in ipairs(frame and statePages(buttonName, frame) or {}) do add(k) end
+    end
+    add(saved)
+    if #order == 1 then return nil end
+    -- Default, then the pages by number, then any state named otherwise.
+    table.sort(order, function(a, b)
+        if a == "Default" or b == "Default" then return a == "Default" and b ~= "Default" end
+        local na, nb = tonumber(a), tonumber(b)
+        if na and nb then return na < nb end
+        if na or nb then return na ~= nil end
+        return tostring(a) < tostring(b)
+    end)
+    return states, order
 end
 
 --- The action-bar overrides to put on for a spec, from its own rows and the
@@ -481,20 +681,217 @@ function GSE.OverridesToApply(specRows, loadoutRows)
     return rows, pinned
 end
 
---- The sequence an overridden button runs now: on a LibActionButton bar, the
---- one on the state it is in, as each form, stance or stealth can have its
---- own; else the button's.
+--- The pages a stance, form or stealth turns a button's bar to, where its
+--- Default row stays off: { [page] = true }. The pages the button's State
+--- choices are made from (statePages) -- and the one list for the button's
+--- own click (gse-stance-<page>, Events.lua) and for what GSE shows on it, so
+--- the two always agree -- but for the page the button is on in no stance: a
+--- Dominos bar set on the bonus-bar slots is no stance bar. None on a
+--- LibActionButton bar, which keeps the Default row in every state, or on a
+--- bar GSE sees no paging of. Read on every sequence press (GSE.UpdateIcon):
+--- no names are looked up here.
+function GSE.ButtonStancePages(buttonName)
+    local pages = {}
+    local frame = buttonName and _G[buttonName]
+    if type(frame) ~= "table" or frame.state_types or (frame.SetState and frame.SetShowGridInsecure == nil) then
+        return pages
+    end
+    local base = frame.GetAttribute and tonumber(frame:GetAttribute("action-base"))
+    local home = base and base > 0 and math.floor((base - 1) / 12) + 1
+    for _, k in ipairs(statePages(buttonName, frame) or {}) do
+        local page = tonumber(k)
+        if page ~= home then pages[page] = true end
+    end
+    return pages, home
+end
+
+--- The sequence an overridden button runs now: the row pinned to the state
+--- it is in, as each form, stance or stealth can have its own; else the
+--- button's Default row. On a bar that turns to another one for a stance,
+--- form or stealth (Blizzard's main bar, Dominos, a bar addon's own pages)
+--- that bar is its own: with no row pinned there, nothing runs (Larry,
+--- 2026-11-20; GSE.ButtonStancePages). A LibActionButton bar keeps the
+--- Default row in every state without one, and the GSE Action Bar has no
+--- states.
 function GSE.ButtonOverrideSequence(buttonName)
     local byState = GSE.ButtonOverrideStates and GSE.ButtonOverrideStates[buttonName]
-    local button = byState and _G[buttonName]
-    if button and button.GetAttribute then
+    local button = _G[buttonName]
+    if type(button) == "table" and button.GetAttribute then
         local st
         if GSE.OverrideStateFor then st = GSE.OverrideStateFor(button) else st = button:GetAttribute("state") end
-        if st ~= nil and byState[tostring(st)] then return byState[tostring(st)] end
+        if st ~= nil and byState and byState[tostring(st)] then return byState[tostring(st)] end
+        if st ~= nil and GSE.OverrideStateFor and GSE.ButtonStancePages(buttonName)[tonumber(st)] then return nil end
     end
     -- No row for this state: the Default row, where the button has one.
     if GSE.ButtonOverrideDefaults and not GSE.ButtonOverrideDefaults[buttonName] then return nil end
     return GSE.ButtonOverrides and GSE.ButtonOverrides[buttonName]
+end
+
+-- ── A button by the action slot it is on ────────────────────────────────────
+--
+-- Each bar addon names its buttons its own way, and a row is saved under the
+-- button's name: a sequence put on EllesmereUI's first button was gone from
+-- the bars the day the player ran ElvUI, or DaylightUI, or no bar addon at
+-- all (Larry, 2026-11-21: "the Sequence and Binds should stay"). What every
+-- one of them agrees on is the action slot a button holds on its own page
+-- (Blizzard's bars 1-8 are pages 1, 6, 5, 3, 4, 13, 14 and 15), and the
+-- game's own key bindings go by the same bars. So a row saved for another bar
+-- addon's button is moved to the button on that slot in the one running now.
+
+local BAR_PAGES = { 1, 6, 5, 3, 4, 13, 14, 15 }
+local BAR_OF_PAGE = {}
+for bar, page in ipairs(BAR_PAGES) do BAR_OF_PAGE[page] = bar end
+local BLIZZARD_BARS = {
+    "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton",
+    "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button", "MultiBar7Button",
+}
+
+-- A bar addon whose buttons are named by bar and button. byBarOrder: its bars
+-- 1-8 are Blizzard's, in Blizzard's order; otherwise bar n is page n.
+local function barFamily(name, pattern, format, byBarOrder)
+    return {
+        name = name,
+        slot = function(button)
+            local bar, index = string.match(button, pattern)
+            bar, index = tonumber(bar), tonumber(index)
+            local page = bar
+            if byBarOrder then page = bar and BAR_PAGES[bar] end
+            if not page or not index or index < 1 or index > 12 then return nil end
+            return (page - 1) * 12 + index
+        end,
+        button = function(slot)
+            local page, index = math.floor((slot - 1) / 12) + 1, (slot - 1) % 12 + 1
+            local bar = page
+            if byBarOrder then bar = BAR_OF_PAGE[page] end
+            return bar and string.format(format, bar, index) or nil
+        end,
+    }
+end
+-- A bar addon whose buttons are named by the slot itself.
+local function slotFamily(name, prefix)
+    return {
+        name = name,
+        slot = function(button) return tonumber(string.match(button, "^" .. prefix .. "(%d+)$")) end,
+        button = function(slot) return prefix .. slot end,
+    }
+end
+-- The bar addons that take the bars over, then Blizzard's own (Dominos keeps
+-- Blizzard's names for these slots). ConsolePort's buttons go by the pad's
+-- keys, Button Forge's and the GSE Action Bar's by nothing shared: their rows
+-- stay where they are.
+local BAR_FAMILIES = {
+    slotFamily("EllesmereUI", "EABButton"),
+    barFamily("DaylightUI", "^DaylightUIBar(%d+)Button(%d+)$", "DaylightUIBar%dButton%d", true),
+    barFamily("ElvUI", "^ElvUI_Bar(%d+)Button(%d+)$", "ElvUI_Bar%dButton%d"),
+    slotFamily("Bartender4", "BT4Button"),
+    barFamily("NDui", "^NDui_ActionBar(%d+)Button(%d+)$", "NDui_ActionBar%dButton%d", true),
+    {
+        name = "Blizzard",
+        slot = function(button)
+            for bar, prefix in ipairs(BLIZZARD_BARS) do
+                local index = tonumber(string.match(button, "^" .. prefix .. "(%d+)$"))
+                if index and index >= 1 and index <= 12 then return (BAR_PAGES[bar] - 1) * 12 + index end
+            end
+        end,
+        button = function(slot)
+            local bar = BAR_OF_PAGE[math.floor((slot - 1) / 12) + 1]
+            return bar and BLIZZARD_BARS[bar] .. ((slot - 1) % 12 + 1) or nil
+        end,
+    },
+}
+
+--- The bar addon a button name is of ("EllesmereUI", "ElvUI", "Blizzard"...)
+--- and the action slot it holds on its own page, or nil for any other button.
+function GSE.ButtonHomeSlot(buttonName)
+    if type(buttonName) ~= "string" then return nil end
+    for _, family in ipairs(BAR_FAMILIES) do
+        local slot = family.slot(buttonName)
+        if slot and slot >= 1 and slot <= 180 then return family.name, slot end
+    end
+end
+
+-- The bar addon running the bars now: the first that has made a bar's first
+-- button, else Blizzard's (and Dominos, on Blizzard's names).
+local function activeBarFamily()
+    for _, family in ipairs(BAR_FAMILIES) do
+        for _, page in ipairs(BAR_PAGES) do
+            local name = family.button((page - 1) * 12 + 1)
+            if family.name == "Blizzard" or (name and type(_G[name]) == "table") then return family end
+        end
+    end
+end
+
+--- Move the rows saved for another bar addon's buttons to the buttons on the
+--- same slots in the one running now: rows, a spec's or a loadout's. A row
+--- keeps its State and everything else. One whose slot has no button here, or
+--- whose button here already has a row for that State, is left as it is, for
+--- the day its own bar addon is back. Returns how many were moved.
+function GSE.MoveRowsToActiveBars(rows)
+    if type(rows) ~= "table" then return 0 end
+    local active = activeBarFamily()
+    local moves = {}
+    for key, row in pairs(rows) do
+        if type(row) == "table" and type(row.Bind) == "string" then
+            local family, slot = GSE.ButtonHomeSlot(row.Bind)
+            local target = family and family ~= active.name and active.button(slot)
+            if target and type(_G[target]) == "table" then
+                moves[#moves + 1] = { key = key, row = row, target = target }
+            end
+        end
+    end
+    local moved = 0
+    for _, move in ipairs(moves) do
+        local state = move.row.State
+        local key = move.target .. (state ~= nil and ("-" .. tostring(state)) or "")
+        if rows[key] == nil then
+            rows[move.key] = nil
+            move.row.Bind = move.target
+            rows[key] = move.row
+            moved = moved + 1
+        end
+    end
+    return moved
+end
+
+--- Put a spec's Default rows on the stances they ran in before a stance bar
+--- became a bar of its own, once. Only for a class that is never out of a
+--- stance (alwaysStancePages): its Default rows ran on every stance with no
+--- row of its own, and would now never run at all. A row is marked
+--- StancesCopied when it has been looked at -- one made after this is marked
+--- as it is made (GSE.SetOverrideData) -- so a stance the player then unticks
+--- stays unticked. A button that is not there yet waits for a login that has
+--- it; a bar set on a stance's own slots (Dominos) never turns, and keeps its
+--- Default row as it is. Returns how many rows were added.
+function GSE.CopyDefaultRowsToStances(specKey)
+    local stances = alwaysStancePages()
+    local rows = stances and GSE.SpecOverrides(specKey, false)
+    if type(rows) ~= "table" then return 0 end
+    local defaults, has = {}, {}
+    for _, row in pairs(rows) do
+        if type(row) == "table" and type(row.Bind) == "string" then
+            if row.State ~= nil then
+                has[row.Bind .. "\001" .. tostring(row.State)] = true
+            elseif not row.StancesCopied then
+                defaults[#defaults + 1] = row
+            end
+        end
+    end
+    local added = 0
+    for _, row in ipairs(defaults) do
+        if type(_G[row.Bind]) == "table" then
+            local pages, home = GSE.ButtonStancePages(row.Bind)
+            if not (home and home >= 7 and home <= 10) then
+                for key in pairs(stances) do
+                    if pages[tonumber(key)] and not has[row.Bind .. "\001" .. key] then
+                        rows[row.Bind .. "-" .. key] = { Bind = row.Bind, State = key, Sequence = row.Sequence }
+                        added = added + 1
+                    end
+                end
+            end
+            row.StancesCopied = true
+        end
+    end
+    return added
 end
 
 --- Whether an overridden button runs sequence in any of its states.
@@ -547,15 +944,19 @@ function GSE.OverrideLayerFor(buttonName, state)
 end
 
 --- Put a sequence on buttonName for the current spec, in state (a stance,
---- form or stealth; nil: the Default row). layer "loadout" keeps it to the
---- active talent loadout; anything else is the spec's, for every loadout --
---- and then the active loadout's own row for the button and state goes, or it
---- would go on hiding the change.
-function GSE.SetOverrideData(buttonName, sequenceId, layer, state)
-    local spec, loadout = GSE.CurrentSpecKey(), GSE.ActiveBindingLoadout()
+--- form or stealth; nil: the Default row). layer "loadout" keeps it to a
+--- talent loadout -- loadout, or the active one when that is nil; anything
+--- else is the spec's, for every loadout -- and then the active loadout's own
+--- row for the button and state goes, or it would go on hiding the change.
+function GSE.SetOverrideData(buttonName, sequenceId, layer, state, loadout)
+    local spec, active = GSE.CurrentSpecKey(), GSE.ActiveBindingLoadout()
+    loadout = GSE.HasTalentLoadouts() and loadout ~= nil and tostring(loadout) or active
     if state ~= nil then state = tostring(state) end
     local key = state and (buttonName .. "-" .. state) or buttonName
     local bind = { Bind = buttonName, State = state, Sequence = sequenceId }
+    -- A Default row made from now on is as the player ticked it: not one for
+    -- GSE.CopyDefaultRowsToStances to add stances to.
+    if state == nil and alwaysStancePages() then bind.StancesCopied = true end
     local function put(t)
         for _, k in ipairs(overrideKeysFor(t, buttonName, state)) do t[k] = nil end
         t[key] = bind
@@ -565,7 +966,7 @@ function GSE.SetOverrideData(buttonName, sequenceId, layer, state)
         return "loadout"
     end
     put(GSE.SpecOverrides(spec, true))
-    local own = GSE.SpecLoadoutOverrides(spec, loadout, false)
+    local own = GSE.SpecLoadoutOverrides(spec, active, false)
     for _, k in ipairs(overrideKeysFor(own, buttonName, state)) do own[k] = nil end
     return "spec"
 end

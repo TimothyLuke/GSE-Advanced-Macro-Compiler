@@ -783,9 +783,12 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                     })
                 end)
             end
-            rootDescription:CreateButton(L["Keybindings"], function()
-                GSE.ShowKeyBindings()
-            end)
+            -- Only where the editor has a Bindings area (buildKeybindMenu).
+            if GSE.KeybindingsEnabled() then
+                rootDescription:CreateButton(L["Keybindings"], function()
+                    GSE.ShowKeyBindings()
+                end)
+            end
             if not GSE.isEmpty(id) then
                 rootDescription:CreateButton(L["Delete"], function()
                     editframe.GUIDeleteSequence(classid, id)
@@ -1212,14 +1215,16 @@ end
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
     if not unique then return end
 
-    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE
-    -- Action Bar carries the keys): no chooser and no keybind pages -- the
-    -- Bindings node, and a keybind page restored from a past session, land on
-    -- the current spec's Button Bindings.
-    if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
+    -- The editor has no Bindings area where GSE binds no keys itself, and no
+    -- Button Bindings page anywhere (buildKeybindMenu): a page restored from a
+    -- past session is not there to open.
+    if not GSE.KeybindingsEnabled() then return end
+    -- The area has the one kind of page: its node, and a Button Bindings
+    -- page from a past session, open the current spec's Keybindings.
+    if #unique == 1 or unique[2] == "AO" then
         if editframe.treeContainer and editframe.treeContainer.SelectByValue then
             editframe.forceTreeSelection = true
-            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("KB", GSE.CurrentSpecKey()))
         end
         return
     end
@@ -2171,7 +2176,7 @@ local function ManageTree(editframe)
         table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
             icon = Statics.ActionsIcons.Add })
         for _, g in ipairs(groups) do table.insert(tree, g) end
-        if grouping ~= "class" then table.insert(tree, bindings) end
+        if grouping ~= "class" and bindings then table.insert(tree, bindings) end
         editframe.treeGroupedPaths = pathOf
     else
         local subtree = {
@@ -2234,7 +2239,9 @@ local function ManageTree(editframe)
         end)
 
         table.insert(tree, subtree)
-        table.insert(tree, editframe.buildKeybindMenu())
+        -- nil where the editor has no Bindings area (buildKeybindMenu).
+        local bindings = editframe.buildKeybindMenu()
+        if bindings then table.insert(tree, bindings) end
         local variables, variablePaths = editframe.buildVariablesMenu()
         table.insert(tree, variables)
         -- "VARIABLES\001<name>" -> its place in its class folder.

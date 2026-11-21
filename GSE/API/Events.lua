@@ -79,7 +79,8 @@ local SHBT = CreateFrame("Frame", nil, nil, "SecureHandlerBaseTemplate,SecureFra
 -- page is page 6 + offset.
 --
 -- Which row runs there: a row pinned to that stance/form/stealth page
--- (gse-page-<page>, 7-10) on that page, else the Default row (gse-default);
+-- (gse-page-<page>, 7-10) on that page; on any other page the Default row
+-- (gse-default), which stays off the stance pages (gse-stance-<page>);
 -- with neither the button is a plain action button. And only on an empty or
 -- macro slot: a real action in the slot wins, as it always has (vehicle,
 -- skyriding, possession and override bar controls included).
@@ -105,7 +106,11 @@ local BAR_SWAP_RESOLVE = [[
     local formPage = effectiveAction and floor((effectiveAction - 1) / 12) + 1
     local pinned = formPage and formPage <= 10
         and self:GetAttribute("gse-page-" .. formPage) and formPage or nil
-    local runs = pinned or self:GetAttribute("gse-default")
+    -- A stance, form or stealth page is a bar of its own (gse-stance-<page>):
+    -- the Default row stays off it, so with no row pinned there the button is
+    -- that bar's own, empty or not (Larry, 2026-11-20).
+    local stance = formPage and formPage <= 10 and self:GetAttribute("gse-stance-" .. formPage)
+    local runs = pinned or (not stance and self:GetAttribute("gse-default"))
     local clicks = false
     local swapped = 0
     if effectiveAction then
@@ -240,9 +245,11 @@ local function daylightUIBar(buttonName)
 end
 GSE.DaylightUIBar = daylightUIBar
 
--- asDefault: the button's Default row, which runs on every page no pinned row
--- holds (gse-default). Re-arming without it leaves that as it was.
-local function secureArmGSEButton(button, sequenceName, asDefault)
+-- asDefault: the button's Default row (gse-default), which runs on every page
+-- but the stance, form and stealth pages given in stancePages: those are
+-- marked gse-stance-<page>, and the snippets keep the Default row off them.
+-- Re-arming without it leaves both as they were.
+local function secureArmGSEButton(button, sequenceName, asDefault, stancePages)
     if not button then return end
     -- clickbutton holds the GSE executor frame. It MUST be set from insecure Lua
     -- with the real frame object, NOT from inside the secure snippet via a frame
@@ -260,6 +267,10 @@ local function secureArmGSEButton(button, sequenceName, asDefault)
     if executor and executor ~= button and not InCombatLockdown() then
         button:SetAttribute("clickbutton", executor)
     end
+    local marks = {}
+    for _, page in ipairs(asDefault and stancePages or {}) do
+        marks[#marks + 1] = "b:SetAttribute('gse-stance-" .. page .. "', true)"
+    end
     SHBT:SetFrameRef("gseArmButton", button)
     SHBT:Execute([[
         local b = self:GetFrameRef("gseArmButton")
@@ -268,9 +279,10 @@ local function secureArmGSEButton(button, sequenceName, asDefault)
         b:SetAttribute("type", "click")
     ]] .. (asDefault and [[
         b:SetAttribute("gse-default", true)
+        for page = 1, 10 do b:SetAttribute("gse-stance-" .. page, nil) end
     ]] or "") .. (isBonusPaged(button) and [[
         b:SetAttribute("gse-bonus-paged", true)
-    ]] or ""))
+    ]] or "") .. table.concat(marks, " "))
 end
 
 -- Arm a row pinned to a stance, form or stealth page (7-10): the snippets run
@@ -321,6 +333,7 @@ local function secureDisarmGSEButton(button, pages)
         b:SetAttribute("gse-secure", nil)
         b:SetAttribute("gse-default", nil)
         b:SetAttribute("gse-bonus-paged", nil)
+        for page = 1, 10 do b:SetAttribute("gse-stance-" .. page, nil) end
         b:SetAttribute("type", "action")
     ]] .. table.concat(unmark, " "))
 end
@@ -329,7 +342,13 @@ end
 -- stance, form or stealth page, or else the button's Default row.
 local function armRow(button, buttonName, sequenceName, state)
     if state == nil then
-        secureArmGSEButton(button, sequenceName, true)
+        -- The pages a stance, form or stealth puts this button on
+        -- (GSE.ButtonStancePages, which what GSE shows on it reads too).
+        local stancePages = {}
+        for page in pairs(GSE.ButtonStancePages and GSE.ButtonStancePages(buttonName) or {}) do
+            stancePages[#stancePages + 1] = page
+        end
+        secureArmGSEButton(button, sequenceName, true, stancePages)
         return
     end
     state = tostring(state)
@@ -644,6 +663,10 @@ local function overrideShowing(button)
         return button._state_type == "custom"
             and button:GetAttribute("gse-lab-state-" .. tostring(button:GetAttribute("state"))) and true or false
     end
+    -- In a stance, form or stealth the button has no row for, nothing of
+    -- GSE's shows: the cooldown, count and glows kept for the override's
+    -- spell were drawn on the empty button there.
+    if not overrideSequence(button) then return false end
     return not GSE.ActionBarSlotHasForeignAction(button)
 end
 GSE.ActionBarOverrideShowing = overrideShowing
@@ -1180,6 +1203,10 @@ local function hookPressFlash(button)
     end)
 end
 
+-- Puts DaylightUI's filled look on a button running a sequence; set once its
+-- skin is hooked (hookDaylightUIDress, below).
+local dressDaylightUIOverride
+
 local function repaintGSEOverrideButton(button, defer)
     if not button or not button.GetAttribute then return end
 
@@ -1189,6 +1216,7 @@ local function repaintGSEOverrideButton(button, defer)
         -- slot; re-asserted here because Dominos may re-evaluate grid state after
         -- our initial apply (hence the staggered repaint schedule).
         setOverrideButtonForcedShown(button, true)
+        if dressDaylightUIOverride then dressDaylightUIOverride(button) end
         local btnName = button:GetName()
         local icon = button.icon or (btnName and _G[btnName .. "Icon"])
         if not icon then return end
@@ -1597,6 +1625,46 @@ local function hookDaylightUIPaint()
     end)
 end
 
+-- DaylightUI dresses a button by what is in its action slot, and an
+-- override's slot is empty: the button's shell (its border), key and edge
+-- shading are hidden, or see-through with its empty buttons shown, so the
+-- sequence's icon sat bare beside the bar's other icons (Larry, 2026-11-21).
+-- The filled look goes back on wherever DaylightUI puts the empty one: after
+-- its skin's UpdateEmpty and UpdateRange, which its paints, a drag and its
+-- redraws all go through. The ends of its own fade (eg*) are set too, so a
+-- fade under way ends filled; taken off again, the button's next paint by
+-- DaylightUI is the empty look as ever.
+local function dressDaylightUIButton(skin, button)
+    if button:GetAttribute("type") ~= "click" or not overrideSequence(button) then return end
+    local parts = skin.GetParts(button)
+    if type(parts) ~= "table" then return end
+    local key = (type(parts.L) == "table" and parts.L.keybind == false) and 0 or 1
+    parts.egB, parts.egK, parts.egH = 1, key, 1
+    if not parts.emptyEasing then
+        parts.eB, parts.eK, parts.eH = 1, key, 1
+        if parts.back then parts.back:SetAlpha(1) end
+        if parts.key then parts.key:SetAlpha(key) end
+        local highlight = button.GetHighlightTexture and button:GetHighlightTexture()
+        if highlight then highlight:SetAlpha(1) end
+    end
+    if parts.shade then parts.shade:SetAlpha(parts.tintA or 1) end
+end
+
+local function hookDaylightUIDress()
+    if dressDaylightUIOverride then return end
+    local DUI = _G.DaylightUI
+    local mod = type(DUI) == "table" and type(DUI.GetModule) == "function" and DUI:GetModule("ActionBars")
+    local skin = type(mod) == "table" and type(mod.ns) == "table" and mod.ns.Skin
+    if type(skin) ~= "table" or type(skin.GetParts) ~= "function" or type(skin.UpdateEmpty) ~= "function" then return end
+    dressDaylightUIOverride = function(button)
+        -- Every button's range and usable pass comes through here.
+        if type(button) ~= "table" or not button.GetAttribute or not button:GetAttribute("gse-button") then return end
+        pcall(dressDaylightUIButton, skin, button)
+    end
+    hooksecurefunc(skin, "UpdateEmpty", dressDaylightUIOverride)
+    if type(skin.UpdateRange) == "function" then hooksecurefunc(skin, "UpdateRange", dressDaylightUIOverride) end
+end
+
 -- EllesmereUI and DaylightUI route action-bar keybinds to native engine
 -- commands instead of clicking the visible button frame (DaylightUI's keys
 -- press the game's hidden buttons), so route those keys back through the
@@ -1633,6 +1701,7 @@ local function overrideActionButton(savedBind, force, pinnedStates)
     _G[Button]:SetAttribute("gse-button", Sequence)
     local isDaylightUIButton = daylightUIBar(Button) ~= nil
     if isDaylightUIButton then hookDaylightUIPaint() end
+    if isDaylightUIButton then hookDaylightUIDress() end
     if (string.sub(Button, 1, 9) == "EABButton" or isDaylightUIButton) and not InCombatLockdown() then
         local cmd = _G[Button].commandName
         if cmd then
@@ -1985,11 +2054,52 @@ function GSE:ACTIONBAR_SLOT_CHANGED()
     reevaluateAllOverrideButtons()
 end
 
+-- A button shows which of its rows runs in the stance, form or stealth the
+-- player is in now: that row's sequence, or an empty button where it has none
+-- for it (a Default row stays off a stance bar; a row pinned to one stance is
+-- not on another). Nothing else repaints it when the stance changes: on
+-- Retail a main-bar button on an empty slot kept the last row's icon until
+-- the mouse went over it. A real action in the slot is the bar's to show, a
+-- LibActionButton bar draws its own states, and the GSE Action Bar has none.
+-- Icons only, so it runs in combat too.
+local function repaintStanceRows()
+    for buttonName in pairs(GSE.ButtonOverrides or {}) do
+        local button = _G[buttonName]
+        if button and button.GetAttribute and button:GetAttribute("gse-button") and not button.SetState
+            and not button.gseActionBarButton and not GSE.ActionBarSlotHasForeignAction(button) then
+            local runs = GSE.ButtonOverrideSequence(buttonName) ~= nil
+            local icon = button.icon or _G[buttonName .. "Icon"]
+            local texture = getGSEButtonIcon(button)
+            if icon and texture then
+                icon:SetTexture(texture)
+                icon:Show()
+            elseif icon and not runs then
+                -- Nothing runs here: not a sequence whose icon is not known yet.
+                icon:SetTexture(nil)
+            end
+            if not runs and overrideSpell[button] then
+                -- What the override drew for its spell goes with it: the
+                -- swipe and its number, the count, the glows.
+                overrideSpell[button] = nil
+                applyOverrideGlow(button)
+                applyOverrideAssist(button)
+                if button.cooldown and button.cooldown.Clear then button.cooldown:Clear() end
+                if button.chargeCooldown and button.chargeCooldown.Clear then button.chargeCooldown:Clear() end
+                if button.Count and button.Count.SetText then button.Count:SetText("") end
+            end
+            setWatermarkVisible(buttonName, runs)
+        end
+    end
+end
+
 -- A stance, form or stealth puts Blizzard's main bar on another page, where a
 -- row pinned to it starts or stops running. In combat the click itself
 -- decides (BAR_SWAP_ONCLICK); out of it, the button shows it now.
 function GSE:UPDATE_BONUS_ACTIONBAR()
     reevaluateAllOverrideButtons()
+    -- Now, and once the bar has turned its own buttons to the new page.
+    repaintStanceRows()
+    C_Timer.After(0, repaintStanceRows)
 end
 
 -- After a GSE override is removed from a button, force WoW to repaint the
@@ -2146,10 +2256,23 @@ local function LoadOverrides(force)
                 loadoutRows = GSE_C["ActionBarBinds"]["LoadOuts"][GetSpec()][selected]
             end
         end
+        -- Rows saved under another bar addon's buttons, onto this one's
+        -- (GSE.MoveRowsToActiveBars, Profiles.lua): the bar addon changed.
+        if GSE.MoveRowsToActiveBars then
+            GSE.MoveRowsToActiveBars(GSE.SpecOverrides(GetSpec(), false))
+            GSE.MoveRowsToActiveBars(loadoutRows)
+        end
+        -- Once: a warrior's or monk's Default rows onto the stances they ran
+        -- in before (GSE.CopyDefaultRowsToStances, Profiles.lua).
+        local copied = GSE.CopyDefaultRowsToStances and GSE.CopyDefaultRowsToStances(GetSpec()) or 0
+        if copied > 0 then
+            GSE.Print(L["Each stance's bar now has its own sequences. Yours were put on every stance, where they ran before."])
+        end
         local rows, pinned = GSE.OverridesToApply(GSE.SpecOverrides(GetSpec(), false), loadoutRows)
         for _, v in ipairs(rows) do
             overrideActionButton(v, force, pinned[v.Bind])
         end
+        repaintStanceRows()
 
         -- Repaint the real action icon on any button whose override was just
         -- removed and NOT re-armed above. removeGSEWatermark() already cleared the
@@ -2318,22 +2441,55 @@ end
 --- (GSE.SetOverrideData); nil changes the button where its override already
 --- comes from, so the change is the one that shows. Returns the layer written.
 --- The sequence goes on the state the button is in (GSE.OverrideStateFor):
---- put on the stealth bar, it runs on the stealth bar.
-function GSE.CreateActionBarOverride(buttonName, sequenceId, layer)
+--- put on the stealth bar, it runs on the stealth bar. The right-click menu
+--- names its own: state, one of GSE.OverrideStatesFor's ("Default": the
+--- Default row), and loadout, the talent loadout a "loadout" row is for
+--- (nil: the active one).
+function GSE.CreateActionBarOverride(buttonName, sequenceId, layer, state, loadout)
     if InCombatLockdown() then return end
-    local state = GSE.OverrideStateFor(_G[buttonName])
+    if state == nil then
+        state = GSE.OverrideStateFor(_G[buttonName])
+    elseif state == "Default" then
+        state = nil
+    end
     layer = layer or (GSE.OverrideLayerFor(buttonName, state) == "loadout" and "loadout" or "spec")
-    local written = GSE.SetOverrideData(buttonName, sequenceId, layer, state)
+    local written = GSE.SetOverrideData(buttonName, sequenceId, layer, state, loadout)
     GSE.ReloadOverrides()
     return written
 end
 
+--- Put sequence id on buttonName for each of states, a row apiece: a list
+--- of the button's states, "Default" its Default row (the right-click menu's
+--- ticked states -- a warrior's three stances, say). An empty list is the
+--- state the button is in, as GSE.CreateActionBarOverride has it. Returns the
+--- layer written.
+function GSE.CreateActionBarOverrides(buttonName, sequenceId, layer, states, loadout)
+    if InCombatLockdown() then return end
+    -- All but the last as data; the last through the call that puts them on.
+    for i = 1, #states - 1 do
+        GSE.SetOverrideData(buttonName, sequenceId, layer, states[i] ~= "Default" and states[i] or nil, loadout)
+    end
+    return GSE.CreateActionBarOverride(buttonName, sequenceId, layer, states[#states], loadout)
+end
+
+-- The States the right-click menu ticks for the next sequence put on a button
+-- (this character's, GSE_Utils) go back to Default when a sequence is cleared
+-- or moved: the button it left opened with Default and Stealth still ticked,
+-- from the time the sequence was put on (Larry, 2026-11-21: "didnt clear the
+-- states to Default", "Move should clear state of old slot").
+local function forgetMenuStates()
+    if type(GSE_C) == "table" then GSE_C.ActionBarMenuStates = nil end
+end
+
 --- Clear the override the button shows now -- the active talent loadout's or
 --- the spec's, for the state it is in -- and leave every other layer and
---- state as it was.
+--- state as it was: each State can hold a sequence of its own, and Clear
+--- Override takes the one it is cleared on (Larry, 2026-11-21: "it should
+--- have just cleared the Sequence from the state it was cleared on").
 function GSE.RemoveActionBarOverride(buttonName)
     if InCombatLockdown() then return end
     GSE.ClearOverrideData(buttonName, GSE.OverrideStateFor(_G[buttonName]))
+    forgetMenuStates()
     GSE.ReloadOverrides()
 end
 
@@ -2343,7 +2499,9 @@ end
 --- bar). A sequence saved for exactly that state of toName comes back to the
 --- row the moved one left, so the two swap; else that row is cleared. Each
 --- change goes where its row lives (the active loadout's, or the spec's).
---- Returns "loadout" when either did.
+--- The sequences on the buttons' other States stay where they are (Larry,
+--- 2026-11-21: "the user move then likely doesnt want to move sequences on
+--- other state bars"). Returns "loadout" when either did.
 function GSE.MoveActionBarOverride(fromName, toName)
     if InCombatLockdown() or fromName == toName then return end
     local from, to = _G[fromName], _G[toName]
@@ -2363,6 +2521,7 @@ function GSE.MoveActionBarOverride(fromName, toName)
     else
         GSE.ClearOverrideData(fromName, fromState)
     end
+    forgetMenuStates()
     GSE.ReloadOverrides()
     return written
 end
@@ -2940,6 +3099,18 @@ function GSE:MODIFIER_STATE_CHANGED()
     queueCurrentSpellIconRefresh(true)
 end
 
+-- A stance, form or stealth changes which line of a block fires, and so its
+-- icon (GSE.GetMacroTextIconInfo). The icon follows as it changes: left to
+-- the next spell event, a block showed its stealth line for a second or so
+-- out of stealth (Larry, 2026-11-21). Now, and once more a moment later:
+-- stealth is told before the form it comes with.
+local function stanceChanged()
+    queueCurrentSpellIconRefresh(true)
+    queueCurrentSpellIconRefresh()
+end
+GSE.UPDATE_STEALTH = stanceChanged
+GSE.UPDATE_SHAPESHIFT_FORM = stanceChanged
+
 function GSE.GetDeveloperDebugWarningReasons()
     local reasons = {}
     if GSEOptions then
@@ -3204,6 +3375,8 @@ GSE:RegisterEvent("GUILD_ROSTER_UPDATE")
 GSE:RegisterEvent("PLAYER_TARGET_CHANGED")
 GSE:RegisterEvent("CINEMATIC_STOP")
 GSE:RegisterEvent("MODIFIER_STATE_CHANGED")
+GSE:RegisterEvent("UPDATE_STEALTH")
+GSE:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
 
 if GSE.GameMode > 8 then
     GSE:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")

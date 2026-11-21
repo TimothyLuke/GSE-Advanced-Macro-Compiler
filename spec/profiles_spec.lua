@@ -539,6 +539,52 @@ describe("Profiles", function()
       end)
     end)
 
+    -- The right-click menu's Loadout > State > sequence.
+    it("a named loadout takes the row, and the active one's and the spec's stay", function()
+      withLoadout("111", function()
+        GSE.SetOverrideData("ActionButton1", "seqA", "spec")
+        GSE.SetOverrideData("ActionButton1", "seqL", "loadout")
+        assert.are.equal("loadout", GSE.SetOverrideData("ActionButton1", "seqO", "loadout", "7", 222))
+        assert.are.same(inState("7", "seqO"), GSE.SpecLoadoutOverrides("3", "222")["ActionButton1-7"])
+        assert.are.same(onButton("seqL"), GSE.SpecLoadoutOverrides("3", "111").ActionButton1)
+        assert.are.same(onButton("seqA"), GSE.SpecOverrides("3").ActionButton1)
+      end)
+    end)
+
+    it("a named loadout is the spec's on a client without loadouts", function()
+      C_SpecializationInfo.SetActiveSpecGroup = function() end
+      assert.are.equal("spec", GSE.SetOverrideData("ActionButton1", "seqA", "loadout", nil, 222))
+    end)
+
+    it("lists the spec's saved loadouts by name, in WoW's order", function()
+      withLoadout("111", function()
+        C_ClassTalents.GetConfigIDsBySpecID = function(specID) return specID == 70 and { 222, 111 } or {} end
+        _G.C_Traits = { GetConfigInfo = function(id) return id == 111 and { name = "Raid" } or nil end }
+        local ok, err = pcall(function()
+          assert.are.same({ { id = "222", name = "222" }, { id = "111", name = "Raid" } }, GSE.BindingLoadouts())
+        end)
+        _G.C_Traits = nil
+        if not ok then error(err, 0) end
+      end)
+      assert.are.same({}, GSE.BindingLoadouts())
+    end)
+
+    it("a button's states: Default and its form pages, or none at all", function()
+      local saved = GSE.ButtonPagesWithForms
+      _G.ActionButton1 = { SetShowGridInsecure = function() end }
+      _G.GSEButton1 = {}
+      GSE.ButtonPagesWithForms = function(name) return name == "ActionButton1" end
+      local ok, err = pcall(function()
+        local states, order = GSE.OverrideStatesFor("ActionButton1")
+        assert.are.same({ "Default", "7", "8", "9", "10" }, order)
+        assert.are.equal("Default", states.Default)
+        assert.is_nil(GSE.OverrideStatesFor("GSEButton1"))
+      end)
+      GSE.ButtonPagesWithForms = saved
+      _G.ActionButton1, _G.GSEButton1 = nil, nil
+      if not ok then error(err, 0) end
+    end)
+
     it("clear takes the row that runs in the state and leaves the others", function()
       withLoadout("nil", function()
         GSE.SpecOverrides("3", true).ActionButton1 = onButton("seqA")
