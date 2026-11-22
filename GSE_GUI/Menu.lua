@@ -139,7 +139,7 @@ local KEYBIND_GUIDE_TEXTURE = "Interface\\AddOns\\GSE_GUI\\Assets\\KeybindGuide.
 -- The file's own pixels. It is shown one for one, never resized by the game
 -- where it fits: a picture the game shrinks goes soft. To change its size,
 -- resize the file and this number together.
-local KEYBIND_GUIDE_PIXELS  = 862
+local KEYBIND_GUIDE_PIXELS  = 800
 local KEYBIND_GUIDE_PAD     = 16   -- each side of the picture
 local KEYBIND_GUIDE_CHROME  = 44   -- title bar above it, border below
 local keybindGuide
