@@ -5,9 +5,11 @@
 -- talent loadout, the stance, and the button's key (GSE_Utils, Utils.lua). So
 -- the editor's Bindings area keeps only the Keybindings pages, and only where
 -- GSE still binds keys to sequences itself; anywhere else the editor has no
--- Bindings node, no Keybindings icon on GSE's menu, and nothing that opens
--- one. The GSE_GUI files cannot be loaded here, so this reads them as text
--- (line endings normalised).
+-- Bindings node and nothing that opens one, and the Keybindings icon on GSE's
+-- menu opens the keybind guide, a picture of the steps (Larry, 2026-11-21: "I
+-- want the Keybind Button back on the bar but just linked to a Pop up of this
+-- image"). The GSE_GUI files cannot be loaded here, so this reads them as
+-- text (line endings normalised).
 local function readSource(path)
   local fh = assert(io.open(path, "r"))
   local src = fh:read("*a")
@@ -55,8 +57,46 @@ describe("editor without a Button Bindings page", function()
     assert.is_nil(show:find('GSE.GUI.BindingsPath("AO")', 1, true))
     assert.truthy(tree:find('if GSE.KeybindingsEnabled() then\n                rootDescription:CreateButton(L["Keybindings"]', 1, true),
       "a sequence's right-click menu")
-    assert.truthy(menu:find("if GSE.ShowKeyBindings and not GSE.KeybindingsEnabled() then", 1, true), "GSE's menu icon")
-    assert.truthy(menu:find("local shorter = BUTTON_STEP * iconsLeftOut", 1, true), "and the strip closes up")
+  end)
+
+  it("keeps the Keybindings icon on GSE's menu, on the guide where the editor has no Bindings area", function()
+    local click = body(menu, "        Statics.Icons.Keybindings,\n", "\n    },\n")
+    local pages = assert(click:find("if GSE.KeybindingsEnabled() then\n                GSE.ShowKeyBindings()", 1, true))
+    local guide = assert(click:find("else\n                showKeybindGuide()", 1, true))
+    assert.is_true(pages < guide)
+    assert.is_nil(menu:find("table.remove(iconData", 1, true), "the icon is taken off the menu")
+    assert.is_nil(menu:find("iconsLeftOut", 1, true), "the strip is shortened for a missing icon")
+    assert.truthy(menu:find("    frame:SetSize(cfg.w, cfg.h)\n", 1, true))
+  end)
+
+  it("shows the guide's picture from a file that ships, built on the first click", function()
+    local show = body(menu, "local function showKeybindGuide()", "\nend\n")
+    assert.truthy(menu:find('local KEYBIND_GUIDE_TEXTURE = "Interface\\\\AddOns\\\\GSE_GUI\\\\Assets\\\\KeybindGuide.png"', 1, true))
+    local fh = assert(io.open("GSE_GUI/Assets/KeybindGuide.png", "rb"), "the picture is not in GSE_GUI/Assets")
+    local head = fh:read(24)
+    fh:close()
+    assert.are.equal("\137PNG\r\n\26\n", head:sub(1, 8))
+    local function be32(at) local a, b, c, d = head:byte(at, at + 3) return ((a * 256 + b) * 256 + c) * 256 + d end
+    local pixels = tonumber(menu:match("local KEYBIND_GUIDE_PIXELS%s*=%s*(%d+)"))
+    assert.are.equal(pixels, be32(17), "KEYBIND_GUIDE_PIXELS is the picture's width")
+    assert.are.equal(pixels, be32(21), "and its height: the picture is square")
+    local reopen = assert(show:find("keybindGuide:SetShown(not keybindGuide:IsShown())", 1, true), "a second click closes it")
+    local built = assert(show:find('CreateFrame("Frame", "GSEKeybindGuideFrame", UIParent, "PortraitFrameTemplate")', 1, true),
+      "Blizzard's own window around the picture")
+    assert.is_true(reopen < built, "built once")
+    assert.truthy(show:find('tinsert(UISpecialFrames, "GSEKeybindGuideFrame")', 1, true), "Escape closes it")
+    assert.truthy(show:find("if keybindGuide.CloseButton then", 1, true), "the template's close button closes it")
+    for _, method in ipairs({ "SetPortraitToAsset", "SetPortraitTexCoord", "SetTitleOffsets", "SetTitle" }) do
+      assert.truthy(show:find("if keybindGuide." .. method .. " then keybindGuide:" .. method .. "(", 1, true),
+        method .. " is not on every client's template")
+    end
+    assert.truthy(show:find("if GetPhysicalScreenSize then", 1, true), "guarded: not on every client")
+    assert.truthy(show:find('keybindGuide:SetScript("OnHide", function() picture:SetTexture(nil) end)', 1, true),
+      "the picture is let go when the window closes")
+    assert.truthy(show:find('keybindGuide:SetScript("OnShow", function() picture:SetTexture(KEYBIND_GUIDE_TEXTURE) end)', 1, true),
+      "and loaded again when it opens")
+    local _, uses = menu:gsub("KEYBIND_GUIDE_TEXTURE", "")
+    assert.are.equal(3, uses, "the picture is named outside the window's own build")
   end)
 
   -- With the page gone the right-click menu is the one way to put a sequence

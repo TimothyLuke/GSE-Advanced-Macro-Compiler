@@ -51,6 +51,7 @@ globals = {
     "GetBindingKey",
     "GetBinding",
     "GetNumBindings",
+    "GetPhysicalScreenSize",
     "C_LevelLink",
     "CooldownFrame_Set",
     "C_UnitAuras",
