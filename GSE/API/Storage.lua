@@ -3538,7 +3538,15 @@ end
 -- Within a rank, the clause a line would fire now comes first: "/cast
 -- [stealth] Ambush; Sinister Strike" shows Ambush in stealth and Sinister
 -- Strike out of it. A line none of whose clauses hold now has its first
--- clause count as the one it fires.
+-- clause count as the one it fires: "/cast [combat] Kill Command" shows Kill
+-- Command at rest, over a line below it that would fire there.
+--
+-- But not across a stance, form or stealth. A clause that asks for one the
+-- character is not in ([stance], [stealth], [form:2], [nostealth] ...) cannot
+-- fire until that changes, so it comes after everything that can be cast as
+-- the character stands: "/cast [stance] Ambush" over "/cast [nostealth]
+-- Kingsbane" shows Kingsbane out of stealth and Ambush in it (Larry,
+-- 2026-11-21: Ambush showed out of stealth).
 
 -- Forms, stances and stealth: what the character is in, not what the block
 -- is for.
@@ -3559,6 +3567,11 @@ local FORM_SPELL_IDS = {
     [165961] = true, -- Stag Form
     [1784] = true, -- Stealth
     [5215] = true, -- Prowl
+    -- Sprint, with them at Larry's word (2026-11-21): a line that casts it is
+    -- not what the block is for either. Its three ranks.
+    [2983] = true,
+    [8696] = true,
+    [11305] = true,
 }
 
 -- Calling, keeping and reviving a pet.
@@ -3574,12 +3587,14 @@ local PET_SPELL_IDS = {
 }
 
 local RANK_PLAIN, RANK_MODIFIED, RANK_FORM, RANK_PET = 1, 2, 3, 4
--- Above every rank and its not-firing-now step (4 * 2 + 1).
-local RANK_CANNOT_CAST = 10
+-- Each above every rank and its not-firing-now step (4 * 2 + 1): what is for
+-- another stance, form or stealth, then what the character can't cast at all.
+local RANK_OFF_STANCE, RANK_CANNOT_CAST = 20, 40
 
 local function isFormName(name)
     name = strlower(name)
     return name == "ghost wolf" or name == "tree of life" or name == "stealth" or name == "prowl"
+        or name == "sprint"
         or name:match("%f[%a]form%f[%A]") ~= nil or name:match("%f[%a]stance%f[%A]") ~= nil
 end
 
@@ -3693,14 +3708,45 @@ local SKIPPED_ICON_COMMANDS = {
     stopmacro = true, cancelaura = true, cancelform = true, petautocastoff = true, petautocaston = true,
 }
 
+-- A condition on the stance, form or stealth the character is in.
+local function isStanceCondition(test)
+    test = test:gsub("^no", "")
+    return test == "stealth" or test:match("^stance%f[%A]") ~= nil or test:match("^form%f[%A]") ~= nil
+        or test:match("^bonusbar%f[%A]") ~= nil
+end
+
+-- Whether a clause is for a stance, form or stealth the character is not in:
+-- every [..] group of it asks for one, and none of them has it. Asked of
+-- WoW's own parser, with the group's other conditions (combat, a target, a
+-- modifier) left out.
+local function offStance(clause)
+    local groups = 0
+    for group in string.gmatch(clause, "%[([^%]]*)%]") do
+        groups = groups + 1
+        local stance = {}
+        for condition in string.gmatch(group, "[^,]+") do
+            local test = strlower(condition:match("^%s*(.-)%s*$"))
+            if isStanceCondition(test) then stance[#stance + 1] = test end
+        end
+        if #stance == 0 then return false end
+        if GSE.SafeSecureCmdOptionParse("[" .. table.concat(stance, ",") .. "] x") then return false end
+    end
+    return groups > 0
+end
+
 -- The clause of a line that would fire now: the first whose conditions
--- hold, else the first.
+-- hold, else the first that is not for another stance, form or stealth.
+-- Nil when every clause is: nothing of the line fires as the character
+-- stands.
 local function firingClause(clauses)
     for i, clause in ipairs(clauses) do
         local result = GSE.SafeSecureCmdOptionParse(clause)
         if result and trimMacroIconCandidate(result) ~= "" then return i end
     end
-    return 1
+    for i, clause in ipairs(clauses) do
+        if not offStance(clause) then return i end
+    end
+    return nil
 end
 
 --- Every spell, item and slot a macro block names, in order, each with its
@@ -3718,6 +3764,7 @@ function GSE.GetMacroTextIconCandidates(str)
                 local candidate = clauseCandidate(cmd, clause)
                 if candidate then
                     candidate.firing = i == firing
+                    candidate.offStance = offStance(clause)
                     candidates[#candidates + 1] = candidate
                 end
             end
@@ -3740,6 +3787,7 @@ function GSE.GetMacroTextIconInfo(str)
     local best, bestRank
     for _, candidate in ipairs(candidates) do
         local rank = candidate.rank * 2 + (candidate.firing and 0 or 1)
+            + (candidate.offStance and RANK_OFF_STANCE or 0)
             + (candidate.canCast and 0 or RANK_CANNOT_CAST)
         if not bestRank or rank < bestRank then
             best, bestRank = candidate.info, rank
@@ -4038,8 +4086,12 @@ function GSE.UpdateIcon(self, reseticon)
         end
         if GSE.ButtonOverrides and not reseticon then
             for k, v in pairs(GSE.ButtonOverrides) do
-                -- The sequence the button runs now: a LAB state can have its own.
-                local runs = GSE.ButtonOverrideSequence and GSE.ButtonOverrideSequence(k) or v
+                -- The sequence the button runs now: a state can have its own,
+                -- and in one with no row it runs none. Falling back to the
+                -- button's sequence there drew a stealth row's icon on the
+                -- main bar, and a Default row's on the stance bar.
+                local runs = v
+                if GSE.ButtonOverrideSequence then runs = GSE.ButtonOverrideSequence(k) end
                 if runs == gsebutton and _G[k] then
                     if
                         string.sub(k, 1, 5) == "ElvUI" or string.sub(k, 1, 4) == "CPB_" or string.sub(k, 1, 3) == "BT4" or

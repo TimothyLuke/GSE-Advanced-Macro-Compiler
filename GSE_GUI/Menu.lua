@@ -151,6 +151,18 @@ local iconData = {
     },
 }
 
+-- No Keybindings icon where the editor has no Bindings area: GSE binds no
+-- keys itself there (Editor_Keybind.lua, buildKeybindMenu).
+local iconsLeftOut = 0
+if GSE.ShowKeyBindings and not GSE.KeybindingsEnabled() then
+    for i, data in ipairs(iconData) do
+        if data[3] == GSE.ShowKeyBindings then
+            table.remove(iconData, i)
+            iconsLeftOut = 1
+            break
+        end
+    end
+end
 for i, data in ipairs(iconData) do
     iconButtons[i] = createIconButton(i, data[1], data[2], data[3])
 end
@@ -165,7 +177,9 @@ function GSE.UpdateMenuDirection(newDirection)
 
     getMenuOpts().direction = dir
 
-    frame:SetSize(cfg.w, cfg.h)
+    -- An icon left out shortens the strip by its step.
+    local shorter = BUTTON_STEP * iconsLeftOut
+    frame:SetSize(cfg.w - (cfg.x ~= 0 and shorter or 0), cfg.h - (cfg.y ~= 0 and shorter or 0))
     frame:SetMovable(not isLocked())
 
     logo:ClearAllPoints()

@@ -2480,6 +2480,101 @@ colorTable[0] = "|r"
 Statics.IndentationColorTable = colorTable
 
 do
+    -- A tick or untick in the menu's State picker is saved at once and put
+    -- on the buttons once the menu has closed. Put on at once, the button
+    -- blinks out as its rows are taken off and put back, and WoW closes a
+    -- menu whose button is gone (Larry, 2026-11-20). The menu's own closing
+    -- callbacks fire for a submenu too, so the open menu is asked for
+    -- instead; held through combat, when nothing can be put on a button.
+    local applyTicker
+    local function applyStateTicks()
+        if not applyTicker then return false end
+        applyTicker:Cancel()
+        applyTicker = nil
+        GSE.ReloadOverrides()
+        return true
+    end
+    local function applyWhenMenuCloses(owner)
+        if applyTicker then return end
+        applyTicker = C_Timer.NewTicker(0.1, function()
+            if InCombatLockdown() then return end
+            local open = Menu and Menu.GetManager and Menu.GetManager():GetOpenMenu()
+            if open and open.GetOwnerRegion and open:GetOwnerRegion() == owner then return end
+            applyStateTicks()
+        end)
+    end
+
+    -- The menu is built for the state the button is in as it opens: the
+    -- sequence it names and the States ticked. A stance, form or stealth
+    -- changed under an open menu, the handler builds it again for the new
+    -- state (Larry, 2026-11-21: "changing state when menu is open should
+    -- update the state selection") -- inside the menu that is open
+    -- (rebuildOpenMenu), which stays where it is, under the mouse ("Dont
+    -- close menu while user is still moused over it"). Held through combat,
+    -- when none may open.
+    local stateWatch, reopenPlace, inPlaceMenu
+    local function watchMenuState(owner, state, reopen)
+        if stateWatch then stateWatch:Cancel() end
+        stateWatch = C_Timer.NewTicker(0.1, function()
+            local manager = Menu.GetManager()
+            local open = manager:GetOpenMenu()
+            if not (open and open.GetOwnerRegion and open:GetOwnerRegion() == owner) then
+                stateWatch:Cancel()
+                stateWatch = nil
+                return
+            end
+            if InCombatLockdown() then return end
+            if tostring(GSE.OverrideStateFor and GSE.OverrideStateFor(owner)) == tostring(state) then return end
+            stateWatch:Cancel()
+            stateWatch = nil
+            local ok, left, top = pcall(function() return open:GetLeft(), open:GetTop() end)
+            reopenPlace = ok and left and top and { owner = owner, left = left, top = top, at = GetTime() } or nil
+            inPlaceMenu = open
+            owner.gseABMenuOpenedAt = nil
+            reopen(owner, "RightButton")
+            -- Not taken: the handler has no menu for the button in this
+            -- state, and the open one goes; or it is putting waiting ticks on
+            -- the buttons first and opens a moment later (gseABMenuOpenedAt).
+            if inPlaceMenu then
+                inPlaceMenu = nil
+                if not owner.gseABMenuOpenedAt then manager:CloseMenus() end
+            end
+        end)
+    end
+    -- The menu built again inside the open one the watch handed over: a new
+    -- description put on the same frame, and the picker that was open (State,
+    -- Loadout: each row tagged) opened again from its new row. False when
+    -- there is none to build in, or it could not be done: the handler then
+    -- opens a menu as a click does.
+    local PICKER_TAG = "MENU_GSE_ACTION_BUTTON_"
+    local function rebuildOpenMenu(owner, generator, pickerRows)
+        local menu = inPlaceMenu
+        inPlaceMenu = nil
+        if not menu or Menu.GetManager():GetOpenMenu() ~= menu or menu:GetOwnerRegion() ~= owner then return false end
+        return (pcall(function()
+            local wasOpen = {}
+            for _, tag in ipairs(Menu.GetOpenMenuTags()) do wasOpen[tag] = true end
+            local description = MenuUtil.CreateRootMenuDescription(
+                owner.menuMixin or MenuVariants.GetDefaultContextMenuMixin())
+            Menu.PopulateDescription(generator, owner, description)
+            menu:SetMenuDescription(description)
+            for title, row in pairs(pickerRows) do
+                if wasOpen[PICKER_TAG .. title] then row:ForceOpenSubmenu() end
+            end
+        end))
+    end
+    -- The menu opened in place of one closed for a change of state goes where
+    -- that one was, not to the mouse.
+    local function placeReopenedMenu(owner, menu)
+        local place = reopenPlace
+        reopenPlace = nil
+        if not (place and menu and place.owner == owner and GetTime() - place.at < 0.5) then return end
+        pcall(function()
+            menu:ClearAllPoints()
+            menu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", place.left, place.top)
+        end)
+    end
+
     -- Shared handler: right-click on a GSE-overridden button shows change/clear options;
     -- right-click on an empty action button shows the sequence picker to assign one.
     local function gseEmptyButtonHandler(self, mousebutton, down)
@@ -2495,8 +2590,26 @@ do
         -- at once (WoW Forever). A bar that sends no release in OnClick still
         -- gets one through OnMouseUp (hookMenu).
         if down then return end
+        -- Ticks from a menu that has only just closed go on the buttons
+        -- first: this menu reads what is on them. Then it opens.
+        if applyStateTicks() then
+            self.gseABMenuOpenedAt = GetTime()
+            C_Timer.After(0.1, function()
+                self.gseABMenuOpenedAt = nil
+                gseEmptyButtonHandler(self, mousebutton)
+            end)
+            return
+        end
 
         local existingSequence = self:GetAttribute("gse-button")
+        -- On a stance bar with no row of its own (the Default row stays off
+        -- it), or out of the one stance its row is for, nothing is on the
+        -- button here: the menu assigns, as on any empty button.
+        -- And where one does run, it is that one the menu names and changes:
+        -- the attribute holds the row put on last, another stance's perhaps.
+        if existingSequence and GSE.ButtonOverrideSequence then
+            existingSequence = GSE.ButtonOverrideSequence(self:GetName())
+        end
         -- A GSE Action Bar button holding a spell, item or macro is not empty.
         if self.gseActionBarButton and GSE.ActionBarButtonHasAction and GSE.ActionBarButtonHasAction(self) then
             return
@@ -2506,7 +2619,12 @@ do
             -- Only show the picker on genuinely empty slots.
             -- CPB_ (ConsolePort) buttons are controller-mapped, not slot-based; skip the action check.
             -- The GSE Action Bar's buttons hold no slot either.
-            if string.sub(self:GetName() or "", 1, 4) ~= "CPB_" and not self.gseActionBarButton then
+            -- Button Forge's hold none: an empty one is a button with no mode
+            -- (its ParentButton.Mode, Button.lua).
+            if string.sub(self:GetName() or "", 1, 11) == "ButtonForge" then
+                local owner = self.ParentButton
+                if type(owner) ~= "table" or owner.Mode ~= nil then return end
+            elseif string.sub(self:GetName() or "", 1, 4) ~= "CPB_" and not self.gseActionBarButton then
                 local action = self.action or self:GetAttribute("action")
                 if not action or action == 0 then return end
                 if HasAction(action) then return end
@@ -2541,7 +2659,98 @@ do
         local layer = existingSequence and GSE.OverrideLayerFor
             and GSE.OverrideLayerFor(buttonName, GSE.OverrideStateFor and GSE.OverrideStateFor(self))
 
-        local function addSequenceButtons(parent, toLayer)
+        -- A sequence goes on a talent loadout (ALL: the spec's, for every
+        -- loadout) and on a state of the button (Default: every state no
+        -- other row holds). Each is picked in its own submenu, and the
+        -- sequence clicked in the list under them goes where they say. A
+        -- client without loadouts, and a button with only the one state,
+        -- leave that submenu out.
+        local loadouts = GSE.BindingLoadouts and GSE.BindingLoadouts() or {}
+        local states, stateOrder
+        if GSE.OverrideStatesFor then states, stateOrder = GSE.OverrideStatesFor(buttonName) end
+        -- Only the states something puts this button in: a form, stance or
+        -- stealth the class has, or a page its bar addon names. A page nothing
+        -- names (a shaman's 7-10) is no choice to offer.
+        local named = {}
+        for _, k in ipairs(stateOrder or {}) do
+            if k == "Default" or states[k] ~= k then named[#named + 1] = k end
+        end
+        if #named < 2 then states, stateOrder = nil, nil else stateOrder = named end
+        -- The picks the menu opens on: every loadout, and the state the button
+        -- is in now. More than one state can be ticked (Larry, 2026-11-20: a
+        -- warrior can choose all three stances); the sequence then goes on
+        -- each, a row apiece. Never none: the last tick stays.
+        local toLoadout, toStates
+        if states then
+            local now = GSE.OverrideStateFor and GSE.OverrideStateFor(self)
+            local first = "Default"
+            for _, k in ipairs(stateOrder) do
+                if now ~= nil and k == tostring(now) then first = k end
+            end
+            toStates = { [first] = true }
+            -- A button showing a sequence opens with every state that holds
+            -- that sequence ticked, so the ticks say where it is, and a
+            -- change goes to all of them.
+            if existingSequence then
+                local pinned = GSE.ButtonOverrideStates and GSE.ButtonOverrideStates[buttonName] or {}
+                for _, k in ipairs(stateOrder) do
+                    local holds
+                    if k == "Default" then
+                        holds = GSE.ButtonOverrideDefaults and GSE.ButtonOverrideDefaults[buttonName]
+                            and GSE.ButtonOverrides and GSE.ButtonOverrides[buttonName]
+                    else
+                        holds = pinned[k]
+                    end
+                    if holds == existingSequence then toStates[k] = true end
+                end
+            else
+                -- An empty button opens with the states ticked last time a
+                -- sequence was assigned from this menu (this character's),
+                -- beside the one it is in: ticking Default and Stealth is
+                -- done once, not on every button.
+                local last = type(GSE_C) == "table" and GSE_C.ActionBarMenuStates
+                for _, k in ipairs(stateOrder) do
+                    if type(last) == "table" and last[k] then toStates[k] = true end
+                end
+                -- But not Default into a stance, form or stealth: the button
+                -- is empty there, and Default ticked last time says nothing
+                -- of this state (Larry, 2026-11-21: "if a default has already
+                -- been selected then it should be unchecked in a state").
+                -- Once the state holds the sequence Default does, the ticks
+                -- above say so: "Default, Stealth".
+                if first ~= "Default" then toStates.Default = nil end
+            end
+        end
+        local function stateLabel(k) return k == "Default" and L["Default"] or states[k] end
+        -- The ticked states, in the menu's order.
+        local function pickedStates()
+            local picked = {}
+            for _, k in ipairs(toStates and stateOrder or {}) do
+                if toStates[k] then picked[#picked + 1] = k end
+            end
+            return picked
+        end
+
+        -- A submenu of picks, its row saying which is in: "Loadout: ALL".
+        -- multi: tick boxes, any number of them, in place of the one choice.
+        local pickerRows = {}
+        local function addPicker(parent, title, current, choices, multi)
+            local row = parent:CreateButton(title .. ": " .. current())
+            row:SetTag(PICKER_TAG .. title)
+            pickerRows[title] = row
+            row:AddInitializer(function(frame)
+                if frame.fontString then frame.fontString:SetText(title .. ": " .. current()) end
+            end)
+            for _, choice in ipairs(choices) do
+                local create = multi and row.CreateCheckbox or row.CreateRadio
+                create(row, choice.text, choice.isSelected, function()
+                    return choice.select() or MenuResponse.Refresh
+                end)
+            end
+        end
+
+        local function addSequenceButtons(parent)
+            parent:CreateTitle(L["GSE Sequences"])
             for _, entry in ipairs(names) do
                 local iconText = classIconText
                 local specID = entry.specID
@@ -2558,14 +2767,37 @@ do
                         GameTooltip_SetTitle(tooltip, L["Sequence Disabled"])
                     end)
                 else
-                    parent:CreateButton(iconText .. entry.name,
-                        function() GSE.CreateActionBarOverride(buttonName, entryId, toLayer) end)
+                    parent:CreateButton(iconText .. entry.name, function()
+                        if toStates and type(GSE_C) == "table" then
+                            GSE_C.ActionBarMenuStates = {}
+                            for _, k in ipairs(pickedStates()) do GSE_C.ActionBarMenuStates[k] = true end
+                        end
+                        local written = GSE.CreateActionBarOverrides(buttonName, entryId,
+                            toLoadout and "loadout" or "spec", pickedStates(), toLoadout and toLoadout.id)
+                        if written == "loadout" and toLoadout then
+                            GSE.Print(string.format(L["Changed for talent loadout %s only."], toLoadout.name),
+                                L["Button Bindings"])
+                        end
+                    end)
                 end
             end
         end
 
+        -- The button's key is WoW's own to set: the row opens Key Bindings at
+        -- the button's section. The page that does it loads on demand
+        -- (GSE.GUICall), at the click.
+        local function addKeybindRow(parent)
+            local row = parent:CreateButton(L["Keybind"], function()
+                GSE.GUICall("GUIOpenButtonKeyBindings", buttonName)
+            end)
+            row:SetTooltip(function(tooltip)
+                GameTooltip_SetTitle(tooltip, L["Keybind"])
+                GameTooltip_AddNormalLine(tooltip, L["Open WoW's Key Bindings at this button, to set its key."])
+            end)
+        end
+
         self.gseABMenuOpenedAt = GetTime()
-        MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
+        local function generator(ownerRegion, rootDescription)
             if existingSequence then
                 -- gse-button holds the sequence's id; show its label.
                 rootDescription:CreateTitle(L["GSE"] .. ": " .. (GSE.SequenceName(existingSequence) or existingSequence))
@@ -2575,19 +2807,86 @@ do
                 rootDescription:CreateButton(L["Clear Override"], function()
                     GSE.RemoveActionBarOverride(buttonName)
                 end)
-                if #names == 0 then return end
+                if #names == 0 then
+                    addKeybindRow(rootDescription)
+                    return
+                end
                 rootDescription:CreateDivider()
                 rootDescription:CreateTitle(L["Change Sequence"])
             else
                 rootDescription:CreateTitle(L["Assign GSE Sequence"])
             end
-            if not loadoutName then
-                addSequenceButtons(rootDescription, "spec")
-                return
+            if #loadouts > 0 then
+                local choices = { {
+                    text = L["ALL"],
+                    isSelected = function() return toLoadout == nil end,
+                    select = function() toLoadout = nil end,
+                } }
+                for _, loadout in ipairs(loadouts) do
+                    choices[#choices + 1] = {
+                        text = loadout.name,
+                        isSelected = function() return toLoadout == loadout end,
+                        select = function() toLoadout = loadout end,
+                    }
+                end
+                addPicker(rootDescription, L["Loadout"],
+                    function() return toLoadout and toLoadout.name or L["ALL"] end, choices)
             end
-            addSequenceButtons(rootDescription:CreateButton(L["All Talent Loadouts"]), "spec")
-            addSequenceButtons(rootDescription:CreateButton(string.format(L["%s only"], loadoutName)), "loadout")
-        end)
+            if states then
+                local choices = {}
+                for _, k in ipairs(stateOrder) do
+                    choices[#choices + 1] = {
+                        text = stateLabel(k),
+                        isSelected = function() return toStates[k] == true end,
+                        select = function()
+                            -- On a button showing a sequence the ticks are
+                            -- where that sequence is, and changing one changes
+                            -- it (Larry, 2026-11-20): unticking takes the
+                            -- sequence off that state, ticking puts it on.
+                            -- Saved at once; on the buttons when the menu has
+                            -- closed, so the menu stays open for the next tick.
+                            if existingSequence then
+                                if InCombatLockdown() then return end
+                                local state = k ~= "Default" and k or nil
+                                if toStates[k] then
+                                    toStates[k] = nil
+                                    -- Only the state's own row: with none, the
+                                    -- lookup answers with the Default row.
+                                    local _, saved = GSE.OverrideLayerFor(buttonName, state)
+                                    if tostring(saved) == tostring(state) then
+                                        GSE.ClearOverrideData(buttonName, state)
+                                        applyWhenMenuCloses(self)
+                                    end
+                                else
+                                    toStates[k] = true
+                                    GSE.SetOverrideData(buttonName, existingSequence,
+                                        toLoadout and "loadout" or "spec", state, toLoadout and toLoadout.id)
+                                    applyWhenMenuCloses(self)
+                                end
+                                return
+                            end
+                            -- An empty button: the ticks are where the next
+                            -- sequence goes. Never none.
+                            if toStates[k] and #pickedStates() == 1 then return end
+                            toStates[k] = not toStates[k] or nil
+                        end,
+                    }
+                end
+                addPicker(rootDescription, L["State"], function()
+                    local names = {}
+                    for _, k in ipairs(pickedStates()) do names[#names + 1] = stateLabel(k) end
+                    return table.concat(names, ", ")
+                end, choices, true)
+            end
+            addKeybindRow(rootDescription)
+            addSequenceButtons(rootDescription)
+        end
+        if not rebuildOpenMenu(self, generator, pickerRows) then
+            placeReopenedMenu(self, MenuUtil.CreateContextMenu(self, generator))
+        end
+        if states then
+            watchMenuState(self, GSE.OverrideStateFor and GSE.OverrideStateFor(self), gseEmptyButtonHandler)
+        end
     end
 
     -- The GSE Action Bar hooks its own buttons with the same menu.
@@ -2733,6 +3032,35 @@ do
                     local btn = _G[prefix .. i]
                     if btn then hookMenu(btn) end
                 end
+            end
+        end
+
+        -- Button Forge makes its buttons as the player adds bars and buttons
+        -- to them (ButtonForge<n>; the CheckButtons are the action buttons).
+        -- The editor's Button Bindings page was the one place to put a
+        -- sequence on one, and it is gone (Larry, 2026-11-20), so the menu
+        -- goes on them too: at login, and again whenever one is made.
+        if BFButton then
+            local function hookBFButtons()
+                for i = 1, 1000 do
+                    local btn = _G["ButtonForge" .. i]
+                    if btn and not btn.gseRightClickHooked and btn.IsObjectType and btn:IsObjectType("CheckButton") then
+                        btn.gseRightClickHooked = true
+                        hookMenu(btn)
+                    end
+                end
+            end
+            hookBFButtons()
+            if type(BFButton.CreateButtonWidget) == "function" then
+                local pending
+                hooksecurefunc(BFButton, "CreateButtonWidget", function()
+                    if pending then return end
+                    pending = true
+                    C_Timer.After(0, function()
+                        pending = nil
+                        hookBFButtons()
+                    end)
+                end)
             end
         end
 

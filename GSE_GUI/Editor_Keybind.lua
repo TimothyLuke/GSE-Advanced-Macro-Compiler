@@ -498,9 +498,17 @@ local function buildKeybindMenu()
         end
     end
 
-    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE
-    -- Action Bar carries the keys): Button Bindings only.
-    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
+    -- Button Bindings are set on the buttons themselves: their right-click
+    -- menu puts a sequence on a talent loadout and a stance, and opens the
+    -- button's key (GSE_Utils, Utils.lua). So the editor has no page for them.
+    -- What is left is the Keybindings pages, where GSE still binds keys to
+    -- sequences itself; where it does not (WoW Forever and Retail 12.1.7, or
+    -- the GSE Action Bar carries the keys) the editor has no Bindings node at
+    -- all, and this returns nil.
+    -- The Button Bindings page's code below (showOverridePanel and its
+    -- helpers) is left as it was, unreached.
+    table.remove(tree, 1)
+    if not GSE.KeybindingsEnabled() then return nil end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -1420,6 +1428,39 @@ end
 -- ---------------------------------------------------------------------------
 local AO_COL_BUTTON, AO_COL_KEY, AO_COL_KEYS, AO_COL_STATE, AO_COL_SEQ = 175, 110, 110, 150, 180
 local AO_ROW_WIDTH = KB_COL_ADD + AO_COL_BUTTON + AO_COL_KEY + AO_COL_KEYS + AO_COL_STATE + AO_COL_SEQ + KB_COL_REMOVE + 30
+local AO_FLOW_GAP = 6
+
+-- A row is one line (flowNoWrap), so on a pane too narrow for the full
+-- widths the columns give some back: the two dropdowns first, which have
+-- room to spare, then the two key cells, whose text is cut to fit (the
+-- tooltip has every key in full), then the button.
+local AO_COL_BASE = {button = AO_COL_BUTTON, sequence = AO_COL_SEQ, state = AO_COL_STATE,
+    key = AO_COL_KEY, keys = AO_COL_KEYS}
+local AO_COL_SHRINK = {
+    {{"state"}, 120}, {{"sequence"}, 150}, {{"key", "keys"}, 50}, {{"button"}, 130}, {{"key", "keys"}, 30},
+}
+-- Fills `cols` (name -> width) for a row `avail` wide.  A pane with no real
+-- size yet (hidden editor) leaves `cols` as it was.
+local function fitOverrideColumns(cols, avail, showState, hasMarks)
+    if not avail or avail < 200 then return end
+    -- add + remove, the gaps between the columns, 2px to spare.
+    local over = KB_COL_ADD + KB_COL_REMOVE + AO_FLOW_GAP * (showState and 6 or 5) + 2 - avail
+    if hasMarks then over = over + KB_COL_MARK + KB_ICON_GAP end
+    for name, width in pairs(AO_COL_BASE) do
+        cols[name] = width
+        if name ~= "state" or showState then over = over + width end
+    end
+    for _, step in ipairs(AO_COL_SHRINK) do
+        local names, least = step[1], step[2]
+        if over > 0 and (names[1] ~= "state" or showState) then
+            local take = math.min(cols[names[1]] - least, math.ceil(over / #names))
+            if take > 0 then
+                for _, name in ipairs(names) do cols[name] = cols[name] - take end
+                over = over - take * #names
+            end
+        end
+    end
+end
 
 -- Every action button this client can override, name -> name.  One scan per
 -- panel build, not per row: ButtonForge alone is a thousand _G lookups.
@@ -1776,6 +1817,77 @@ end
 -- shape.  Fold the two into one once this panel has been confirmed on the
 -- same terms the keybind one was; refactoring a panel Larry has just signed
 -- off on to save 120 lines is the wrong trade today.
+-- The binding action WoW's Key Bindings lists for a button: the one
+-- buttonKeysText reads keys from or, unbound, the one its bar registers.
+-- Blizzard's bars bind by command; LibActionButton bars (Bartender4,
+-- Dominos, EllesmereUI) name theirs on the button; the rest bind a click.
+local function bindingActionFor(buttonName)
+    if GSE.isEmpty(buttonName) or not GetBindingKey then return nil end
+    local prefix, num = string.match(buttonName, "^(.-)(%d+)$")
+    local candidates = {}
+    if prefix and BAR_COMMANDS[prefix] then candidates[#candidates + 1] = BAR_COMMANDS[prefix] .. num end
+    local frame = _G[buttonName]
+    local command = type(frame) == "table" and (frame.commandName
+        or (frame.GetAttribute and frame:GetAttribute("commandName")))
+    if type(command) == "string" and command ~= "" then candidates[#candidates + 1] = command end
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":LeftButton"
+    candidates[#candidates + 1] = "CLICK " .. buttonName .. ":Keybind"
+    for _, action in ipairs(candidates) do
+        if bindingKeys(action) then return action end
+    end
+    return candidates[1]
+end
+
+-- The Key Bindings section a binding action is listed under, named as the
+-- page names it: the category WoW's bindings table gives the action, read
+-- through its BINDING_HEADER_ string the way the page does; nil for an
+-- action the table does not list (a bar addon binding a click on its frame).
+local function bindingHeaderFor(action)
+    if not (action and GetNumBindings and GetBinding) then return nil end
+    for i = 1, GetNumBindings() do
+        local listed, cat = GetBinding(i)
+        if listed == action then
+            if not cat then return BINDING_HEADER_OTHER end
+            local header = _G[cat]
+            return type(header) == "string" and header or cat
+        end
+    end
+    return nil
+end
+
+-- Open WoW's own Key Bindings page at the section holding a binding action,
+-- expanded, where the key is set: GSE never writes a bar's binding itself.
+-- The page scrolls to a section by its name; expanded is set on the
+-- section's own initializer before the page draws, since the section reads
+-- that at Init and an addon's section starts collapsed.  An action with no
+-- section opens the page at its top.  False where the client has no
+-- Settings panel to open, and in combat, where opening it is protected.
+local function openWoWKeyBindingsFor(action)
+    if not (Settings and Settings.OpenToCategory and Settings.KEYBINDINGS_CATEGORY_ID) then return false end
+    if InCombatLockdown() then return false end
+    local header = bindingHeaderFor(action)
+    local category = header and SettingsPanel and SettingsPanel.GetCategory
+        and SettingsPanel:GetCategory(Settings.KEYBINDINGS_CATEGORY_ID)
+    local layout = category and SettingsPanel.GetLayout and SettingsPanel:GetLayout(category)
+    local initializers = layout and layout.GetInitializers and layout:GetInitializers()
+    for _, initializer in ipairs(initializers or {}) do
+        local data = rawget(initializer, "data")
+        if type(data) == "table" and data.bindingsCategories and data.name == header then
+            data.expanded = true
+        end
+    end
+    Settings.OpenToCategory(Settings.KEYBINDINGS_CATEGORY_ID, header)
+    return true
+end
+
+--- Open WoW's Key Bindings at a button's section, where its key is set. For
+--- the action buttons' right-click menu (GSE_Utils, Utils.lua), which reaches
+--- it through GSE.GUICall: this file loads on demand.
+function GSE.GUIOpenButtonKeyBindings(buttonName)
+    if GSE.isEmpty(buttonName) then return false end
+    return openWoWKeyBindingsFor(bindingActionFor(buttonName))
+end
+
 local showOverridePanel
 -- The open Button Bindings panel's rows re-read their keys when WoW's
 -- bindings change, so a key set in WoW's own Key Bindings shows at once.
@@ -1817,15 +1929,26 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- converges instead of re-applying it on every run.
     local headingNudge = {[2] = -10}
     -- The columns, left to right, for the rows and the headings alike.
-    -- Button stays second, which headingNudge counts on.
+    -- Button stays second, which headingNudge counts on.  The two key cells
+    -- are read-only, so they sit last, after what the row is set with.
     local function columnLayout()
-        local order = {"add", "button", "key", "keys", "sequence"}
+        local order = {"add", "button", "sequence"}
         if showState then order[#order + 1] = "state" end
+        order[#order + 1] = "key"
+        order[#order + 1] = "keys"
         order[#order + 1] = "remove"
         if marks then order[#order + 1] = "mark" end
         return order
     end
     local buttonNames, buttonOrder = actionButtonNames()
+    -- The column widths now (fitOverrideColumns), shared by every row and
+    -- the headings.  fitColumns is a row's or the headings' beforeLayout.
+    local cols = {}
+    for name, width in pairs(AO_COL_BASE) do cols[name] = width end
+    local function fitColumns(container)
+        local content = container.content or container.frame
+        fitOverrideColumns(cols, content and content.GetWidth and content:GetWidth(), showState, marks ~= nil)
+    end
 
     -- Negative `by` slides right; both directions are used below.
     local function slideLeft(frame, by)
@@ -1905,23 +2028,23 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
     end
     -- A greyed row lined up with the first row's columns: its button name
-    -- under the button, Copy to Loadout under the Main Key and Backup Key
-    -- cells together, its sequence left-aligned at the sequence dropdown's
-    -- left edge.
+    -- under the button, its sequence left-aligned at the sequence dropdown's
+    -- left edge, Copy to Loadout under the Main Key and Backup Key cells
+    -- together.
     local function alignInherited(entry)
-        local f = rowChains[1] and rowChains[1].frames
+        local f = rowChains[1] and rowChains[1].byName
         if not f then return end
         local function centreOf(a, z)
             local l, r = a and a.GetLeft and a:GetLeft(), z and z.GetRight and z:GetRight()
             return l and r and (l + r) / 2
         end
-        local targets = {centreOf(f[2], f[2]), centreOf(f[3], f[4])}
+        local targets = {centreOf(f.button, f.button), centreOf(f.key, f.keys)}
         for i = 1, 2 do
             local frame = entry.cells[i]
             local have, want = frame.GetCenter and frame:GetCenter(), targets[i]
             if have and want then slideLeft(frame, have - want) end
         end
-        local seqFrame, seqLeft = entry.cells[3], f[5] and f[5].GetLeft and f[5]:GetLeft()
+        local seqFrame, seqLeft = entry.cells[3], f.sequence and f.sequence.GetLeft and f.sequence:GetLeft()
         local have = seqFrame and seqFrame.GetLeft and seqFrame:GetLeft()
         if have and seqLeft then slideLeft(seqFrame, have - seqLeft) end
     end
@@ -2057,10 +2180,11 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local row = UI:Create("SimpleGroup")
         row:SetFullWidth(true)
         row:SetLayout("Flow")
-        if row.SetFlowGap then row:SetFlowGap(6) end
+        if row.SetFlowGap then row:SetFlowGap(AO_FLOW_GAP) end
         if row.SetFlowPadding then row:SetFlowPadding(0, 0, 0, 0) end
         if row.SetFlowVAlign then row:SetFlowVAlign("CENTER") end
         if row.SetFlowHAlign then row:SetFlowHAlign("CENTER") end
+        row.flowNoWrap = true
 
         local addSlot
         if index == #rows then
@@ -2124,7 +2248,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end)
 
         local state = showState and UI:Create("Dropdown")
-        if state then state:SetWidth(AO_COL_STATE) end
+        if state then state:SetWidth(cols.state) end
         local function refreshStates()
             if not state then return end
             local states, order = stateListFor(model.bind, model.state)
@@ -2162,7 +2286,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
             return cell
         end
-        local key, keys = keyCell(AO_COL_KEY), keyCell(AO_COL_KEYS)
+        local key, keys = keyCell(cols.key), keyCell(cols.keys)
         local refreshButtonText
         -- WoW's keys for the button: the first, then every further one.
         local function keyTexts()
@@ -2186,8 +2310,8 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
         local function refreshKeys()
             local first, second = keyTexts()
-            fillKeyCell(key, AO_COL_KEY, first)
-            fillKeyCell(keys, AO_COL_KEYS, second)
+            fillKeyCell(key, cols.key, first)
+            fillKeyCell(keys, cols.keys, second)
             if refreshButtonText then refreshButtonText() end
         end
         -- A key set in WoW's Key Bindings while the pane is open shows at once.
@@ -2200,7 +2324,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- submenu per bar -- through MenuUtil, as the tree's right-click
         -- menus do.  Falls back to a flat menu where MenuUtil is missing.
         local button = UI:Create("Button")
-        button:SetWidth(AO_COL_BUTTON)
+        button:SetWidth(cols.button)
         button:SetHeight(KB_ROW_HEIGHT)
         -- Bar and slot (buttonLabel), fitted to the button.  Its keys are
         -- the two cells beside it.  The frame name is in the tooltip.
@@ -2209,7 +2333,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 button:SetText(L["Pick a button"])
                 return
             end
-            button:SetText(fitTail(button.text, buttonLabel(model.bind), AO_COL_BUTTON - 20))
+            button:SetText(fitTail(button.text, buttonLabel(model.bind), cols.button - 20))
         end
         button:SetCallback("OnEnter", function()
             if GSE.isEmpty(model.bind) then return end
@@ -2327,7 +2451,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         refreshButtonText()
 
         local sequence = UI:Create("Dropdown")
-        sequence:SetWidth(AO_COL_SEQ)
+        sequence:SetWidth(cols.sequence)
         local seqNames, seqOrder = sequenceList()
         sequence:SetList(seqNames, seqOrder)
         for k in pairs(seqNames) do
@@ -2347,9 +2471,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         local mark = marks and loadoutMark(editframe, rowKey(model) and marks[rowKey(model)] or nil)
         local cells = {add = addSlot, button = button, key = key, keys = keys, sequence = sequence, state = state,
             remove = remove, mark = mark}
-        local chain = {frames = {}, edges = {}}
+        local chain = {frames = {}, edges = {}, byName = {}}
         for i, name in ipairs(columnLayout()) do
             local cell = cells[name]
+            chain.byName[name] = cell.frame
             if name == "mark" then
                 -- The loadout marker sits just right of the X, on the row's
                 -- own line. As a flowed cell it made the row wider than the
@@ -2368,6 +2493,22 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
         rowChains[#rowChains + 1] = chain
         row:SetHeight(KB_ROW_HEIGHT)
+        -- Each layout sizes the columns to the row's width first, and cuts
+        -- the key and button text again when that changed them.
+        local fitted, fitting
+        row.beforeLayout = function(container)
+            if fitting then return end
+            fitColumns(container)
+            local now = table.concat({cols.button, cols.sequence, cols.state, cols.key, cols.keys}, ":")
+            for name, width in pairs(cols) do
+                if cells[name] then cells[name].width = width end
+            end
+            if fitted ~= now then
+                fitted, fitting = now, true
+                refreshKeys()
+                fitting = false
+            end
+        end
         -- A resize lays the row out again, undoing the tightening: redo it
         -- in the same layout pass (the first row carries the headings).
         row.afterLayout = function()
@@ -2402,14 +2543,14 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 local v = spec[k]
                 local label = buttonLabel(v.Bind or k)
                 if v.State then label = label .. " (" .. v.State .. ")" end
-                entries[#entries + 1] = {first = label, firstWidth = AO_COL_BUTTON, seq = v.Sequence, onOverride = function()
+                entries[#entries + 1] = {first = label, firstWidth = cols.button, seq = v.Sequence, onOverride = function()
                     addInheritedRow(rows, {bind = v.Bind or k, state = v.State, seq = v.Sequence})
                     markDirty()
                     redraw()
                 end}
             end
             inheritedRows = inheritedSection(editframe, inheritedContainer, entries,
-                {seqJustify = "LEFT", seqWidth = AO_COL_SEQ, seqInset = 10, topGap = KB_ROW_HEIGHT})
+                {seqJustify = "LEFT", seqWidth = cols.sequence, seqInset = 10, topGap = KB_ROW_HEIGHT})
             -- Laid out after the rows on a resize: line up in the same pass.
             for _, entry in ipairs(inheritedRows) do
                 entry.row.afterLayout = function() alignInherited(entry) end
@@ -2511,10 +2652,11 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     local headings = UI:Create("SimpleGroup")
     headings:SetFullWidth(true)
     headings:SetLayout("Flow")
-    if headings.SetFlowGap then headings:SetFlowGap(6) end
+    if headings.SetFlowGap then headings:SetFlowGap(AO_FLOW_GAP) end
     if headings.SetFlowPadding then headings:SetFlowPadding(0, 0, 0, 0) end
     if headings.SetFlowHAlign then headings:SetFlowHAlign("CENTER") end
-    local function heading(width, icon, text)
+    headings.flowNoWrap = true
+    local function heading(width, icon, text, exact)
         local h = UI:Create("Heading")
         h:SetWidth(width)
         h:SetHeight(KB_ROW_HEIGHT)
@@ -2528,7 +2670,7 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         -- same, and the columns either side leave it the room.
         local fs = h.text or h.label
         local textWidth = fs and fs.GetStringWidth and fs:GetStringWidth() or 0
-        if textWidth + 6 > width then h:SetWidth(math.ceil(textWidth) + 6) end
+        if not exact and textWidth + 6 > width then h:SetWidth(math.ceil(textWidth) + 6) end
         return h
     end
     local function blank(width)
@@ -2540,8 +2682,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     local headingCells = {
         add = function() return blank(KB_COL_ADD) end,
         button = function() return heading(AO_COL_BUTTON, Statics.Icons.Button, L["Action Bar Type"]) end,
-        key = function() return heading(AO_COL_KEY, nil, L["Main Key"]) end,
-        keys = function() return heading(AO_COL_KEYS, nil, L["Backup Key"]) end,
+        -- The two key headings stay their column's width, cut short with it:
+        -- side by side, wider ones would run into each other.
+        key = function() return heading(cols.key, nil, L["Main Key"], true) end,
+        keys = function() return heading(cols.keys, nil, L["Backup Key"], true) end,
         sequence = function() return heading(AO_COL_SEQ, Statics.Icons.Sequences, L["Sequence"]) end,
         state = function() return heading(AO_COL_STATE, nil, L["State"]) end,
         remove = function() return blank(KB_COL_REMOVE) end,
@@ -2550,10 +2694,16 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     -- Same order as the row.  Recorded so the tighten pass can slide each
     -- heading by what its column moved.
     wipe(headingFrames)
+    local keyHeadings = {}
     for _, name in ipairs(columnLayout()) do
         local cell = headingCells[name]()
         headings:AddChild(cell)
         headingFrames[#headingFrames + 1] = cell.frame
+        if name == "key" or name == "keys" then keyHeadings[name] = cell end
+    end
+    headings.beforeLayout = function(container)
+        fitColumns(container)
+        for name, cell in pairs(keyHeadings) do cell.width = cols[name] end
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
