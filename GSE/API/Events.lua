@@ -1478,7 +1478,8 @@ local function showGSEButtonTooltip(btn)
             rightLine:Show()
         end
     else
-        GameTooltip:SetText(seqName, 1, 1, 1)
+        -- The sequence's own name: seqName is its id, which is what its button is called.
+        GameTooltip:SetText(GSE.SequenceName(seqName) or seqName, 1, 1, 1)
         GameTooltip:AddLine(L["GSE Sequence"], 0.6, 0.6, 0.6)
     end
     GameTooltip:Show()
