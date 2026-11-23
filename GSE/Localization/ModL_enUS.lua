@@ -1127,6 +1127,7 @@ L["Buttons per row"] = true
 L["How many buttons each row of the bar holds."] = true
 L["Scale"] = true
 L["The GSE Action Bar could not be loaded: %s"] = true
+L["GSE's help could not be loaded: %s"] = true
 L["A macro named %s already exists."] = true
 L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
 L["The version used where no other version has been configured."] = true

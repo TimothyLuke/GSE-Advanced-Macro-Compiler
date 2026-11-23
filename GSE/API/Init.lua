@@ -284,7 +284,7 @@ GSE.DebugProfile("init")
 -- ---------------------------------------------------------------------------
 -- Submodule init dispatch
 --
--- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL, GSE_Actionbar) cannot reach
+-- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL, GSE_Actionbar, GSE_Help) cannot reach
 -- this addon's private namespace at parse-time. Each one exposes a single
 -- global `<name>_Initialize` function that takes the GSE table and runs the
 -- submodule's deferred setup. Reinit guards live inside each submodule.
@@ -297,6 +297,8 @@ local SUBMODULES = {
     GSE_QoL = true,
     -- LoadOnDemand: GSE loads it while it is turned on (Events.lua, loadActionBar).
     GSE_Actionbar = true,
+    -- LoadOnDemand: GSE loads it when help is asked for (Events.lua, GSE.CheckHelp).
+    GSE_Help = true,
     GSE_Companion = true,
 }
 

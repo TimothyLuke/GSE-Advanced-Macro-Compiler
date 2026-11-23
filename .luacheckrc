@@ -131,6 +131,7 @@ globals = {
     "GSE_LDB_Initialize",
     "GSE_QoL_Initialize",
     "GSE_Actionbar_Initialize",
+    "GSE_Help_Initialize",
     -- GSE
     "GSE2",
     "GSEGUI",
