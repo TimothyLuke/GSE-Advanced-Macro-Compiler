@@ -8378,7 +8378,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     if GSE.GUI.ResetUndo then GSE.GUI.ResetUndo(editor) end
     editor.ManageTree()
     editor.treeContainer:SelectByValue(
-        table.concat({"Sequences", classid, classid .. "," .. GSE.GetCurrentSpecID() .. "," .. id .. ",0", "config"}, "\001")
+        table.concat({"Sequences", classid, classid .. "," .. sequence.MetaData.SpecID .. "," .. id .. ",0", "config"}, "\001")
     )
 end
 

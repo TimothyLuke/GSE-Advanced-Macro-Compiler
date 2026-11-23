@@ -309,7 +309,7 @@ local function buildSpecList()
     if specListBuilt then return end
     specListBuilt = true
 
-    if GSE.GameMode <= 4 then
+    if GSE.GameMode < 7 and not GSE.IsForever then
         Statics.SpecIDClassList = {
             [0] = 0,
             [1] = 1,
@@ -336,6 +336,10 @@ local function buildSpecList()
         Statics.SpecIDList[11] = determineClassName(11)
         if GSE.GameMode >= 3 then
             Statics.SpecIDList[6] = determineClassName(6)
+        end
+        if GSE.GameMode >= 5 then
+            Statics.SpecIDClassList[10] = 10
+            Statics.SpecIDList[10] = determineClassName(10)
         end
     else
         Statics.SpecIDList[0]    = L["Global"]

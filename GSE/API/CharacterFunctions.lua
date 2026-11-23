@@ -5,7 +5,7 @@ local Statics = GSE.Static
 
 --- Return the characters current spec id
 function GSE.GetCurrentSpecID()
-    if GSE.GameMode <= 4 then
+    if GSE.GameMode < 7 and not GSE.IsForever then
         return GSE.GetCurrentClassID() and GSE.GetCurrentClassID()
     else
         local getSpec = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
@@ -78,6 +78,16 @@ function GSE.GetClassIDforSpec(specid)
         if classid == 0 then classid = GSE.SpecIDClassList[specid] or 0 end
     end
     return classid
+end
+
+function GSE.SequenceSpecID(specID)
+    local id = tonumber(specID)
+    if GSE.GameMode < 7 and not GSE.IsForever and id and id > 13 then
+        local classID = GSE.SpecIDClassList[id]
+        if not classID and GSE.GameMode >= 5 then classID = GSE.GetClassIDforSpec(id) end
+        if classID and classID > 0 then return classID end
+    end
+    return specID
 end
 
 --- A spec's icon: the client's own, else its talent tree's (WoW Forever has

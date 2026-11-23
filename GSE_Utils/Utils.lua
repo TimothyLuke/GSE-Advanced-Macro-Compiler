@@ -87,6 +87,7 @@ function GSE.OOCAddSequenceToCollection(sequenceName, sequence, classid, id)
         )
     end
 
+    sequence.MetaData.SpecID = GSE.SequenceSpecID(sequence.MetaData.SpecID)
     -- Check for collisions
     local found = false
     if (GSE.isEmpty(classid) or classid == 0) and not GSE.isEmpty(sequence.MetaData.SpecID) then
