@@ -26,6 +26,59 @@ local function liftSpecWithClass(specName, className)
     return chunk(function() return specName end, function() return className end)
 end
 
+-- A spec's name is the client's own. Mists was given the spec's class id in
+-- its place -- a number -- and the editor's spec list, which sorts by name,
+-- failed on it, so a sequence's Configuration page stopped before its rows
+-- (Larry, 2026-11-23).
+describe("determineSpecializationName", function()
+    local function lift(api)
+        local fh = assert(io.open("GSE/API/Statics.lua", "r"), "cannot open GSE/API/Statics.lua")
+        local src = fh:read("*a")
+        fh:close()
+        src = (src:gsub("\r\n", "\n"):gsub("\r", "\n"))
+        local body = assert(src:match("\nlocal function determineSpecializationName%(specID%)\n(.-)\nend\n"),
+            "determineSpecializationName not found in Statics.lua")
+        local compile = loadstring or load
+        local chunk = assert(compile("local GetSpecializationInfoByID = ...\nreturn function(specID)\n" .. body .. "\nend"))
+        return chunk(api)
+    end
+
+    it("is the client's name for the spec", function()
+        local f = lift(function(id) return id, "Arcane", "", 135932, "DAMAGER", "MAGE" end)
+        assert.equals("Arcane", f(62))
+    end)
+
+    it("is nil for a spec the client does not have, and on a client with no specs", function()
+        assert.is_nil(lift(function() return nil end)(577))
+        assert.is_nil(lift(function() return 577, "" end)(577))
+        assert.is_nil(lift(nil)(62))
+    end)
+
+    it("is never the spec's class id", function()
+        local fh = assert(io.open("GSE/API/Statics.lua", "r"))
+        local src = fh:read("*a"):gsub("\r\n", "\n")
+        fh:close()
+        local body = assert(src:match("\nlocal function determineSpecializationName%(specID%)\n(.-)\nend\n"))
+        assert.is_nil(body:find("SpecIDClassList", 1, true))
+        assert.is_nil(body:find("GameMode", 1, true))
+    end)
+
+    -- What the number did: the editor sorts a class's specs by name.
+    it("gives names the editor's spec list can sort", function()
+        local fh = assert(io.open("GSE/API/StringFunctions.lua", "r"))
+        local src = fh:read("*a"):gsub("\r\n", "\n")
+        fh:close()
+        local body = assert(src:match("\nfunction GSE%.AlphabeticalTableSortAlgorithm%(a, b%)\n(.-)\nend\n\nfunction "))
+        local sort = assert((loadstring or load)("return function(a, b)\n" .. body .. "\nend"))()
+        local f = lift(function(id) return id, ({ [62] = "Arcane", [63] = "Fire", [64] = "Frost" })[id] end)
+        local specs = { { name = f(64) }, { name = f(62) }, { name = f(63) } }
+        table.sort(specs, function(a, b) return sort(a.name, b.name) end)
+        assert.are.same({ "Arcane", "Fire", "Frost" }, { specs[1].name, specs[2].name, specs[3].name })
+        assert.is_false(pcall(table.sort, { { name = 8 }, { name = 8 }, { name = "8 - Mage" } },
+            function(a, b) return sort(a.name, b.name) end), "the class id as a name fails the sort")
+    end)
+end)
+
 describe("specWithClass", function()
     it("joins spec and class when the client has both", function()
         local f = liftSpecWithClass("Frost", "Mage")

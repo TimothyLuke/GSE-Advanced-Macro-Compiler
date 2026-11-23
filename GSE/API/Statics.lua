@@ -163,13 +163,17 @@ GSE.SpecIDClassList = {
     [1473] = 13
 }
 
+-- A spec's name as the client gives it, or nil where it has no such spec (a
+-- Retail-only spec on Mists, any retail spec on WoW Forever). Mists was given
+-- the spec's class id here in place of a name: a number, which the editor's
+-- spec list cannot sort, so a sequence's Configuration page stopped before
+-- its rows (Larry, 2026-11-23). The clients without specs never ask
+-- (buildSpecList).
 local function determineSpecializationName(specID)
-    if GSE.GameMode < 7 then
-        return GSE.SpecIDClassList[specID]
-    else
-        local _, specname = GetSpecializationInfoByID(specID)
-        return specname
-    end
+    if not GetSpecializationInfoByID then return nil end
+    local _, specname = GetSpecializationInfoByID(specID)
+    if type(specname) ~= "string" or specname == "" then return nil end
+    return specname
 end
 
 local function determineClassName(specID)
