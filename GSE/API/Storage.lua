@@ -3638,6 +3638,8 @@ local function playerKnowsSpell(spellID)
     end
     return false
 end
+-- The State choices ask it too (Profiles.lua).
+GSE.PlayerKnowsSpell = playerKnowsSpell
 
 local function knowsSpellNamed(value)
     local info = safeGetSpellInfo(tonumber(value) or value)
