@@ -427,14 +427,34 @@ local function spellName(spellID)
     return info and info.name
 end
 
+-- Dire Bear Form takes Bear Form's place in the spellbook (Classic Era to
+-- Cataclysm).
+local FORM_REPLACED_BY = { [5487] = 9634 }
+-- Whether the character has a form, stance or stealth yet: the spell is
+-- known, or it is on the stance bar, or (a higher rank: Prowl) its name is in
+-- the spellbook, where a name finds only what the character has.
+local function formKnown(spellID)
+    if not spellID then return false end
+    local replaced = FORM_REPLACED_BY[spellID]
+    if GSE.PlayerKnowsSpell(spellID) or (replaced and GSE.PlayerKnowsSpell(replaced)) then return true end
+    local name = spellName(spellID)
+    for i = 1, GetNumShapeshiftForms and GetNumShapeshiftForms() or 0 do
+        local onBar = select(4, GetShapeshiftFormInfo(i))
+        if onBar and (onBar == spellID or onBar == replaced or (name and spellName(onBar) == name)) then return true end
+    end
+    local byName = name and GSE.GetSpellInfo(name)
+    return byName ~= nil and byName.name == name
+end
+
 -- Whether bonus bar n comes up for a class on this client (set below, with
 -- the pages they come up on).
 local clientBonusBar
 
 -- One [..] group of a driver as a name: "Bear Form", "Shift + Cat Form".
 -- Nil for a vehicle, Skyriding or a page switched by hand -- and, with
--- onlyClientBars, for a bonus bar the class has none of on this client.
-local function describePageConditions(group, classfile, onlyClientBars)
+-- onlyClientBars, for a bonus bar the class has none of on this client; with
+-- onlyKnown, for a form, stance or stealth the character has not learned.
+local function describePageConditions(group, classfile, onlyClientBars, onlyKnown)
     local bonus, form, stealth, modifier, target
     for raw in string.gmatch(group, "[^,]+") do
         local test = string.lower(raw:match("^%s*(.-)%s*$"))
@@ -453,19 +473,21 @@ local function describePageConditions(group, classfile, onlyClientBars)
         if test == "help" or test == "harm" then target = test end
     end
 
-    local name
+    local spell
     if (bonus or form) and stealth and classfile == "DRUID" then
-        name = spellName(PROWL)
+        spell = PROWL
     elseif bonus then
-        name = spellName(BONUS_BAR_SPELLS[classfile] and BONUS_BAR_SPELLS[classfile][bonus])
+        spell = BONUS_BAR_SPELLS[classfile] and BONUS_BAR_SPELLS[classfile][bonus]
     elseif form and GetShapeshiftFormInfo then
-        name = spellName(select(4, GetShapeshiftFormInfo(form)))
+        spell = select(4, GetShapeshiftFormInfo(form))
         -- A priest's Shadowform is form 1 to a macro condition and has no
         -- place on the stance bar to be named from (DaylightUI pages by it).
-        if not name and form == 1 and classfile == "PRIEST" then name = spellName(BONUS_BAR_SPELLS.PRIEST[1]) end
+        if not spellName(spell) and form == 1 and classfile == "PRIEST" then spell = BONUS_BAR_SPELLS.PRIEST[1] end
     elseif stealth then
-        name = spellName(classfile == "DRUID" and PROWL or STEALTH)
+        spell = classfile == "DRUID" and PROWL or STEALTH
     end
+    if onlyKnown and spell and not formKnown(spell) then return nil end
+    local name = spellName(spell)
     local parts = {}
     if modifier then parts[#parts + 1] = modifier end
     if name then parts[#parts + 1] = name end
@@ -480,7 +502,9 @@ end
 --- class has none of on this client. EllesmereUI on WoW Forever sends all
 --- four for every class, and a form that brings up no bar is no State to
 --- choose (Moonkin Form and Shadowform there).
-function GSE.PageDriverNames(driver, classfile, onlyClientBars)
+--- onlyKnown: leave out a form, stance or stealth the character has not
+--- learned yet (the State choices; a page stays a stance page either way).
+function GSE.PageDriverNames(driver, classfile, onlyClientBars, onlyKnown)
     local names, default = {}, nil
     for clause in string.gmatch(tostring(driver or "") .. ";", "([^;]*);") do
         -- DaylightUI tags a page with the form or page under it ("13:f1").
@@ -488,7 +512,7 @@ function GSE.PageDriverNames(driver, classfile, onlyClientBars)
         if page and not string.find(clause, "[", 1, true) then default = default or page end
         if page then
             for group in string.gmatch(clause, "%[([^%]]*)%]") do
-                local name = describePageConditions(group, classfile, onlyClientBars)
+                local name = describePageConditions(group, classfile, onlyClientBars, onlyKnown)
                 if name then
                     names[page] = names[page] or {}
                     local seen = false
@@ -568,7 +592,10 @@ end
 -- (Larry, 2026-11-20: "show just Stealth, hide the page number"): from its bar's page
 -- driver (GSE.PageDriverNames), where the bar addon lets the player choose
 -- the pages; Blizzard's main bar and Dominos by the pages above. A state
--- nothing names shows its number.
+-- nothing names shows its number -- and a stance, form or stealth the
+-- character has not learned yet is not named, so it is no State to choose
+-- until they have it (Larry, 2026-11-23: a rogue was offered Shadow Dance
+-- without it).
 local function stateNamer(buttonName)
     local classfile = GetClassInfo and select(2, GetClassInfo(GSE.GetCurrentClassID()))
     -- Not Dominos' driver: it pages by states of its own ("[bonusbar:1]cat;
@@ -580,13 +607,14 @@ local function stateNamer(buttonName)
     -- A LibActionButton bar's states are its own, each named as its driver
     -- has it; any other bar's are the pages a stance brings up here.
     local lab = type(frame) == "table" and frame.state_types ~= nil
-    local names = driver and GSE.PageDriverNames(driver, classfile, not lab)
+    local names = driver and GSE.PageDriverNames(driver, classfile, not lab, true)
     return function(k)
         local name
         if names then
             name = names[k] and table.concat(names[k], " / ")
         elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
             local spell = classfile and FORM_PAGES[classfile] and FORM_PAGES[classfile][k]
+            if not formKnown(spell) then spell = nil end
             local info = spell and GSE.GetSpellInfo(spell)
             name = info and info.name
         end
