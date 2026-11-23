@@ -2142,6 +2142,7 @@ end
 function GSE.ReplaceSequence(classid, id, sequence)
     classid = tonumber(classid)
     if type(sequence.MetaData) ~= "table" then sequence.MetaData = {} end
+    sequence.MetaData.SpecID = GSE.SequenceSpecID(sequence.MetaData.SpecID)
     local prior, fromClass = GSE.SequenceEnvelope(id)
     -- The label: what the sequence says it is called, else what it was.
     local sequenceName = sequence.MetaData.Name or (prior and prior.Name)
