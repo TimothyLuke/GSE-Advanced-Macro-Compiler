@@ -1203,6 +1203,126 @@ local function hookPressFlash(button)
     end)
 end
 
+-- A press of a sequence shows on the Blizzard action buttons that hold the
+-- spell that press fired, as if the spell's own key had been pressed. Off by
+-- default: GSEOptions.actionBarShowCastPress. Visual only -- the pushed art,
+-- shown and hidden again -- so it works in combat and changes nothing about
+-- the button. With a target, every press shows, whether or not the spell
+-- then casts, as every press of a key does.
+-- shortcut: Blizzard's own bars only, add a bar addon's button names if asked.
+local CAST_PRESS_BARS = {
+    "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton",
+    "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button", "MultiBar7Button",
+}
+-- Whether the spell in a slot is the one pressed: the same spell, the one a
+-- talent replaced it with, or the same spell by name -- with spell ranks
+-- (Classic, Forever) the bar holds one rank's id and the sequence fires
+-- another's, and C_ActionBar.FindSpellActionButtons finds neither.
+local function slotHoldsSpell(slot, spellID, base, name)
+    local kind, held = GetActionInfo(slot)
+    if kind ~= "spell" or not held then return false end
+    if held == spellID or held == base then return true end
+    local info = name and GSE.GetSpellInfo(held)
+    return info ~= nil and info.name == name
+end
+-- The lines of a block that cast something.
+local CAST_PRESS_COMMANDS = { cast = true, use = true, spell = true, castsequence = true }
+-- Whether a block's macro text casts the spell with its conditions as they read
+-- now: a /cast or /use line whose conditions pick a clause naming it, or a
+-- /castsequence line whose picked clause is on it, before any /stopmacro that
+-- holds. A block with no cast line is taken at its word. The press is read before its macro runs (the click
+-- snippet calls UpdateIcon ahead of the action), so the cast it starts cannot
+-- change the answer.
+local function macroCastsSpell(macrotext, spellID, name)
+    local castLines = 0
+    for line in string.gmatch(macrotext .. "\n", "([^\n]*)\n") do
+        local cmd, etc = string.match(line, "^%s*/(%w+)%s*(.-)%s*$")
+        cmd = cmd and string.lower(cmd)
+        -- A /stopmacro whose conditions hold: no line after it runs.
+        if cmd == "stopmacro" and (etc == "" or GSE.SafeSecureCmdOptionParse(etc) ~= nil) then
+            return false
+        end
+        if cmd and CAST_PRESS_COMMANDS[cmd] then
+            castLines = castLines + 1
+            local picked = GSE.SafeSecureCmdOptionParse(etc)
+            if picked ~= nil and not isSecretValue(picked) and type(picked) == "string" and picked ~= "" then
+                local entries = { picked }
+                if cmd == "castsequence" then
+                    -- Only the step the sequence is on casts: past the
+                    -- spell (a "Spell, nil" until its reset), nothing does.
+                    -- WoW keeps the sequence by the text its parser picked.
+                    local step
+                    if QueryCastSequence then _, _, step = QueryCastSequence(picked) end
+                    entries = type(step) == "string" and { step } or GSE.SplitCastSequence(picked)
+                end
+                for _, entry in ipairs(entries) do
+                    local target = GSE.GetMacroClauseTarget(entry)
+                    local info = GSE.GetSpellInfo(target)
+                    if (info and ((spellID and info.spellID == spellID) or (name and info.name == name)))
+                        or (name and type(target) == "string" and string.lower(target) == string.lower(name)) then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return castLines == 0
+end
+-- Presses come faster than the art stays up: a later press keeps it up, and
+-- only the last one's timer takes it down.
+local pressShownUntil = setmetatable({}, {__mode = "k"})
+local function showCastPress(spellID, name, macrotext)
+    if isSecretValue(spellID) or not (spellID or name) then return end
+    -- Only with a target, and alive: riding, eating or standing about with
+    -- nothing targeted, a press is not a cast and the bar stays still.
+    if not UnitExists("target") or UnitIsDeadOrGhost("player") then return end
+    -- The spell as the game names it: a sequence's can carry its rank.
+    local info = GSE.GetSpellInfo(spellID or name)
+    spellID = spellID or (info and info.spellID)
+    name = info and info.name or name
+    -- Targeting yourself, a spell that only harms has nothing to hit. Where
+    -- the game keeps the comparison secret, the press shows.
+    local onSelf = UnitIsUnit("target", "player")
+    if not isSecretValue(onSelf) and onSelf and C_Spell and C_Spell.IsSpellHarmful
+        and C_Spell.IsSpellHarmful(spellID or name) and not C_Spell.IsSpellHelpful(spellID or name) then
+        return
+    end
+    -- Conditions that rule the spell out ([mod:shift] with no Shift held, a
+    -- [combat] line out of combat): nothing cast, nothing shown.
+    if macrotext and not macroCastsSpell(macrotext, spellID, name) then return end
+    local base = spellID and FindBaseSpellByID and FindBaseSpellByID(spellID)
+    for _, bar in ipairs(CAST_PRESS_BARS) do
+        for i = 1, 12 do
+            local button = _G[bar .. i]
+            local slot = button and button:IsVisible() and not button:GetAttribute("gse-button")
+                and getButtonEffectiveSlot(button)
+            local pushed = slot and slotHoldsSpell(slot, spellID, base, name) and button:GetPushedTexture()
+            if pushed then
+                pressShownUntil[button] = GetTime() + PRESS_FLASH_SECONDS
+                pushed:Show()
+                C_Timer.After(PRESS_FLASH_SECONDS, function()
+                    if GetTime() >= pressShownUntil[button] and button:GetButtonState() == "NORMAL" then
+                        pushed:Hide()
+                    end
+                end)
+            end
+        end
+    end
+end
+--- GSE.UpdateIcon (Storage.lua) found the spell of the step a sequence fires
+--- next, and that step's macro text; pressed is true when a press brought it
+--- there. That press fired the step found the time before, so that spell is
+--- the one shown as pressed.
+local pressNext = {}
+function GSE.SequenceStepShown(sequenceId, spellID, name, pressed, macrotext)
+    local fired = pressNext[sequenceId]
+    pressNext[sequenceId] = (spellID or name) and { spellID, name, macrotext } or nil
+    if not (pressed and fired) or GSEOptions.actionBarShowCastPress ~= true then return end
+    -- A value Midnight keeps secret in combat, or a button built some other
+    -- way: no press shown, never an error on a press.
+    pcall(showCastPress, fired[1], fired[2], fired[3])
+end
+
 -- Puts DaylightUI's filled look on a button running a sequence; set once its
 -- skin is hooked (hookDaylightUIDress, below).
 local dressDaylightUIOverride

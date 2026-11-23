@@ -1613,6 +1613,23 @@ local function AddActionBarIconColourOption(optionsCategory)
     end
 end
 
+-- GSE Streamer Mode, for viewers to see what a sequence presses. Off by
+-- default: a press of a sequence shows on the action buttons holding the
+-- spell it fired. See showCastPress in GSE/API/Events.lua. Saved as
+-- GSEOptions.actionBarShowCastPress.
+local function AddActionBarCastPressOption(optionsCategory)
+    do
+        local function GetValue()
+            return GSEOptions.actionBarShowCastPress == true
+        end
+        local function SetValue(val)
+            GSEOptions.actionBarShowCastPress = val == true
+        end
+        local setting = Settings.RegisterProxySetting(optionsCategory, "actionBarShowCastPress", Settings.VarType.Boolean, L["GSE Streamer Mode"], false, GetValue, SetValue)
+        Settings.CreateCheckbox(optionsCategory, setting, L["Each press of a sequence shows as a press of the action bar button holding the spell it fired, as if you had pressed that spell's own key. Visual only."])
+    end
+end
+
 -- Sits a row under another one without initializer:SetParentInitializer.
 -- Called from addon code that writes a tainted parentInitializer, and WoW's
 -- Options search reads it off every row a search matches. A first letter
@@ -3146,6 +3163,7 @@ function GSE:CreateConfigPanels()
         AddActionBarLabelOption(generalOptions)
         AddActionBarWatermarkOption(generalOptions)
         AddActionBarIconColourOption(generalOptions)
+        AddActionBarCastPressOption(generalOptions)
         -- Last in the section. Button Binding popup: the right-click menu runs on every client,
         -- so its switch is on every client too.
         do

@@ -4030,6 +4030,14 @@ function GSE.UpdateIcon(self, reseticon)
     if GSE.GetCurrentButtonIconInfo then
         spellinfo, foundSpell, action = GSE.GetCurrentButtonIconInfo(self, reseticon)
     end
+    -- The spell of the step the next press fires, and its macro text, for
+    -- showing a press on the action bar (Events.lua). Not on a reset, which
+    -- shows the sequence's logo.
+    if GSE.SequenceStepShown then
+        local shown = not reseticon and spellinfo or nil
+        GSE.SequenceStepShown(gsebutton, shown and shown.spellID, shown and (shown.name or foundSpell),
+            isFreshSequenceClick, shown and action and action.macrotext or nil)
+    end
     if not action and executionAction then
         action = executionAction
         foundSpell = foundSpell or executionAction.spell or ""
