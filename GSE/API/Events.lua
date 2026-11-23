@@ -3642,6 +3642,17 @@ function GSE.CheckGUI()
     return loaded
 end
 
+--- Loads GSE's help (GSE_Help, LoadOnDemand) the first time it is asked for.
+-- Its windows are on GSE once it is loaded (GSE.ToggleKeybindGuide).
+-- @return true when it is loaded; otherwise why not is said in chat.
+function GSE.CheckHelp()
+    local loaded, reason = C_AddOns.LoadAddOn("GSE_Help")
+    if not loaded then
+        GSE.Print(string.format(L["GSE's help could not be loaded: %s"], tostring(reason)))
+    end
+    return loaded
+end
+
 -- Force-load the LoadOnDemand GUI (which hosts the native dialogs) and then
 -- call the named GSE.* GUI function. Used by always-loaded core/util/options
 -- code that may need to raise a popup before the GUI has been opened.

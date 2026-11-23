@@ -1,0 +1,29 @@
+﻿## Interface: 11509, 16001, 20506, 50504, 120105, 120107
+
+## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Help|r
+## Notes: GSE's in-game help: the keybind guide
+## Author: TimothyLuke
+## Version: @project-version@
+## Dependencies: GSE
+# GSE loads it (C_AddOns.LoadAddOn, GSE.CheckHelp) the first time help is
+# asked for, so it adds nothing to a loading screen. Turned off in the AddOn
+# list, GSE says so in chat instead of showing help.
+## LoadOnDemand: 1
+## IconTexture: Interface\Addons\GSE_GUI\Assets\GSE_512x512-Transparent.png
+## Category-enUS: Combat
+## Category-deDE: Kampf
+## Category-esES: Combate
+## Category-esMX: Combate
+## Category-frFR: Combat
+## Category-itIT: Combattimento
+## Category-koKR: 전투
+## Category-ptBR: Combate
+## Category-ruRU: Бой
+## Category-zhCN: 战斗
+## Category-zhTW: 戰鬥
+## Group: GSE
+
+
+# Bootstrap exposes _G.GSE_Help_Initialize that main GSE calls on ADDON_LOADED.
+Bootstrap.lua
+KeybindGuide.lua
