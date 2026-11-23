@@ -551,6 +551,30 @@ local SHOWGRID_ALWAYS = [[
     local grid = b:GetAttribute("showgrid") or 0
     if grid % 2 == 0 then b:SetAttribute("showgrid", grid + 1) end
 ]]
+-- GSE's menu on an empty action button needs a button to click. The classic
+-- clients' default Edit Mode layout has "Always Show Buttons" off on every bar
+-- (Blizzard_EditMode/Classic/EditModePresetLayouts.lua): an empty button there
+-- is hidden and only its slot art shows, so the right-click reaches nothing
+-- (Larry, 2026-11-22, Burning Crusade). Where the menu is on, GSE shows
+-- Blizzard's empty buttons itself there, with the bit an override's button is
+-- kept shown by; WoW's own setting stays as the player has it. Forever and
+-- Retail show them by default, so nothing is done there.
+local EMPTY_BUTTON_BAR = {}
+for _, prefix in ipairs({ "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
+    "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button", "MultiBar7Button" }) do
+    for index = 1, 12 do EMPTY_BUTTON_BAR[prefix .. index] = true end
+end
+function GSE.ShowsEmptyButtons()
+    return GSE.GameMode < 11 and GSEOptions.actionBarOverridePopup ~= false
+end
+-- The bit on, and the button shown where the bar has it in use (gseGridShow).
+local SHOWGRID_EMPTY = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 0 then b:SetAttribute("showgrid", grid + 262144) end
+    if self:GetAttribute("gseGridShow") then b:Show() end
+]]
 local function barAlwaysShowsButtons(bar)
     local setting = Enum and Enum.EditModeActionBarSetting and Enum.EditModeActionBarSetting.AlwaysShowButtons
     if not (setting and bar.GetSettingValueBool) then return false end
@@ -563,12 +587,44 @@ local function setOverrideButtonForcedShown(buttonOrName, shown)
     if btn.SetShowGridInsecure then
         btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
     elseif btn.GetShowGrid and btn.bar and btn.bar.UpdateShownButtons then
+        -- An empty button GSE shows anyway keeps the bit (GSE.UpdateEmptyButtons).
+        if not shown and EMPTY_BUTTON_BAR[btn:GetName() or ""] and GSE.ShowsEmptyButtons() then return end
         -- Only when the bit has to change: repaints call this often.
         local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
         if hasBit == (shown and true or false) and (not shown or btn:IsShown()) then return end
         SHBT:SetFrameRef("gseGridButton", btn)
         if not shown and barAlwaysShowsButtons(btn.bar) then SHBT:Execute(SHOWGRID_ALWAYS) end
         SHBT:Execute(shown and SHOWGRID_ON or SHOWGRID_OFF)
+    end
+end
+
+--- Show Blizzard's empty action buttons where GSE does (GSE.ShowsEmptyButtons),
+--- or let go of the ones it showed once the menu is turned off. Out of combat:
+--- the buttons are secure, so it is run again when combat ends.
+function GSE.UpdateEmptyButtons()
+    if InCombatLockdown() or GSE.GameMode >= 11 then return end
+    local show = GSE.ShowsEmptyButtons()
+    for name in pairs(EMPTY_BUTTON_BAR) do
+        local btn = _G[name]
+        local bar = btn and btn.bar
+        if bar and btn.GetShowGrid and bar.UpdateShownButtons then
+            if show then
+                -- Shown now where the bar has the button in use. One it is not
+                -- showing (its icon count, a vehicle's bar) gets the bit alone,
+                -- and the bar shows it when it next has it in use.
+                local inUse = btn.index ~= nil and btn.index <= (bar.numButtonsShowable or 0)
+                    and not btn:GetAttribute("statehidden")
+                local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
+                if not hasBit or (inUse and not btn:IsShown()) then
+                    SHBT:SetFrameRef("gseGridButton", btn)
+                    SHBT:SetAttribute("gseGridShow", inUse)
+                    SHBT:Execute(SHOWGRID_EMPTY)
+                end
+            elseif not btn:GetAttribute("gse-button") then
+                -- shortcut: the bit comes off and the bar hides the button at its next update, not at once.
+                setOverrideButtonForcedShown(btn, false)
+            end
+        end
     end
 end
 
@@ -2999,6 +3055,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     -- The GSE Action Bar's buttons have to exist before Button Bindings go on.
     loadActionBar()
     LoadOverrides()
+    GSE.UpdateEmptyButtons()
     GSE.ManageMacros()
     scheduleGSEOverrideIconRepaint()
     -- Migrate any remaining classes in the background so login is not blocked.
@@ -3213,6 +3270,7 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     -- The GSE Action Bar waited for combat to end to load (loadActionBar).
     if actionBarWaiting then GSE.StartActionBar() end
     LoadOverrides()
+    GSE.UpdateEmptyButtons()
     GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
