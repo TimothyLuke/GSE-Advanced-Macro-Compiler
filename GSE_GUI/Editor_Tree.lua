@@ -656,11 +656,22 @@ local AREA_OPEN_MODE = {VARIABLES = "variables", Macro = "macros", KEYBINDINGS =
 -- Pages that create something are not a place to come back to, as New
 -- Sequence is not.
 local AREA_NEW_NODE = {VARIABLES = "NEWVARIABLES"}
+-- How deep a node is that opens a page of its own: a variable's or a macro's
+-- Configuration, Notes - Help or version. A node above it opens none (the
+-- area's own, New Variable) or passes the click on to one that does, which is
+-- then the one remembered. The area's own node was remembered: a click on
+-- "Variables" left the sequence in the pane, and after a /reload the editor
+-- came back on Variables with an empty pane (Larry, 2026-11-23).
+local AREA_PAGE_DEPTH = {VARIABLES = 3, Macro = 4}
+local function isAreaPage(unique)
+    return #unique >= (AREA_PAGE_DEPTH[unique[1]] or 1)
+end
 
 local function SaveLastAreaNode(unique)
     local area = unique[1]
     local opts = GetSequenceEditorOptions()
     if not (opts and AREA_OPEN_MODE[area]) then return end
+    if not isAreaPage(unique) then return end
     opts.openMode = AREA_OPEN_MODE[area]
     if unique[2] and unique[2] == AREA_NEW_NODE[area] then return end
     -- Nor is New Version: coming back to it would make another.
@@ -689,11 +700,24 @@ function GSE.GUI.GetLastAreaNode(editor, area)
     local opts = GetSequenceEditorOptions()
     local path = opts and opts.lastNodeByArea and opts.lastNodeByArea[area]
     if not path then return nil end
+    -- A node that opens no page, remembered by an older build.
+    if not isAreaPage(splitElementPath(path)) then
+        opts.lastNodeByArea[area] = nil
+        return nil
+    end
     local tree = editor and editor.treeContainer
     local treePath = tree and tree.gseTreePath and tree.gseTreePath(path) or path
     if tree and treeHasPath(tree.tree, treePath) then return path end
     opts.lastNodeByArea[area] = nil
     return nil
+end
+
+--- Whether `area` was left on a page of its own (GSE.GUI.GetLastAreaNode
+--- without the tree, which is not built yet when the editor is reopened).
+function GSE.GUI.HasLastAreaPage(area)
+    local opts = GetSequenceEditorOptions()
+    local path = opts and opts.lastNodeByArea and opts.lastNodeByArea[area]
+    return path ~= nil and isAreaPage(splitElementPath(path))
 end
 
 -- ---------------------------------------------------------------------------

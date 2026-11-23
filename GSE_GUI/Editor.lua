@@ -8544,11 +8544,19 @@ local function RestoreSequenceEditorIfNeeded()
         return
     end
 
-    if seOpts.openMode == "keybindings" then
+    -- Variables and Macros come back on a page they were left on. With none
+    -- remembered the editor comes back on the last sequence, not on an empty
+    -- pane.
+    local mode = seOpts.openMode
+    if (mode == "variables" and not GSE.GUI.HasLastAreaPage("VARIABLES"))
+        or (mode == "macros" and not GSE.GUI.HasLastAreaPage("Macro")) then
+        mode = "sequences"
+    end
+    if mode == "keybindings" then
         GSE.ShowKeyBindings()
-    elseif seOpts.openMode == "variables" then
+    elseif mode == "variables" then
         GSE.ShowVariables()
-    elseif seOpts.openMode == "macros" then
+    elseif mode == "macros" then
         GSE.ShowMacros()
     else
         GSE.ShowSequences()
