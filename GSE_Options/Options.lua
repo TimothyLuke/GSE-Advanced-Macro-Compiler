@@ -3151,6 +3151,8 @@ function GSE:CreateConfigPanels()
         do
             local setting = Settings.RegisterAddOnSetting(generalOptions, "actionbaroverpopup", "actionBarOverridePopup", GSEOptions, Settings.VarType.Boolean, L["Action Bar Override Popup"], true)
             Settings.CreateCheckbox(generalOptions, setting, L["Show a sequence picker popup when right-clicking an empty actionbar button outside of combat."])
+            -- With the menu on, the classic clients' empty buttons are shown for it (Events.lua).
+            setting:SetValueChangedCallback(function() GSE.UpdateEmptyButtons() end)
         end
         AddCompanionAppOptions(importExportOptions)
         AddImportExportOptions(importExportOptions)
