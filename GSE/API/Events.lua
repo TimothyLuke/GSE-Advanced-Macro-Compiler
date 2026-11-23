@@ -2421,8 +2421,8 @@ function LoadKeyBindings(payload)
             ClearOverrideBindings(keybindingframe)
         end
     end
-    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE Action
-    -- Bar carries the keys): released above, bind nothing.
+    -- Keybinding switched off (every client, Init.lua; the GSE Action Bar
+    -- carries the keys): released above, bind nothing.
     if not GSE.KeybindingsEnabled() then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
@@ -2913,15 +2913,13 @@ function GSE.ClearKeyBinding(key)
     return true
 end
 
--- Where WoW no longer honours GSE's own keybinds (Retail 12.1.7 on; Forever
--- never had any to move), a character with some gets the GSE Action Bar
+-- GSE's own keybinds are retired on every client (Init.lua; Forever never
+-- had any to move), so a character with some gets the GSE Action Bar
 -- turned on, once per account,
 -- with both bars hidden: its keybinds move onto the bar's buttons
 -- (GSE_Actionbar/Migration.lua) and keep working, and nothing new shows until
 -- the player chooses to show it. There is no reload: GSE loads the bar itself (loadActionBar). Turned off again
--- afterwards, it stays off. Everywhere else
--- the keybinds still work, and moving them is the player's choice: the switch
--- in GSE's options.
+-- afterwards, it stays off.
 local function enableActionBarForKeybinds()
     if not GSE.DirectKeybindsRetired or GSE.IsForever then return end
     if GSE.ActionBarActive() or type(GSE_C) ~= "table" or GSEOptions.ActionBarAutoEnabled then return end

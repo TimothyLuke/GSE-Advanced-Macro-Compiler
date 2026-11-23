@@ -502,8 +502,8 @@ local function buildKeybindMenu()
     -- menu puts a sequence on a talent loadout and a stance, and opens the
     -- button's key (GSE_Utils, Utils.lua). So the editor has no page for them.
     -- What is left is the Keybindings pages, where GSE still binds keys to
-    -- sequences itself; where it does not (WoW Forever and Retail 12.1.7, or
-    -- the GSE Action Bar carries the keys) the editor has no Bindings node at
+    -- sequences itself; it does not on any client now (Init.lua,
+    -- GSE.DirectKeybindsRetired), so the editor has no Bindings node at
     -- all, and this returns nil.
     -- The Button Bindings page's code below (showOverridePanel and its
     -- helpers) is left as it was, unreached.
