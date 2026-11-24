@@ -1461,8 +1461,6 @@ local function AddAppearanceOptions(optionsCategory)
         ))
     end
 
-    AddEditorSequenceListOptions(optionsCategory)
-
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
         layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Scaling", ["tooltip"] = "Scaling"}))
@@ -1743,11 +1741,11 @@ local function AddImportExportOptions(optionsCategory)
     end
 end
 
+-- The Editor's own rows: which sequences its tree lists, and how it draws.
+-- They follow the size rows under the one "Sequence Editor" heading
+-- (createBlizzOptions); they had a heading of their own, "Editor Sequence
+-- List", further up the same page (Timothy, 2026-11-24: one section).
 function AddEditorSequenceListOptions(optionsCategory)
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {["name"] = "Editor Sequence List", ["tooltip"]= L["Filter Sequence Selection"]}))
-    end
     -- Show All Sequences
     do
         local setting = Settings.RegisterAddOnSetting(optionsCategory, "showAllMacros", Statics.All, GSEOptions.filterList, Settings.VarType.Boolean, L["Show All Sequences in Editor"], true)
@@ -2794,6 +2792,27 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
             layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = L["Sequence Editor"], tooltip = L["Sequence Editor"]}))
         end
         do
+            -- The tree whole, or cut down to the open tab's part. Never
+            -- chosen is whole: an install from before the tabs.
+            local function GetValue() return GSEOptions.EditorFullTree ~= false end
+            local function SetValue(value)
+                GSEOptions.EditorFullTree = value and true or false
+                if GSE.GUI and GSE.GUI.RefreshEditorTabsHidden then GSE.GUI.RefreshEditorTabsHidden() end
+            end
+            local setting = Settings.RegisterProxySetting(windowOptions, "gseEditorFullTree", Settings.VarType.Boolean, L["Show the Full Tree"], true, GetValue, SetValue)
+            Settings.CreateCheckbox(windowOptions, setting, L["Show Sequences, Bindings, Variables and Macros together in the Editor's tree. Unticked, the tree shows only the open tab's part."])
+        end
+        do
+            -- The tabs alone. With none to turn the tree by, it is whole.
+            local function GetValue() return GSEOptions.HideEditorTabs == true end
+            local function SetValue(value)
+                GSEOptions.HideEditorTabs = value and true or nil
+                if GSE.GUI and GSE.GUI.RefreshEditorTabsHidden then GSE.GUI.RefreshEditorTabsHidden() end
+            end
+            local setting = Settings.RegisterProxySetting(windowOptions, "gseHideEditorTabs", Settings.VarType.Boolean, L["Hide the Editor's Tabs"], false, GetValue, SetValue)
+            Settings.CreateCheckbox(windowOptions, setting, L["Hide the tabs on the Editor's right edge. The tree then shows everything, as with Show the Full Tree, and has an Import row."])
+        end
+        do
             local function GetValue()
                 return EnsureSequenceEditorOptions().height
             end
@@ -2821,6 +2840,7 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
             options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right)
             Settings.CreateSlider(windowOptions, setting, options, L["How many pixels wide should the Editor start at.  Defaults to 1050"])
         end
+        AddEditorSequenceListOptions(windowOptions)
 
         AddDebuggerWindowSizeOptions(windowOptions)
     end

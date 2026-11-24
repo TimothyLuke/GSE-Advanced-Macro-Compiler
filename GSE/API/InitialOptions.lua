@@ -108,6 +108,12 @@ function GSE.SetDefaultOptions()
     -- existing restore behaviour. Within a session the state is still tracked,
     -- so closing and reopening the editor still returns you to where you were.
     GSEOptions.forgetLastSequenceOnLogout = false
+    -- EditorFullTree: false on a new install, where the Editor's tabs each
+    -- show their own part of the tree. This function runs for a new install
+    -- only, so an install from before the tabs has no value here, and no
+    -- value means the full tree it has always had (GSE_GUI, Editor.lua,
+    -- GSE.GUI.EditorTreeWhole) (Timothy, 2026-11-24).
+    GSEOptions.EditorFullTree = false
     -- FocusHighlightTint: master toggle for the 10%-opacity rail-color fill
     -- on the currently-focused block. When false, only the proc-pulsed
     -- border lines remain; when true, the block's empty areas (outside the

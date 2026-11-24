@@ -1,7 +1,16 @@
 -- The Editor's tabs (Larry, 2026-11-23): what GSE's toolbar opened is a tab
 -- down the Editor's right edge, and the left tree shows the open tab's part
--- only -- Editor the sequences, Variables the variables, Macros the macros --
--- with the tab's own "New" row at its top. Import is a tab, not a row.
+-- only -- Editor the sequences, Variables the variables, Macros the macros,
+-- Bindings the bindings -- with the tab's own "New" row at its top. Import is
+-- a tab, not a row.
+--
+-- Two settings, each its own (Timothy, 2026-11-24: "there should be a show
+-- full tree independant of showing tabs. showing tabs should just hide / show
+-- the tabs"). GSEOptions.EditorFullTree: the tree is whole, and a tab opens
+-- its part of it. On for an install from before the tabs, off for a new one
+-- ("show full tree should be the default for people migrating from earlier
+-- versions of GSE"). GSEOptions.HideEditorTabs: the tabs go; with none to
+-- turn the tree by it is whole then too, and has its Import row.
 --
 -- The editor's files cannot be loaded here, so this reads the pieces as text.
 describe("the Editor's tabs", function()
@@ -40,6 +49,7 @@ describe("the Editor's tabs", function()
       { value = "Sequences", children = { { value = 4 } } },
       { value = "VARIABLES", children = { { value = "NEWVARIABLES" }, { value = "FOLDER:4" } } },
       { value = "Macro", children = { { value = "A" }, { value = "P" } } },
+      { value = "KEYBINDINGS", children = { { value = "AO" }, { value = "KB" } } },
     }
   end
   local function values(nodes)
@@ -53,12 +63,19 @@ describe("the Editor's tabs", function()
     assert.are.same({ "NewSequence", "Sequences" }, values(narrow(byType(), "sequences")))
     assert.are.same({ "VARIABLES\001NEWVARIABLES", "VARIABLES" }, values(narrow(byType(), "variables")))
     assert.are.same({ "Macro\001NEWMACRO", "Macro" }, values(narrow(byType(), "macros")))
+    assert.are.same({ "KEYBINDINGS" }, values(narrow(byType(), "bindings")))
   end)
 
   -- Larry, 2026-11-23: "remove import from left tree menu".
-  it("has no Import row: Import is a tab", function()
-    assert.is_nil(tree:find('value = "Import"', 1, true))
-    assert.is_nil(tree:find('"Import"', 1, true), "nothing in the tree acts on an Import row")
+  -- With the tabs turned off there is no Import tab, and the row is back.
+  it("has no Import row: Import is a tab; with the tabs off the tree has the row", function()
+    assert.truthy(tree:find('    if not GSE.GUI.EditorTreeWhole() then\n        tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")\n'
+      .. '    elseif GSE.GUI.EditorTabsHidden() then\n', 1, true), "whole with the tabs showing: no row, the tab has it")
+    local whole = assert(tree:match("\n    elseif GSE%.GUI%.EditorTabsHidden%(%) then\n(.-)\n    end\n    treeContainer:SetTree"),
+      "the tabs-off branch not found")
+    assert.truthy(whole:find('table.insert(tree, at, { value = "Import", text = L["Import"], icon = Statics.Icons.Import })', 1, true))
+    local _, count = tree:gsub('value = "Import"', "")
+    assert.are.equal(1, count, "the row is made in that branch alone")
     local _, narrow = world()
     assert.are.same({ "NewSequence", "Sequences" }, values(narrow({ { value = "NewSequence" }, { value = "Import" },
       { value = "Sequences" } }, "sequences")), "one handed in is not shown")
@@ -97,32 +114,37 @@ describe("the Editor's tabs", function()
     assert.are.equal("sequences", GSE.GUI.TabOfTreePath("NewSequence"))
     assert.are.equal("variables", GSE.GUI.TabOfTreePath("VARIABLES\001myvar\001config"))
     assert.are.equal("macros", GSE.GUI.TabOfTreePath(GROUP .. "class:4\001Macro\001A\0015\001config"))
+    assert.are.equal("bindings", GSE.GUI.TabOfTreePath("KEYBINDINGS\001AO\0014\0011"))
     assert.is_nil(GSE.GUI.TabOfTreePath("Import"), "no tab's")
     assert.is_nil(GSE.GUI.TabOfTreePath(nil))
   end)
 
   it("narrows the tree as it is built, and turns to a node's tab before selecting it", function()
-    assert.truthy(tree:find('    tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")\n    treeContainer:SetTree(tree)\n', 1, true))
+    assert.truthy(tree:find('    if not GSE.GUI.EditorTreeWhole() then\n        tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")\n', 1, true))
     assert.truthy(tree:find("local tab = GSE.GUI.TabOfTreePath(path)", 1, true))
     assert.truthy(tree:find('if tab and (tab ~= (editframe.editorTab or "sequences") or editframe.editorPage) and GSE.GUI.SetEditorTab then', 1, true),
-      "also off the Keybind or Import page")
+      "also off the Import page")
     assert.truthy(tree:find("GSE.GUI.SetEditorTab(editframe, tab)", 1, true))
     assert.truthy(tree:find('if unique[2] == "NEWMACRO" then\n        GSE.GUINewMacroPrompt(editframe)', 1, true))
   end)
 
   -- GSE.GUI.SetEditorTab as the editor has it.
-  local function setTab()
+  -- hidden: a table whose .on says whether the tree is whole.
+  local function setTab(hidden)
+    hidden = hidden or {}
     local body = assert(editor:match("\nfunction GSE%.GUI%.SetEditorTab%(editframe, tab, quiet%)\n(.-)\nend\n"),
       "GSE.GUI.SetEditorTab not found")
     local all = assert(editor:match("\nlocal EDITOR_TAB_ALL = (%b{})\n"), "EDITOR_TAB_ALL not found")
-    return assert(compile("local L = ...\nlocal EDITOR_TAB_ROOT = { sequences = \"Sequences\", variables = \"VARIABLES\", macros = \"Macro\" }\n"
+    local root = assert(editor:match("\nlocal EDITOR_TAB_ROOT = (%b{})\n"), "EDITOR_TAB_ROOT not found")
+    return assert(compile("local L, GSE = ...\nlocal EDITOR_TAB_ROOT = " .. root .. "\n"
       .. "local EDITOR_TAB_ALL = " .. all .. "\n"
       .. "local EDITOR_TAB_TITLE = " .. assert(editor:match("\nlocal EDITOR_TAB_TITLE = (%b{})\n"), "EDITOR_TAB_TITLE not found") .. "\n"
-      .. "return function(editframe, tab, quiet)\n" .. body .. "\nend"))(setmetatable({}, { __index = function(_, k) return k end }))
+      .. "return function(editframe, tab, quiet)\n" .. body .. "\nend"))(setmetatable({}, { __index = function(_, k) return k end }),
+      { GUI = { EditorTreeWhole = function() return hidden.on == true end } })
   end
   local function window()
     local w = { built = 0, lit = {}, tabButtons = {}, treeContainer = { status = {} } }
-    for _, key in ipairs({ "sequences", "keybind", "import", "variables", "macros", "options" }) do
+    for _, key in ipairs({ "sequences", "bindings", "import", "variables", "macros", "options" }) do
       w.tabButtons[key] = { SetTabChecked = function(_, on) w.lit[key] = on end }
     end
     w.ManageTree = function() w.built = w.built + 1 end
@@ -144,6 +166,81 @@ describe("the Editor's tabs", function()
     assert.are.equal("macros", w.editorTab)
     set(w, "import")
     assert.are.equal("macros", w.editorTab, "a tab with no tree of its own leaves the tree's tab alone")
+    set(w, "bindings")
+    assert.are.equal("bindings", w.editorTab)
+    assert.is_true(w.lit.bindings)
+    assert.is_true(w.treeContainer.status.groups.KEYBINDINGS)
+    assert.are.equal(2, w.built)
+  end)
+
+  it("leaves a whole tree whole: no title, the sequences' box, the tab lit and its part opened, nothing built again", function()
+    local hidden = { on = true }
+    local set, w = setTab(hidden), window()
+    local title, box
+    w.treeContainer.navWindowFrame = {
+      GSESetTitle = function(text) title = text end,
+      GSESetAllCheckbox = function(text, key, default) box = text and { text, key, default } or "none" end,
+    }
+    set(w, "macros")
+    assert.are.equal("", title)
+    assert.are.same({ "All Sequences", "All", false }, box)
+    assert.are.equal(0, w.built, "the whole tree has every tab's part already")
+    assert.is_true(w.treeContainer.status.groups.Macro, "its part is still opened")
+    assert.is_true(w.lit.macros, "and its tab lit")
+    hidden.on = false
+    set(w, "variables")
+    assert.are.equal("Variables", title)
+    assert.are.equal(1, w.built)
+  end)
+
+  it("keeps the two settings apart: the full tree with the tabs showing, and the tabs off with the tree whole", function()
+    local hiddenFn = assert(editor:match("\nfunction GSE%.GUI%.EditorTabsHidden%(%)\n(.-)\nend\n"), "EditorTabsHidden not found")
+    local wholeFn = assert(editor:match("\nfunction GSE%.GUI%.EditorTreeWhole%(%)\n(.-)\nend\n"), "EditorTreeWhole not found")
+    local options = {}
+    local GSE = { GUI = {} }
+    GSE.GUI.EditorTabsHidden = assert(compile("local GSEOptions = ...\nreturn function()\n" .. hiddenFn .. "\nend"))(options)
+    local whole = assert(compile("local GSE, GSEOptions = ...\nreturn function()\n" .. wholeFn .. "\nend"))(GSE, options)
+    assert.is_true(whole(), "never chosen: an install from before the tabs keeps its whole tree")
+    assert.is_false(GSE.GUI.EditorTabsHidden(), "the full tree leaves the tabs showing")
+    options.EditorFullTree = false
+    assert.is_false(whole(), "turned off, and on a new install: the tabs, each with its own part of the tree")
+    options.EditorFullTree = true
+    assert.is_true(whole())
+    options.EditorFullTree, options.HideEditorTabs = false, true
+    assert.is_true(GSE.GUI.EditorTabsHidden())
+    assert.is_true(whole(), "no tab to turn the tree by")
+    local defaults = assert(readSource("GSE/API/InitialOptions.lua"):match("\nfunction GSE%.SetDefaultOptions%(%)\n(.-)\nend\n"))
+    assert.truthy(defaults:find("    GSEOptions.EditorFullTree = false\n", 1, true), "a new install starts on the tabs' own trees")
+    local options_lua = readSource("GSE_Options/Options.lua")
+    assert.truthy(options_lua:find("local function GetValue() return GSEOptions.EditorFullTree ~= false end", 1, true))
+    assert.truthy(options_lua:find("GSEOptions.EditorFullTree = value and true or false\n"
+      .. "                if GSE.GUI and GSE.GUI.RefreshEditorTabsHidden then GSE.GUI.RefreshEditorTabsHidden() end", 1, true))
+  end)
+
+  it("hides the tabs and gives back their room at the screen's edge, and shows them again", function()
+    local hiddenFn = assert(editor:match("\nfunction GSE%.GUI%.EditorTabsHidden%(%)\n(.-)\nend\n"), "EditorTabsHidden not found")
+    local apply = assert(editor:match("\nfunction GSE%.GUI%.ApplyEditorTabsHidden%(editframe%)\n(.-)\nend\n"), "ApplyEditorTabsHidden not found")
+    local options = {}
+    local GSE = { GUI = {} }
+    GSE.GUI.EditorTabsHidden = assert(compile("local GSEOptions = ...\nreturn function()\n" .. hiddenFn .. "\nend"))(options)
+    local run = assert(compile("local GSE = ...\nreturn function(editframe)\n" .. apply .. "\nend"))(GSE)
+    local shown, insets = {}, nil
+    local w = { tabRoom = 36, tabButtons = {}, frame = { SetClampRectInsets = function(_, l, r) insets = { l, r } end } }
+    for _, key in ipairs({ "sequences", "bindings" }) do
+      w.tabButtons[key] = { SetShown = function(_, on) shown[key] = on end }
+    end
+    run(w)
+    assert.are.same({ sequences = true, bindings = true }, shown, "never chosen: the tabs show")
+    assert.are.same({ 10, 36 }, insets)
+    options.HideEditorTabs = true
+    run(w)
+    assert.are.same({ sequences = false, bindings = false }, shown)
+    assert.are.same({ 10, 0 }, insets)
+    assert.truthy(editor:find("    editframe.tabRoom = room\n    GSE.GUI.ApplyEditorTabsHidden(editframe)\nend\n", 1, true), "as the tabs are made")
+    local options_lua = readSource("GSE_Options/Options.lua")
+    assert.truthy(options_lua:find("GSEOptions.HideEditorTabs = value and true or nil\n"
+      .. "                if GSE.GUI and GSE.GUI.RefreshEditorTabsHidden then GSE.GUI.RefreshEditorTabsHidden() end", 1, true),
+      "the setting turns every open editor at once")
   end)
 
   -- The box under the tree is the open tab's (Larry, 2026-11-23: "these should
@@ -193,14 +290,18 @@ describe("the Editor's tabs", function()
   it("lists another class's variables only while All Variables is ticked, and every macro always", function()
     local body = assert(editor:match("\nfunction GSE%.GUI%.TreeShowsVariable%(classid%)\n(.-)\nend\n"), "TreeShowsVariable not found")
     local options = {}
+    local hidden = false
     local shows = assert(compile("local GSE, GSEOptions = ...\nreturn function(classid)\n" .. body .. "\nend"))(
-      { GetCurrentClassID = function() return 4 end }, options)
+      { GetCurrentClassID = function() return 4 end, GUI = { EditorTreeWhole = function() return hidden end } }, options)
     assert.is_true(shows(8), "never chosen: all of them, as before the box was theirs")
     options.filterList = { AllVariables = false }
     assert.is_false(shows(8))
     assert.is_true(shows(4), "the player's own class")
     assert.is_true(shows(0), "Global")
     assert.is_true(shows(nil))
+    hidden = true
+    assert.is_true(shows(8), "the whole tree has no All Variables box to untick")
+    hidden = false
     options.filterList.AllVariables = true
     assert.is_true(shows(8))
     for _, file in ipairs({ "GSE_GUI/Editor_Variable.lua", "GSE_GUI/Editor_Tree.lua" }) do
@@ -213,9 +314,10 @@ describe("the Editor's tabs", function()
     local list = assert(editor:match("\nlocal function editorTabList%(%)\n(.-)\nend\n"), "editorTabList not found")
     local order = {}
     for key in list:gmatch('{ key = "(%a+)"') do order[#order + 1] = key end
-    -- Keybind under Macros (Larry, 2026-11-23).
-    assert.are.same({ "sequences", "import", "variables", "macros", "keybind", "options" }, order)
-    for _, call in ipairs({ "GSE.ShowSequences(editframe)", 'GSE.GUI.OpenEditorPage(editframe, "keybind")',
+    -- Under Macros (Larry, 2026-11-23); Bindings, not the guide alone (Timothy, 2026-11-24).
+    assert.are.same({ "sequences", "import", "variables", "macros", "bindings", "options" }, order)
+    assert.truthy(list:find('{ key = "bindings", icon = Statics.Icons.Keybindings, text = L["Bindings"],', 1, true))
+    for _, call in ipairs({ "GSE.ShowSequences(editframe)", "GSE.ShowKeyBindings(editframe)",
       'GSE.GUI.OpenEditorPage(editframe, "import")', "GSE.ShowVariables(editframe)", "GSE.ShowMacros(editframe)",
       "GSE.OpenOptionsPanel()" }) do
       assert.truthy(list:find(call, 1, true), call)
@@ -240,26 +342,29 @@ describe("the Editor's tabs", function()
     assert.are.equal(0, made)
     assert.are.equal(1, editorFor(nil).made)
     assert.are.equal(2, editorFor({ GetName = function() end }).made, "a button handed in by a click handler")
-    for _, show in ipairs({ "ShowSequences", "ShowVariables", "ShowMacros" }) do
+    for _, show in ipairs({ "ShowSequences", "ShowVariables", "ShowMacros", "ShowKeyBindings" }) do
       local fn = assert(editor:match("\nfunction GSE%." .. show .. "%(existing%)\n(.-)\nend\n"), show)
       assert.truthy(fn:find("editorFor(existing)", 1, true), show)
       assert.is_nil(fn:find("GSE.CreateEditor()", 1, true), show)
     end
   end)
 
-  -- A tab opens no window of its own (Larry, 2026-11-23): Keybind and Import
-  -- are pages in the Editor, with the tree tucked away.
-  describe("the Keybind and Import tabs", function()
-    local function page()
+  -- A tab opens no window of its own (Larry, 2026-11-23): Import is a page in
+  -- the Editor, beside the tree, which stays (Timothy, 2026-11-24: "the left
+  -- hand tree shouldnt be disappearing"). The guide, which was one too, is
+  -- the Bindings tab's Keybindings section (Timothy, 2026-11-24).
+  describe("the Import tab and the keybind guide", function()
+    local function page(hidden)
       local body = assert(editor:match("\nfunction GSE%.GUI%.OpenEditorPage%(editframe, page%)\n(.-)\nend\n"),
         "GSE.GUI.OpenEditorPage not found")
       local drawn, saved = {}, {}
-      local GSE = { GUI = { DrawImportPage = function(_, room) drawn[#drawn + 1] = "import " .. tostring(room) end } }
-      local open = assert(compile("local GSE, L, SetSequenceEditorOpenPreference, drawKeybindPage = ...\n"
+      local GSE = { GUI = { DrawImportPage = function(_, room) drawn[#drawn + 1] = "import " .. tostring(room) end,
+        EditorTabsHidden = function() return hidden == true end },
+        ShowImport = function() drawn[#drawn + 1] = "import window" end }
+      local open = assert(compile("local GSE, L, SetSequenceEditorOpenPreference = ...\n"
         .. "return function(editframe, page)\n" .. body .. "\nend"))(GSE,
         setmetatable({}, { __index = function(_, k) return k end }),
-        function(isOpen, mode) saved[#saved + 1] = mode end,
-        function() drawn[#drawn + 1] = "keybind" end)
+        function(isOpen, mode) saved[#saved + 1] = mode end)
       return open, drawn, saved
     end
     local function paged()
@@ -273,12 +378,12 @@ describe("the Editor's tabs", function()
       return w
     end
 
-    it("draw their page in the Editor, light their tab and tuck the tree away", function()
+    it("draws its page in the Editor and lights its tab, the tree left where it was", function()
       local open, drawn, saved = page()
       local w = paged()
       open(w, "import")
       assert.are.same({ "import 480" }, drawn)
-      assert.is_true(w.tucked)
+      assert.is_nil(w.tucked, "the tree is not put away for the page")
       assert.are.equal(1, w.released)
       assert.is_true(w.lit.import)
       assert.is_false(w.lit.sequences)
@@ -287,14 +392,23 @@ describe("the Editor's tabs", function()
       open(w, "import")
       assert.are.same({ "import 480" }, drawn, "already on it")
       open(w, "keybind")
-      assert.are.same({ "import 480", "keybind" }, drawn)
-      assert.are.equal("GSE: Keybind", w.title)
-      assert.is_true(w.lit.keybind)
       open(w, "options")
-      assert.are.equal("keybind", w.editorPage, "not a page")
+      assert.are.same({ "import 480" }, drawn)
+      assert.are.equal("import", w.editorPage, "not pages")
     end)
 
-    it("give the tree back, and clear their page, when a tab with a tree is opened", function()
+    it("is the Import window with the tabs turned off, where no tab would lead back from the page", function()
+      local open, drawn, saved = page(true)
+      local w = paged()
+      open(w, "import")
+      assert.are.same({ "import window" }, drawn)
+      assert.is_nil(w.tucked)
+      assert.is_nil(w.editorPage)
+      assert.are.same({}, saved)
+      assert.truthy(tree:find('if group == "Import" and GSE.ShowImport then GSE.ShowImport() end', 1, true), "the tree's row")
+    end)
+
+    it("gives the tree back, and clears its page, when a tab with a tree is opened", function()
       local set, w = setTab(), paged()
       w.editorPage, w.loaded = "import", true
       set(w, "sequences", true)
@@ -305,19 +419,18 @@ describe("the Editor's tabs", function()
       assert.is_true(w.lit.sequences)
     end)
 
-    it("are where the Keybindings icon and a reload go", function()
-      assert.is_nil(tree:find("GSE.ShowImport()", 1, true))
-      assert.truthy(editor:find('    if mode == "keybind" or mode == "import" then\n        GSE.GUI.OpenEditorPage(GSE.CreateEditor(), mode)\n', 1, true))
-      assert.truthy(editor:find('if not GSE.KeybindingsEnabled() then return GSE.GUI.OpenEditorPage(GSE.CreateEditor(), "keybind") end', 1, true))
+    it("is where a reload goes; a reload on the guide's old page goes to Bindings", function()
+      assert.truthy(editor:find('    if mode == "import" and not GSE.GUI.EditorTabsHidden() then\n        GSE.GUI.OpenEditorPage(GSE.CreateEditor(), mode)\n', 1, true))
+      assert.truthy(editor:find('    elseif mode == "keybindings" or mode == "keybind" then\n        GSE.ShowKeyBindings()\n', 1, true))
     end)
 
-    it("show the guide from GSE's help in a group that takes it away with the page", function()
-      local draw = assert(editor:match("\nlocal function drawKeybindPage%(container%)\n(.-)\nend\n"))
+    it("shows the guide from GSE's help in a group that takes it away with the page", function()
+      local draw = assert(editor:match("\nfunction GSE%.GUI%.DrawKeybindGuide%(container%)\n(.-)\nend\n"))
       assert.truthy(draw:find("if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame) end", 1, true))
       assert.truthy(draw:find('outer:SetCallback("OnRelease", function()\n        if GSE.HideKeybindGuide then GSE.HideKeybindGuide() end', 1, true))
     end)
 
-    it("draw the import page's paste box in the Editor, leaving the Import window to the rest", function()
+    it("draws the import page's paste box in the Editor, leaving the Import window to the rest", function()
       local import = readSource("GSE_GUI/Import.lua")
       assert.truthy(import:find("function GSE.GUI.DrawImportPage(container, room)", 1, true))
       assert.truthy(import:find("local function LandingPage(host, room)", 1, true))

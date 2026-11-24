@@ -2153,9 +2153,21 @@ end
 -- What GSE's toolbar opened is a tab down the Editor's right edge (Larry,
 -- 2026-11-23). Editor, Variables and Macros each show their own part of the
 -- left tree (Editor_Tree.lua, narrowTreeToTab) and come back on the page they
--- were left on. Keybind and Import are a page each, with the tree tucked away
+-- were left on. So does Bindings (Timothy, 2026-11-24): Button Bindings, and
+-- a Keybindings section that shows the keybind guide while GSE's help is
+-- turned on. Import is a page in the pane, beside the tree as it was left
 -- (GSE.GUI.OpenEditorPage): a tab opens no window of its own. Options opens
 -- WoW's Options, as the toolbar's button did.
+--
+-- Two settings, each its own (Options, Windows & Layout; Timothy,
+-- 2026-11-24). Show the Full Tree (GSEOptions.EditorFullTree): the tree is
+-- whole, as it was before the tabs, and a tab opens its part of it rather
+-- than cutting the tree down to it. On unless turned off: an install from
+-- before the tabs keeps the tree it had, and only a new install starts with
+-- it off (GSE/API/InitialOptions.lua). Hide the Editor's Tabs
+-- (GSEOptions.HideEditorTabs): the tabs go, and nothing else -- but with no
+-- tab to turn it by, a tree cut down to one part would be all there is, so
+-- the tree is whole then too, and has its Import row.
 --
 -- One tab on every client, drawn to match the window: Blizzard's spellbook
 -- side tab on the Native look -- its template's sizes and art, which every
@@ -2165,9 +2177,9 @@ local EDITOR_TAB_SIZE = 32   -- SpellBookSkillLineTabTemplate
 local EDITOR_TAB_GAP = 12    -- the spellbook's sit 17 apart; closer here (Larry, 2026-11-23)
 local EDITOR_TAB_TOP = -40
 -- The tree's top node on each tab that has a tree.
-local EDITOR_TAB_ROOT = { sequences = "Sequences", variables = "VARIABLES", macros = "Macro" }
+local EDITOR_TAB_ROOT = { sequences = "Sequences", variables = "VARIABLES", macros = "Macro", bindings = "KEYBINDINGS" }
 -- The title over the tree on each.
-local EDITOR_TAB_TITLE = { sequences = "Sequences", variables = "Variables", macros = "Macros" }
+local EDITOR_TAB_TITLE = { sequences = "Sequences", variables = "Variables", macros = "Macros", bindings = "Bindings" }
 -- The box under the tree on each: its text, the setting behind it
 -- (GSEOptions.filterList) and what that is until chosen. Variables were all
 -- listed before the box was theirs, so theirs starts ticked. Macros have no
@@ -2177,9 +2189,23 @@ local EDITOR_TAB_ALL = {
     variables = { "All Variables", "AllVariables", true },
 }
 
+--- Whether the Editor's tabs are turned off.
+function GSE.GUI.EditorTabsHidden()
+    return GSEOptions ~= nil and GSEOptions.HideEditorTabs == true
+end
+
+--- Whether the tree is whole -- every tab's part in it -- not cut down to
+--- the open tab: unless turned off (never chosen is an install from before
+--- the tabs: whole), or the tabs are off and nothing could turn it.
+function GSE.GUI.EditorTreeWhole()
+    return (GSEOptions ~= nil and GSEOptions.EditorFullTree ~= false) or GSE.GUI.EditorTabsHidden()
+end
+
 --- Whether the tree lists a variable of a class: every class while All
---- Variables is ticked, else the player's own and Global.
+--- Variables is ticked, else the player's own and Global. Every class in the
+--- whole tree, which has no All Variables box.
 function GSE.GUI.TreeShowsVariable(classid)
+    if GSE.GUI.EditorTreeWhole() then return true end
     local all = GSEOptions and GSEOptions.filterList and GSEOptions.filterList.AllVariables
     if all == nil or all then return true end
     classid = tonumber(classid) or 0
@@ -2192,7 +2218,8 @@ function GSE.GUI.SetEditorTab(editframe, tab, quiet)
     if not (editframe and EDITOR_TAB_ROOT[tab]) then return end
     local changed = (editframe.editorTab or "sequences") ~= tab
     editframe.editorTab = tab
-    -- Coming off the Keybind or Import tab: its page goes and the tree is back.
+    -- Coming off the Import tab: its page goes. The tree was never put away
+    -- for it; untucked all the same, for anything else that tucked it.
     if editframe.editorPage then
         editframe.editorPage = nil
         local container = editframe.treeContainer
@@ -2205,10 +2232,13 @@ function GSE.GUI.SetEditorTab(editframe, tab, quiet)
     for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == tab) end
     local tree = editframe.treeContainer
     local nav = tree and tree.navWindowFrame
+    -- The whole tree: no title, the sequences' All box, and nothing to build
+    -- again for a tab.
+    local whole = GSE.GUI.EditorTreeWhole()
     -- The tree's title: what it lists.
-    if nav and nav.GSESetTitle then nav.GSESetTitle(L[EDITOR_TAB_TITLE[tab]]) end
+    if nav and nav.GSESetTitle then nav.GSESetTitle(whole and "" or L[EDITOR_TAB_TITLE[tab]]) end
     if nav and nav.GSESetAllCheckbox then
-        local box = EDITOR_TAB_ALL[tab]
+        local box = EDITOR_TAB_ALL[whole and "sequences" or tab]
         if box then nav.GSESetAllCheckbox(L[box[1]], box[2], box[3]) else nav.GSESetAllCheckbox(nil) end
     end
     local status = tree and (tree.status or tree.localstatus)
@@ -2216,13 +2246,13 @@ function GSE.GUI.SetEditorTab(editframe, tab, quiet)
         status.groups = status.groups or {}
         status.groups[EDITOR_TAB_ROOT[tab]] = true
     end
-    if changed and not quiet and editframe.ManageTree then editframe.ManageTree() end
+    if changed and not quiet and not whole and editframe.ManageTree then editframe.ManageTree() end
 end
 
--- The Keybind tab's page: the guide picture (GSE_Help, loaded by the tab
--- that asks for it), in a group of the pane's own so that it leaves with the
--- page.
-local function drawKeybindPage(container)
+--- The Bindings tab's Keybindings section: the guide picture (GSE_Help,
+--- loaded when it is asked for), in a group of the pane's own so that it
+--- leaves with the page.
+function GSE.GUI.DrawKeybindGuide(container)
     local outer = UI:Create("SimpleGroup")
     outer:SetFullWidth(true)
     outer:SetFullHeight(true)
@@ -2234,10 +2264,14 @@ local function drawKeybindPage(container)
     if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame) end
 end
 
---- Turn an editor to a tab with a page of its own and no tree: "keybind" (the
---- guide) or "import". The tree is tucked away while it shows.
+--- Turn an editor to a tab with a page of its own and no tree: "import".
+--- The tree stays as it was left, beside the page (Timothy, 2026-11-24: it
+--- was tucked away while the page showed); a node picked in it turns the
+--- Editor back to that node's tab. With the tabs turned off Import is its
+--- own window, as it was before them.
 function GSE.GUI.OpenEditorPage(editframe, page)
-    if not (editframe and (page == "keybind" or page == "import")) then return end
+    if not (editframe and page == "import") then return end
+    if GSE.GUI.EditorTabsHidden() then return GSE.ShowImport() end
     if editframe.editorPage == page and editframe.loaded then
         editframe:Show()
         return
@@ -2245,18 +2279,12 @@ function GSE.GUI.OpenEditorPage(editframe, page)
     local container = editframe.treeContainer
     editframe.editorPage = page
     for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == page) end
-    if container.SetNavTucked then container.SetNavTucked(true) end
     container:ReleaseChildren()
     editframe.loaded = nil
     SetSequenceEditorOpenPreference(true, page)
     editframe:Show()
-    if page == "import" then
-        editframe:SetTitle("GSE: " .. L["Import"])
-        GSE.GUI.DrawImportPage(container, editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0)
-    else
-        editframe:SetTitle("GSE: " .. L["Keybind"])
-        drawKeybindPage(container)
-    end
+    editframe:SetTitle("GSE: " .. L["Import"])
+    GSE.GUI.DrawImportPage(container, editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0)
     editframe.loaded = true
 end
 
@@ -2270,8 +2298,8 @@ local function editorFor(existing)
     return GSE.CreateEditor()
 end
 
--- The tabs, top to bottom. A tab with a tree is named for it (key); Keybind
--- and Import are pages; Options opens WoW's Options.
+-- The tabs, top to bottom. A tab with a tree is named for it (key); Import
+-- is a page; Options opens WoW's Options.
 local function editorTabList()
     return {
         { key = "sequences", icon = Statics.Icons.Sequences, text = L["Editor"],
@@ -2282,8 +2310,8 @@ local function editorTabList()
             click = function(editframe) GSE.ShowVariables(editframe) end },
         { key = "macros", icon = Statics.Icons.Macros, text = L["Macros"],
             click = function(editframe) GSE.ShowMacros(editframe) end },
-        { key = "keybind", icon = Statics.Icons.Keybindings, text = L["Keybind"],
-            click = function(editframe) GSE.GUI.OpenEditorPage(editframe, "keybind") end },
+        { key = "bindings", icon = Statics.Icons.Keybindings, text = L["Bindings"],
+            click = function(editframe) GSE.ShowKeyBindings(editframe) end },
         { key = "options", icon = Statics.Icons.Options, text = L["Options"],
             click = function() GSE.OpenOptionsPanel() end },
     }
@@ -2414,7 +2442,29 @@ function GSE.GUI.CreateEditorTabs(editframe)
         editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat)
         room = room + EDITOR_FLYOUT_GAP + EDITOR_TAB_SIZE
     end
-    editframe.frame:SetClampRectInsets(10, room, 0, 0)
+    editframe.tabRoom = room
+    GSE.GUI.ApplyEditorTabsHidden(editframe)
+end
+
+--- Show an editor's tabs, or hide them, as the setting has it
+--- (GSE.GUI.EditorTabsHidden), with the room they take at the screen's edge.
+function GSE.GUI.ApplyEditorTabsHidden(editframe)
+    if not (editframe and editframe.tabButtons) then return end
+    local hidden = GSE.GUI.EditorTabsHidden()
+    for _, button in pairs(editframe.tabButtons) do button:SetShown(not hidden) end
+    editframe.frame:SetClampRectInsets(10, hidden and 0 or (editframe.tabRoom or 0), 0, 0)
+end
+
+--- Either setting changed (Show the Full Tree, Hide the Editor's Tabs): every
+--- editor's tabs show or hide, and its tree is built again, whole or for its
+--- tab. An Import page left open gives way to the tree.
+function GSE.GUI.RefreshEditorTabsHidden()
+    for _, editframe in ipairs(GSE.GUI.editors or {}) do
+        GSE.GUI.ApplyEditorTabsHidden(editframe)
+        -- Quiet: the tree is built once, below. Paints the title and All box.
+        GSE.GUI.SetEditorTab(editframe, editframe.editorTab or "sequences", true)
+        if editframe.ManageTree then editframe.ManageTree() end
+    end
 end
 
 function GSE.CreateEditor()
@@ -8766,15 +8816,13 @@ local function SelectLastAreaNode(editor, area)
     GSE.GUI.SelectEditorTreePath(editor, path)
 end
 
-function GSE.ShowKeyBindings()
-    -- The editor has a Bindings area only where GSE binds keys to sequences
-    -- itself (Editor_Keybind.lua, buildKeybindMenu); anywhere else this opens
-    -- the editor where it was.
-    if not GSE.KeybindingsEnabled() then return GSE.GUI.OpenEditorPage(GSE.CreateEditor(), "keybind") end
-    local editor = GSE.CreateEditor()
+function GSE.ShowKeyBindings(existing)
+    local editor = editorFor(existing)
+    GSE.GUI.SetEditorTab(editor, "bindings", true)
     editor.ManageTree()
     -- Down to the class node, wherever the tree's grouping puts Bindings.
-    GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("KB"))
+    GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("AO"))
+    if GSE.KeybindingsEnabled() then GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("KB")) end
     SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()
@@ -8825,9 +8873,12 @@ local function RestoreSequenceEditorIfNeeded()
         or (mode == "macros" and not GSE.GUI.HasLastAreaPage("Macro")) then
         mode = "sequences"
     end
-    if mode == "keybind" or mode == "import" then
+    if mode == "import" and not GSE.GUI.EditorTabsHidden() then
         GSE.GUI.OpenEditorPage(GSE.CreateEditor(), mode)
-    elseif mode == "keybindings" then
+    elseif mode == "import" then
+        -- No Import tab to come back on: the Editor, where it was.
+        GSE.ShowSequences()
+    elseif mode == "keybindings" or mode == "keybind" then
         GSE.ShowKeyBindings()
     elseif mode == "variables" then
         GSE.ShowVariables()

@@ -807,12 +807,9 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
                     })
                 end)
             end
-            -- Only where the editor has a Bindings area (buildKeybindMenu).
-            if GSE.KeybindingsEnabled() then
-                rootDescription:CreateButton(L["Keybindings"], function()
-                    GSE.ShowKeyBindings()
-                end)
-            end
+            rootDescription:CreateButton(L["Bindings"], function()
+                GSE.ShowKeyBindings(editframe)
+            end)
             if not GSE.isEmpty(id) then
                 rootDescription:CreateButton(L["Delete"], function()
                     editframe.GUIDeleteSequence(classid, id)
@@ -1239,16 +1236,20 @@ end
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
     if not unique then return end
 
-    -- The editor has no Bindings area where GSE binds no keys itself, and no
-    -- Button Bindings page anywhere (buildKeybindMenu): a page restored from a
-    -- past session is not there to open.
-    if not GSE.KeybindingsEnabled() then return end
-    -- The area has the one kind of page: its node, and a Button Bindings
-    -- page from a past session, open the current spec's Keybindings.
-    if #unique == 1 or unique[2] == "AO" then
-        if editframe.treeContainer and editframe.treeContainer.SelectByValue then
+    -- Where GSE binds no keys itself (buildKeybindMenu) there is no chooser
+    -- and there are no keybind pages. The Keybindings section shows the
+    -- keybind guide from GSE's help while that is turned on; the Bindings
+    -- node, and anything else, land on the current spec's Button Bindings.
+    if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
+        if unique[2] == "KB" and GSE.HelpEnabled() then
+            ShowSectionFooter(editframe)
+            container:ReleaseChildren()
+            GSE.GUI.DrawKeybindGuide(container)
+            editframe.loaded = true
+            editframe:SetTitle("GSE: " .. L["Keybindings"])
+        elseif editframe.treeContainer and editframe.treeContainer.SelectByValue then
             editframe.forceTreeSelection = true
-            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("KB", GSE.CurrentSpecKey()))
+            editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
         end
         return
     end
@@ -2029,9 +2030,12 @@ end
 --
 -- Each of the Editor's tabs (Editor.lua, GSE.GUI.CreateEditorTabs) shows its
 -- own part of the tree: Editor the sequences, Variables the variables, Macros
--- the macros. The top of the tree is the tab's own "New" row. Import is a
--- tab, not a row here (Larry, 2026-11-23).
-local TAB_OF_AREA = { NewSequence = "sequences", Sequences = "sequences", KEYBINDINGS = "sequences",
+-- the macros, Bindings the bindings. The top of the tree is the tab's own
+-- "New" row. Import is a tab, not a row here (Larry, 2026-11-23).
+-- The whole tree (GSE.GUI.EditorTreeWhole: asked for, or the tabs are off)
+-- is not cut down: it is as it was before the tabs, and with the tabs off
+-- it has its Import row too (Timothy, 2026-11-24).
+local TAB_OF_AREA = { NewSequence = "sequences", Sequences = "sequences", KEYBINDINGS = "bindings",
     VARIABLES = "variables", Macro = "macros" }
 local function areaOf(value)
     return (tostring(value):match("^([^\001]*)"))
@@ -2406,7 +2410,16 @@ local function ManageTree(editframe)
         end
         treeContainer.gseGroupedSelect = true
     end
-    tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")
+    if not GSE.GUI.EditorTreeWhole() then
+        tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")
+    elseif GSE.GUI.EditorTabsHidden() then
+        -- No tab to import from: the row the tree had, under New Sequence.
+        local at = 1
+        for i, node in ipairs(tree) do
+            if node.value == "NewSequence" then at = i + 1 end
+        end
+        table.insert(tree, at, { value = "Import", text = L["Import"], icon = Statics.Icons.Import })
+    end
     treeContainer:SetTree(tree)
     --@debug@
     editframe.lastTreeSequences, editframe.lastTreeLoads = treeSequences, treeLoads
@@ -2564,6 +2577,14 @@ local function ManageTree(editframe)
             end
         end
     )
+    -- The whole tree's Import row (tabs turned off). OnClick as well as the
+    -- selection below: a row already selected is not selected again.
+    treeContainer:SetCallback(
+        "OnClick",
+        function(container, event, group)
+            if group == "Import" and GSE.ShowImport then GSE.ShowImport() end
+        end
+    )
     treeContainer:SetCallback(
         "OnGroupSelected",
         function(container, event, group, ...)
@@ -2638,6 +2659,8 @@ local function ManageTree(editframe)
                     onClick_VARIABLES(editframe, container, group, unique, key)
                 elseif area == "Macro" then
                     onClick_Macro(editframe, container, group, unique, key)
+                elseif area == "Import" then
+                    GSE.ShowImport()
                 else
                     editframe:SetTitle(L["Sequence Editor"])
                 end

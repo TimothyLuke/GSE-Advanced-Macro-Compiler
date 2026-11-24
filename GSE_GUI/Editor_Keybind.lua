@@ -498,17 +498,20 @@ local function buildKeybindMenu()
         end
     end
 
-    -- Button Bindings are set on the buttons themselves: their right-click
-    -- menu puts a sequence on a talent loadout and a stance, and opens the
-    -- button's key (GSE_Utils, Utils.lua). So the editor has no page for them.
-    -- What is left is the Keybindings pages, where GSE still binds keys to
-    -- sequences itself; it does not on any client now (Init.lua,
-    -- GSE.DirectKeybindsRetired), so the editor has no Bindings node at
-    -- all, and this returns nil.
-    -- The Button Bindings page's code below (showOverridePanel and its
-    -- helpers) is left as it was, unreached.
-    table.remove(tree, 1)
-    if not GSE.KeybindingsEnabled() then return nil end
+    -- Button Bindings is a page again (Timothy, 2026-11-24): the buttons'
+    -- right-click menu sets one button, the page shows every one.
+    -- Keybindings: its spec pages where GSE still binds keys to sequences
+    -- itself. It does not on any client now (Init.lua,
+    -- GSE.DirectKeybindsRetired); there the section has no pages of its own
+    -- and shows the keybind guide from GSE's help (Editor_Tree.lua,
+    -- onClick_KEYBINDINGS), and with the help turned off it is left out.
+    if not GSE.KeybindingsEnabled() then
+        if GSE.HelpEnabled() then
+            tree[2].children = nil
+        else
+            table.remove(tree, 2)
+        end
+    end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a

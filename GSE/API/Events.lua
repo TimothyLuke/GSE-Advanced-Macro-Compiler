@@ -3700,6 +3700,20 @@ function GSE.CheckHelp()
     return loaded
 end
 
+--- Whether GSE's help (GSE_Help) is installed and enabled for this character,
+--- so that asking for it would load it. Asks only: nothing is loaded and
+--- nothing is said in chat (GSE.CheckHelp does both).
+function GSE.HelpEnabled()
+    local name = "GSE_Help"
+    if C_AddOns.DoesAddOnExist then
+        if not C_AddOns.DoesAddOnExist(name) then return false end
+    else
+        local _, _, _, _, reason = C_AddOns.GetAddOnInfo(name)
+        if reason == "MISSING" then return false end
+    end
+    return C_AddOns.GetAddOnEnableState(name, UnitName("player")) ~= 0
+end
+
 -- Force-load the LoadOnDemand GUI (which hosts the native dialogs) and then
 -- call the named GSE.* GUI function. Used by always-loaded core/util/options
 -- code that may need to raise a popup before the GUI has been opened.
