@@ -125,6 +125,7 @@ describe("the keybind guide", function()
       function f:SetParent(p) self.parent = p end
       function f:ClearAllPoints() end
       function f:EnableMouse(on) self.mouse = on end
+      function f:EnableMouseWheel(on) self.wheel = on end
       function f:SetPoint(...) self.point = { ... } end
       function f:SetSize(width, height) self.width, self.height = width, height end
       function f:SetAllPoints(p) self.fills = p end
@@ -132,6 +133,9 @@ describe("the keybind guide", function()
       function f:GetWidth() return self.fills and self.fills.w or 0 end
       function f:GetHeight() return self.fills and self.fills.h or 0 end
       function f:GetEffectiveScale() return scale end
+      -- Where the page is on the screen, in its units: set by a test.
+      function f:GetLeft() return self.left end
+      function f:GetTop() return self.top end
       function f:Show()
         if self.shown then return end
         self.shown = true
@@ -151,6 +155,7 @@ describe("the keybind guide", function()
           SetTexCoord = function(t, ...) t.coords = { ... } end,
           SetSize = function(t, width, height) t.width, t.height = width, height end,
           GetWidth = function(t) return t.width end,
+          GetHeight = function(t) return t.height end,
           SetShown = function(t, on) t.shown = on end,
           Show = function(t) t.shown = true end,
           Hide = function(t) t.shown = false end }
@@ -394,6 +399,192 @@ describe("the keybind guide", function()
       assert.is_false(frame.dim.shown)
       assert.are.same({}, litBoxes())
       for _, spot in ipairs(frame.spots) do assert.is_false(spot.path) end
+    end)
+
+    -- Larry, 2026-11-24: "when the user mouses over it when its small they can
+    -- zoom in on the image parts and move it around as needed", and "the black
+    -- sides should go way when small".
+    describe("zoomed and dragged", function()
+      local cursor, buttonDown, savedCursor, savedButton
+      local SMALL = "Interface\\AddOns\\GSE_Help\\Assets\\KeybindGuide.png"
+      local function near(want, got, what) assert.is_true(math.abs(want - got) < 0.001, (what or "") .. ": " .. tostring(got)) end
+      local function viewBox()
+        local c = frame.picture.coords
+        return { c[1] * pixels, c[3] * pixels, c[2] * pixels, c[4] * pixels }
+      end
+      local function sameBox(want, got, what)
+        for i = 1, 4 do near(want[i], got[i], (what or "view") .. " " .. i) end
+      end
+      -- The picture hangs from the middle of the page's top, 8 down.
+      local function pictureCorner()
+        return frame.left + (500 - frame.picture.width) / 2, frame.top - 8
+      end
+      -- The cursor at a share across and down the picture.
+      local function pointAt(across, down)
+        local left, top = pictureCorner()
+        cursor.x, cursor.y = left + across * frame.picture.width, top - down * frame.picture.height
+      end
+      -- The file's pixel under the cursor.
+      local function underCursor()
+        local left, top = pictureCorner()
+        local box = viewBox()
+        return box[1] + (cursor.x - left) / frame.picture.width * (box[3] - box[1]),
+          box[2] + (top - cursor.y) / frame.picture.height * (box[4] - box[2])
+      end
+      local function wheel(delta) frame.scripts.OnMouseWheel(frame, delta) end
+      local function show()
+        gse.ShowKeybindGuideIn(page(500, 300))
+        frame.left, frame.top = 100, 500
+      end
+
+      before_each(function()
+        cursor, buttonDown = { x = 0, y = 0 }, false
+        savedCursor, savedButton = _G.GetCursorPosition, _G.IsMouseButtonDown
+        -- The game gives the cursor in screen units, the page's times its scale.
+        _G.GetCursorPosition = function() return cursor.x * scale, cursor.y * scale end
+        _G.IsMouseButtonDown = function(button) return button == "LeftButton" and buttonDown end
+      end)
+
+      after_each(function()
+        _G.GetCursorPosition, _G.IsMouseButtonDown = savedCursor, savedButton
+      end)
+
+      it("takes the wheel and the mouse, and is whole until zoomed", function()
+        show()
+        assert.is_true(frame.wheel)
+        assert.is_true(frame.mouse)
+        sameBox({ 0, 0, 800, 800 }, viewBox())
+        assert.are.same({ 284, 284 }, { frame.picture.width, frame.picture.height })
+      end)
+
+      it("zooms about the point under the cursor, spreading across the page before it is cut", function()
+        show()
+        pointAt(0.5, 0.5)
+        wheel(1)
+        -- A quarter larger: 355 wide, still the whole width of the picture;
+        -- the page's height cuts it.
+        near(355, frame.picture.width, "wider")
+        near(284, frame.picture.height, "as high as the page has room for")
+        sameBox({ 0, 80, 800, 720 }, viewBox())
+        assert.are.equal(LARGE, frame.picture.path)
+        -- Wider still, until the page's width holds it; while the whole width
+        -- of the picture shows, the point across can only stay where it is.
+        wheel(1)
+        pointAt(0.3, 0.7)
+        local x, y = underCursor()
+        wheel(1)
+        near(484, frame.picture.width, "the page's whole width: no black sides")
+        local x2, y2 = underCursor()
+        near(x, x2, "the same point across")
+        near(y, y2, "and down")
+      end)
+
+      it("goes no further in than one pixel of the larger file to a screen pixel, and back out to the whole picture", function()
+        show()
+        pointAt(0.5, 0.5)
+        for _ = 1, 30 do wheel(1) end
+        local box = viewBox()
+        local screenPerFilePixel = frame.picture.width / (box[3] - box[1]) * scale * screenHeight / 768
+        near(largePixels / pixels, screenPerFilePixel, "screen pixels to a pixel of the picture")
+        for _ = 1, 30 do wheel(-1) end
+        sameBox({ 0, 0, 800, 800 }, viewBox())
+        assert.are.same({ 284, 284 }, { frame.picture.width, frame.picture.height })
+        assert.are.equal(SMALL, frame.picture.path)
+      end)
+
+      it("leaves the wheel alone off the picture", function()
+        show()
+        cursor.x, cursor.y = 0, 0
+        wheel(1)
+        sameBox({ 0, 0, 800, 800 }, viewBox())
+      end)
+
+      it("drags with the left button while zoomed, no further than the picture's edge", function()
+        show()
+        pointAt(0.5, 0.5)
+        frame.scripts.OnMouseDown(frame, "LeftButton")
+        assert.is_nil(frame.scripts.OnUpdate, "not while the whole picture shows")
+        for _ = 1, 3 do wheel(1) end
+        local before = viewBox()
+        local perUnit = (before[3] - before[1]) / frame.picture.width
+        buttonDown = true
+        pointAt(0.5, 0.5)
+        frame.scripts.OnMouseDown(frame, "LeftButton")
+        local drag = assert(frame.scripts.OnUpdate)
+        -- 10 left and 5 down on the page moves the view right and up.
+        cursor.x, cursor.y = cursor.x - 10, cursor.y - 5
+        drag(frame)
+        near(before[1] + 10 * perUnit, viewBox()[1], "left")
+        near(before[2] - 5 * perUnit, viewBox()[2], "top")
+        cursor.x = cursor.x - 1000
+        drag(frame)
+        near(800, viewBox()[3], "stops at the right edge")
+        frame.scripts.OnMouseUp(frame, "LeftButton")
+        assert.is_nil(frame.scripts.OnUpdate)
+        -- From a step's part of the picture too; a button let go anywhere ends it.
+        pointAt(0.5, 0.5)
+        parts[1].scripts.OnMouseDown(parts[1], "LeftButton")
+        assert.truthy(frame.scripts.OnUpdate)
+        buttonDown = false
+        frame.scripts.OnUpdate(frame)
+        assert.is_nil(frame.scripts.OnUpdate)
+        frame.scripts.OnMouseDown(frame, "RightButton")
+        assert.is_nil(frame.scripts.OnUpdate, "the right button drags nothing")
+      end)
+
+      it("puts the lines and the steps' parts where they are, cut to what shows", function()
+        show()
+        pointAt(0.5, 0.5)
+        wheel(1)
+        sameBox({ 0, 80, 800, 720 }, viewBox())
+        local s = frame.picture.width / 800
+        near(40 * s, lines[1].point[4], "left")
+        near(-(542 - 80) * s, lines[1].point[5], "top")
+        near(420 * s, lines[1].width, "width")
+        near((720 - 705.5) * s, lines[7].height, "cut at the bottom")
+        assert.is_false(lines[8].shown, "out of view")
+        wheel(-1)
+        assert.is_true(lines[8].shown, "back in view")
+      end)
+
+      it("draws a lit step's part that shows, at the size it is shown", function()
+        show()
+        pointAt(0, 0)
+        for _ = 1, 3 do wheel(1) end
+        local box = viewBox()
+        near(0, box[1], "left")
+        near(0, box[2], "top")
+        local s = frame.picture.width / (box[3] - box[1])
+        for step, line in ipairs(lines) do
+          line.scripts.OnEnter()
+          for i, spot in ipairs(frame.spots) do
+            if spot.shown then
+              local what = "step " .. step .. " spot " .. i
+              local c = spot.coords
+              local filePixels = spot.path == LARGE and largePixels or pixels
+              near((c[2] - c[1]) * filePixels * s, spot.width, what .. " width")
+              near((c[4] - c[3]) * filePixels * s, spot.height, what .. " height")
+              assert.is_true(spot.point[4] > -0.001 and spot.point[4] + spot.width < frame.picture.width + 0.001, what .. " across")
+              assert.is_true(spot.point[5] < 0.001 and -spot.point[5] + spot.height < frame.picture.height + 0.001, what .. " down")
+            end
+          end
+          line.scripts.OnLeave()
+        end
+        -- Step 4's grown box runs past the view's right edge: it is cut there.
+        lines[4].scripts.OnEnter()
+        near(frame.picture.width, frame.spots[2].point[4] + frame.spots[2].width, "cut at the right")
+      end)
+
+      it("comes back whole after it is hidden", function()
+        show()
+        pointAt(0.5, 0.5)
+        wheel(2)
+        gse.HideKeybindGuide()
+        show()
+        sameBox({ 0, 0, 800, 800 }, viewBox())
+        assert.are.same({ 284, 284 }, { frame.picture.width, frame.picture.height })
+        assert.are.equal(SMALL, frame.picture.path)
+      end)
     end)
   end)
 end)
