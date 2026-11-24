@@ -244,6 +244,33 @@ describe("the editor's Bindings area", function()
     assert.is_true(fired < closes, "before the rule that closes an open row")
   end)
 
+  -- Larry, 2026-11-24: "keep this row centered on the window", on the page
+  -- area. Measured in game: 12.5 left of the page's middle at every width,
+  -- the half of the 24 the pane keeps on its right for a scroll bar.
+  it("centres the page's heading on the page, not on the page less its scroll bar's strip", function()
+    local src = body(keybind, "    local headerRow = centeredRow(headerLabel)", "\n    rightContainer:AddChild(headerRow)\n")
+    local label = {}
+    local pane, view = { right = 2002.8 }, { right = 1978.8 }
+    local function frame(t) return { GetRight = function() return t.right end } end
+    local env = { math = math, centeredRow = function() return {} end, headerLabel = label,
+      rightContainer = { frame = frame(pane), scrollframe = frame(view), AddChild = function() end } }
+    local chunk
+    if loadstring then
+      chunk = assert(loadstring(src .. "\nreturn headerRow"))
+      setfenv(chunk, env)
+    else
+      chunk = assert(load(src .. "\nreturn headerRow", "heading", "t", env))
+    end
+    local row = chunk()
+    row.beforeLayout(row)
+    assert.are.equal(12, label.flowXOffset, "half the 24 strip, the gap measured in game")
+    view.right = nil
+    row.beforeLayout(row)
+    assert.are.equal(0, label.flowXOffset, "a pane not placed yet moves nothing")
+    -- The Flow layout adds it to where it centres the row.
+    assert.truthy(readSource("GSE_GUI/NativeUI.lua"):find("entry.x + extraX + (child.flowXOffset or 0)", 1, true))
+  end)
+
   it("opens the Bindings tab on its own window, down to Button Bindings", function()
     local show = body(editor, "function GSE.ShowKeyBindings(existing)", "\nend\n")
     assert.truthy(show:find("local editor = editorFor(existing)", 1, true))

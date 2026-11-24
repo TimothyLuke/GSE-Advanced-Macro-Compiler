@@ -2683,7 +2683,19 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
-    rightContainer:AddChild(centeredRow(headerLabel))
+    -- The heading centred on the page, not on the page less the strip its
+    -- right edge keeps for a scroll bar: centred on what was left, it sat
+    -- 12.5 left of the page's middle at every width (measured in game, Larry,
+    -- 2026-11-24: "keep this row centered on the window", on the page area).
+    -- Half that strip, read off the pane each layout, puts it back.
+    local headerRow = centeredRow(headerLabel)
+    headerRow.beforeLayout = function()
+        local pane, view = rightContainer.frame, rightContainer.scrollframe
+        local paneRight = pane and pane.GetRight and pane:GetRight()
+        local viewRight = view and view.GetRight and view:GetRight()
+        headerLabel.flowXOffset = (paneRight and viewRight) and math.floor((paneRight - viewRight) / 2 + 0.5) or 0
+    end
+    rightContainer:AddChild(headerRow)
     -- As on the keybind panel: no loadout line without talent loadouts.
     if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow) end
     local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
