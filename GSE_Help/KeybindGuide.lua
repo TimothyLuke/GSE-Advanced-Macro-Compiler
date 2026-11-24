@@ -36,8 +36,8 @@ local KEYBIND_GUIDE_STEPS = {
 -- The list's lines: one under the other, each the same height.
 local KEYBIND_GUIDE_LINES = { left = 40, right = 460, top = 542, height = 27.25 }
 local KEYBIND_GUIDE_DIM   = 0.6    -- how dark the rest of the picture goes
-local guide, picture, dim, litStep
-local spots, lines = {}, {}
+local guide, picture, dim, litStep, pointedAt
+local spots, zones = {}, {}
 
 local function keybindLineBox(step)
     local list = KEYBIND_GUIDE_LINES
@@ -109,7 +109,7 @@ local function fitKeybindGuide()
     end
     local room = math.min(guide:GetWidth(), guide:GetHeight()) - KEYBIND_GUIDE_PAD * 2
     picture:SetSize(math.max(1, math.min(side, room)), math.max(1, math.min(side, room)))
-    for step, line in ipairs(lines) do placeOnPicture(line, keybindLineBox(step)) end
+    for _, zone in ipairs(zones) do placeOnPicture(zone, unpack(zone.box)) end
     if litStep then lightKeybindStep(litStep) end
 end
 
@@ -135,13 +135,29 @@ function GSE.ShowKeybindGuideIn(parent)
             spots[i] = guide:CreateTexture(nil, "OVERLAY")
             spots[i]:Hide()
         end
-        for step = 1, #KEYBIND_GUIDE_STEPS do
-            local line = CreateFrame("Frame", nil, guide)
-            line:EnableMouse(true)
-            line:SetScript("OnEnter", function() lightKeybindStep(step) end)
-            -- Only its own light: the next line may have been entered first.
-            line:SetScript("OnLeave", function() if litStep == step then lightKeybindStep(nil) end end)
-            lines[step] = line
+        -- A step lights from its line of the list, and from its own part of
+        -- the picture (Larry, 2026-11-23: "add mouseover effect also if the
+        -- user mouses over that part of the image"). That part is where the
+        -- step is drawn, not where it grows to.
+        local function addZone(step, left, top, right, bottom)
+            local zone = CreateFrame("Frame", nil, guide)
+            zone.box = { left, top, right, bottom }
+            zone:EnableMouse(true)
+            zone:SetScript("OnEnter", function()
+                pointedAt = zone
+                lightKeybindStep(step)
+            end)
+            -- Only its own light: the next one may have been entered first.
+            zone:SetScript("OnLeave", function()
+                if pointedAt ~= zone then return end
+                pointedAt = nil
+                lightKeybindStep(nil)
+            end)
+            table.insert(zones, zone)
+        end
+        for step = 1, #KEYBIND_GUIDE_STEPS do addZone(step, keybindLineBox(step)) end
+        for step, boxes in ipairs(KEYBIND_GUIDE_STEPS) do
+            for _, box in ipairs(boxes) do addZone(step, unpack(box)) end
         end
         guide:SetScript("OnSizeChanged", fitKeybindGuide)
         -- The picture is in memory only while it shows.

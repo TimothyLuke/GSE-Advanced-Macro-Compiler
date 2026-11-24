@@ -116,7 +116,7 @@ describe("the keybind guide", function()
 
   -- Run with frames that record what is done to them.
   describe("shown in a page", function()
-    local gse, created, frame, lines, saved
+    local gse, created, frame, lines, parts, saved
     local screenHeight, scale = 1440, 0.65
 
     local function newFrame(parent)
@@ -179,12 +179,13 @@ describe("the keybind guide", function()
 
     before_each(function()
       saved = { CreateFrame = _G.CreateFrame, UIParent = _G.UIParent, GetPhysicalScreenSize = _G.GetPhysicalScreenSize }
-      created, screenHeight, lines = 0, 1440, {}
+      created, screenHeight, lines, parts = 0, 1440, {}, {}
       _G.CreateFrame = function(_, _, parent)
         local f = newFrame(parent)
-        -- The guide's own children are the lines of its list.
+        -- The guide's own children: the eight lines of its list, then the
+        -- steps' parts of the picture.
         if created > 0 and parent == frame then
-          table.insert(lines, f)
+          table.insert(#lines < 8 and lines or parts, f)
         else
           created = created + 1
           frame = f
@@ -324,6 +325,33 @@ describe("the keybind guide", function()
       lines[1].scripts.OnLeave()
       assert.is_true(frame.dim.shown)
       assert.are.equal(390, litBoxes()[2][1])
+    end)
+
+    -- Larry, 2026-11-23: "add mouseover effect also if the user mouses over
+    -- that part of the image".
+    it("lights a step from its own part of the picture too, where it is drawn", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      assert.are.equal(11, #parts, "one for each box of each step")
+      local s = frame.picture.width / pixels
+      local function near(want, got, what) assert.is_true(math.abs(want - got) < 0.001, what .. ": " .. got) end
+      -- Step 2 has two boxes, its menu and the hand under it.
+      local menu, hand = parts[2], parts[3]
+      assert.is_true(menu.mouse)
+      assert.are.equal(frame.picture, menu.point[2])
+      near(312 * s, menu.point[4], "left")
+      near(-34 * s, menu.point[5], "top")
+      near((457 - 312) * s, menu.width, "width: not grown")
+      near((222 - 34) * s, menu.height, "height")
+      menu.scripts.OnEnter()
+      assert.are.equal(390, litBoxes()[2][1], "step 2 is lit")
+      -- On to the step's other box, which may be entered before the first is left.
+      hand.scripts.OnEnter()
+      menu.scripts.OnLeave()
+      assert.is_true(frame.dim.shown, "still lit on the step's other box")
+      hand.scripts.OnLeave()
+      assert.is_false(frame.dim.shown)
+      parts[1].scripts.OnEnter()
+      assert.are.same({ { 40, 542, 460, 569.25 }, { 18, 190, 356, 283 } }, litBoxes())
     end)
 
     it("every step's boxes are inside the picture, clear of its list, and drawn on the picture in whole pixels", function()
