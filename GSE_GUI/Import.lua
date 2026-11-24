@@ -1144,13 +1144,35 @@ processQueue = function()
   end
 end
 
-local function LandingPage()
+-- The Import window, brought forward as it is.
+local function openImportWindow()
+  if importframe and importframe.frame then
+    importframe:SetSize(760, 560)
+    UI.MakePopup(importframe.frame, {center = true})
+    if importframe.frame.Raise then importframe.frame:Raise() end
+    importframe.frame:Show()
+  end
+end
+
+-- host: where the page is drawn. Nil: the Import window itself. Else a
+-- container in the Editor (its Import tab), with `room` high for the page.
+local function LandingPage(host, room)
+  local inEditor = host ~= nil
+  host = host or importframe
   -- Back at the start: anything from here is a plain import, not the tail of
   -- a Restore the user abandoned.
   GSE.RestoreInProgress = nil
-  importframe:ReleaseChildren()
-  prepareImportFrame()
-  importframe.fromQueue = false
+  host:ReleaseChildren()
+  if not inEditor then
+    prepareImportFrame()
+    importframe.fromQueue = false
+  end
+  -- From the Editor, the platform queue and a collection's review page open
+  -- in the Import window, as they always have.
+  local function inWindow(fn)
+    if inEditor then openImportWindow() end
+    fn()
+  end
   local hasBanner = false
 
   -- If the platform queue has pending content, show a banner button at the top
@@ -1175,22 +1197,22 @@ local function LandingPage()
     queueButton:SetText("Import Platform Updates")
     styleImportButton(queueButton, 200)
     queueButton:SetCallback("OnClick", function()
-      processQueue()
+      inWindow(processQueue)
     end)
     queueButtons:AddChild(queueButton)
     local manageButton = UI:Create("Button")
     manageButton:SetText("Manage Queue")
     styleImportButton(manageButton, 140)
     manageButton:SetCallback("OnClick", function()
-      renderQueueManager()
+      inWindow(renderQueueManager)
     end)
     queueButtons:AddChild(manageButton)
     queueBanner:AddChild(queueButtons)
-    importframe:AddChild(queueBanner)
+    host:AddChild(queueBanner)
     local divider = UI:Create("Heading")
     divider:SetText("  - or paste a string below -  ")
     divider:SetFullWidth(true)
-    importframe:AddChild(divider)
+    host:AddChild(divider)
   elseif GSE.PendingBridgeDeletes and not GSE.isEmpty(GSE.PendingBridgeDeletes) then
     -- Imports queue is empty but deletes are pending — let the user resolve
     -- them from the same dialog they'd use for imports.
@@ -1205,17 +1227,22 @@ local function LandingPage()
     local delButton = UI:Create("Button")
     delButton:SetText("Review Deletes")
     styleImportButton(delButton, 200)
-    delButton:SetCallback("OnClick", function() processQueue() end)
+    delButton:SetCallback("OnClick", function() inWindow(processQueue) end)
     delButtons:AddChild(delButton)
     delBanner:AddChild(delButtons)
-    importframe:AddChild(delBanner)
+    host:AddChild(delBanner)
     local divider = UI:Create("Heading")
     divider:SetText("  - or paste a string below -  ")
     divider:SetFullWidth(true)
-    importframe:AddChild(divider)
+    host:AddChild(divider)
   end
 
   local pastePanelHeight = hasBanner and 332 or 408
+  if inEditor then
+    -- What the Editor's page has, less the Import button's row and, with a
+    -- banner, the banner and its divider.
+    pastePanelHeight = math.max(160, (room or 0) - 52 - (hasBanner and 118 or 0))
+  end
   local pastePanel = createImportPanel(pastePanelHeight)
   local importsequencebox = UI:Create("MultiLineEditBox")
   local recbutton = UI:Create("Button")
@@ -1225,7 +1252,7 @@ local function LandingPage()
   importsequencebox:DisableButton(true)
   importsequencebox:SetFullWidth(true)
   pastePanel:AddChild(importsequencebox)
-  importframe:AddChild(pastePanel)
+  host:AddChild(pastePanel)
 
   GSE.GUIImportFrame = importframe
   local recButtonGroup = createImportToolbar()
@@ -1239,12 +1266,17 @@ local function LandingPage()
       -- Either a compressed import or a failed copy
       local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
       if decompresssuccess and actiontable.type == "COLLECTION" then
-        processCollection(actiontable.payload)
+        if inEditor then
+          importsequencebox:SetText("")
+          GSE.GUIShowCollectionImport(actiontable.payload)
+        else
+          processCollection(actiontable.payload)
+        end
       else
         local success = GSE.ImportSerialisedSequence(importstring, importframe.AutoCreateIcon)
         if success then
           importsequencebox:SetText("")
-          importframe:Hide()
+          if not inEditor then importframe:Hide() end
         else
           GSE.GUIShowImportFailure()
         end
@@ -1254,9 +1286,9 @@ local function LandingPage()
   -- The Import button centred under the paste box.
   if recButtonGroup.SetFlowHAlign then recButtonGroup:SetFlowHAlign("CENTER") end
   recButtonGroup:AddChild(recbutton)
-  importframe:AddChild(recButtonGroup)
+  host:AddChild(recButtonGroup)
 
-  importframe:Show()
+  if not inEditor then importframe:Show() end
 end
 
 --- Open the Import window on a collection's review page.
@@ -1277,11 +1309,21 @@ function GSE.ShowImport()
     importframe:SetSize(760, 560)
   end
   LandingPage()
-  if importframe and importframe.frame then
-    UI.MakePopup(importframe.frame, {center = true})
-    if importframe.frame.Raise then importframe.frame:Raise() end
-    importframe.frame:Show()
-  end
+  openImportWindow()
+end
+
+--- The Import page in the Editor (its Import tab): the paste box and the
+--- Import button, in `container`, with `room` high. The platform queue and a
+--- collection's review page still open in the Import window.
+function GSE.GUI.DrawImportPage(container, room)
+  local outer = UI:Create("SimpleGroup")
+  outer:SetFullWidth(true)
+  outer:SetFullHeight(true)
+  outer:SetLayout("List")
+  if outer.SetListPadding then outer:SetListPadding(12, 10, 12, 10) end
+  if outer.SetListGap then outer:SetListGap(8) end
+  container:AddChild(outer)
+  LandingPage(outer, (room or 0) - 20)
 end
 
 -- Called by the login notification or the GSE menu to jump straight to the queue

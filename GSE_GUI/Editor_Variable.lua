@@ -63,18 +63,21 @@ local function buildVariablesMenu(editframe)
     -- uses. pairs() gave hash order, so the list shuffled between sessions.
     for k, _ in GSE.pairsByKeys(GSE.Store("variable") or {}, GSE.AlphabeticalTableSortAlgorithm) do
         local classid = GSE.ElementScopeClass("variable", k) or 0
-        local folder = byClass[classid]
-        if not folder then
-            folder = GSE.GUI.ClassFolder(classid)
-            byClass[classid] = folder
-            folders[#folders + 1] = folder
+        -- Another class's only while All Variables is ticked.
+        if GSE.GUI.TreeShowsVariable(classid) then
+            local folder = byClass[classid]
+            if not folder then
+                folder = GSE.GUI.ClassFolder(classid)
+                byClass[classid] = folder
+                folders[#folders + 1] = folder
+            end
+            table.insert(folder.children, {
+                value = k,
+                text = "|CFFFFFFFF" .. k .. Statics.StringReset,
+                children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(k))
+            })
+            paths["VARIABLES\001" .. k] = "VARIABLES\001" .. folder.value .. "\001" .. k
         end
-        table.insert(folder.children, {
-            value = k,
-            text = "|CFFFFFFFF" .. k .. Statics.StringReset,
-            children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(k))
-        })
-        paths["VARIABLES\001" .. k] = "VARIABLES\001" .. folder.value .. "\001" .. k
     end
     GSE.GUI.SortClassFolders(folders)
     for _, folder in ipairs(folders) do table.insert(tree.children, folder) end

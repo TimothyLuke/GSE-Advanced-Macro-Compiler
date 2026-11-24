@@ -95,6 +95,8 @@ local function login(client, classfile)
       GameMode = client.gameMode, IsForever = client.forever or nil,
       L = setmetatable({}, { __index = function(_, k) return k end }),
       GetSpellInfo = function(id) return has[id] and { name = SPELLS[id] } or nil end,
+      -- TEST_KNOWN: the spells the character has learned; unset, all of them.
+      PlayerKnowsSpell = function(id) return env.TEST_KNOWN == nil or env.TEST_KNOWN[id] == true end,
       GetCurrentClassID = function() return 1 end,
       ButtonOverrides = {}, ButtonOverrideDefaults = {}, ButtonOverrideStates = {},
     },
@@ -827,6 +829,92 @@ describe("Stance bars on every client and bar addon", function()
       local copy = assert(load:find("GSE.CopyDefaultRowsToStances(GetSpec())", 1, true))
       local apply = assert(load:find("GSE.OverridesToApply(GSE.SpecOverrides(GetSpec(), false), loadoutRows)", 1, true))
       assert.is_true(copy < apply)
+    end)
+  end)
+
+  -- A stance, form or stealth is a State to choose once the character has it
+  -- (Larry, 2026-11-23, a Mists rogue offered Shadow Dance without it: "any
+  -- stance not known shouldnt show up until the user has that stance"). One
+  -- it has not learned is not named, and the menu offers only named states.
+  describe("A stance the character has not learned", function()
+    local era, mop, forever = CLIENTS[1], CLIENTS[3], CLIENTS[4]
+    local function named(states, page) return states ~= nil and states[page] ~= nil and states[page] ~= page end
+
+    it("is no State to choose on Blizzard's bar or Dominos', and is one once learned", function()
+      for _, build in ipairs({ blizzardMainBar, dominosMainBar }) do
+        local env = login(mop, "ROGUE")
+        env.TEST_KNOWN = { [1784] = true }
+        local name = build(env):GetName()
+        local states = env.GSE.OverrideStatesFor(name)
+        assert.are.equal("Stealth", states["7"])
+        assert.is_false(named(states, "8"), "Shadow Dance, not learned, on " .. name)
+        env.TEST_KNOWN[51713] = true
+        assert.are.equal("Shadow Dance", env.GSE.OverrideStatesFor(name)["8"], "learned since, on " .. name)
+        env.TEST_KNOWN = {}
+        states = env.GSE.OverrideStatesFor(name)
+        assert.is_false(named(states, "7") or named(states, "8"), "nothing learned, on " .. name)
+      end
+    end)
+
+    it("still keeps the Default row off that stance's bar", function()
+      local env = login(mop, "ROGUE")
+      env.TEST_KNOWN = { [1784] = true }
+      blizzardMainBar(env)
+      assert.is_true(env.GSE.ButtonStancePages("ActionButton1")[8])
+    end)
+
+    it("is none on a bar addon that pages by its own driver, or on a LibActionButton bar", function()
+      local env = login(forever, "WARRIOR")
+      env.TEST_KNOWN = { [2457] = true }
+      local states = env.GSE.OverrideStatesFor(ellesmereMainBar(env):GetName())
+      assert.are.equal("Battle Stance", states["7"])
+      assert.is_false(named(states, "8") or named(states, "9"), "Defensive and Berserker Stance, not learned")
+      assert.is_true(env.GSE.ButtonStancePages("EABButton1")[8], "the page stays a stance page")
+
+      env = login(mop, "ROGUE")
+      env.TEST_KNOWN = { [1784] = true }
+      local bar = {}
+      env.RegisterStateDriver(bar, "page", "[bonusbar:1] 7; [bonusbar:2] 8; 0")
+      newButton(env, "BT4Button1", { parent = bar, attrs = { state = "0" },
+        lab = { ["0"] = "action", ["7"] = "action", ["8"] = "action" } })
+      states = env.GSE.OverrideStatesFor("BT4Button1")
+      assert.are.equal("Stealth", states["7"])
+      assert.is_false(named(states, "8"))
+    end)
+
+    it("counts Dire Bear Form as Bear Form", function()
+      local env = login(era, "DRUID")
+      env.TEST_KNOWN = { [9634] = true }
+      local states = env.GSE.OverrideStatesFor(blizzardMainBar(env):GetName())
+      assert.are.equal("Bear Form", states["9"])
+      assert.is_false(named(states, "7"), "Cat Form, not learned")
+    end)
+
+    it("counts a stance on the stance bar, by its spell or its name (another rank)", function()
+      local env = login(era, "ROGUE")
+      env.TEST_KNOWN = {}
+      local spells = env.GSE.GetSpellInfo
+      env.GSE.GetSpellInfo = function(id) return id == 1787 and { name = "Stealth" } or spells(id) end
+      env.GetNumShapeshiftForms = function() return 1 end
+      env.GetShapeshiftFormInfo = function(i) if i == 1 then return nil, false, true, 1787 end end
+      assert.are.equal("Stealth", env.GSE.OverrideStatesFor(blizzardMainBar(env):GetName())["7"])
+    end)
+
+    it("counts a spell whose name the spellbook finds (a higher rank known)", function()
+      local env = login(era, "ROGUE")
+      env.TEST_KNOWN = {}
+      local spells = env.GSE.GetSpellInfo
+      env.GSE.GetSpellInfo = function(id) return id == "Stealth" and { name = "Stealth" } or spells(id) end
+      assert.are.equal("Stealth", env.GSE.OverrideStatesFor(blizzardMainBar(env):GetName())["7"])
+    end)
+
+    it("is left out of the menu, which offers only the states that have a name", function()
+      local menu = readSource("GSE_Utils/Utils.lua")
+      assert.truthy(menu:find('if k == "Default" or states[k] ~= k then named[#named + 1] = k end', 1, true))
+      assert.truthy(menu:find("if #named < 2 then states, stateOrder = nil, nil else stateOrder = named end", 1, true))
+      -- The spell test is the one a sequence's known: conditions use.
+      local storage = readSource("GSE/API/Storage.lua")
+      assert.truthy(storage:find("\nGSE.PlayerKnowsSpell = playerKnowsSpell\n", 1, true))
     end)
   end)
 

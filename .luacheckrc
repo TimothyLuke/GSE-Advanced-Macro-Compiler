@@ -51,6 +51,7 @@ globals = {
     "GetBindingKey",
     "GetBinding",
     "GetNumBindings",
+    "GetPhysicalScreenSize",
     "C_LevelLink",
     "CooldownFrame_Set",
     "C_UnitAuras",
@@ -130,6 +131,7 @@ globals = {
     "GSE_LDB_Initialize",
     "GSE_QoL_Initialize",
     "GSE_Actionbar_Initialize",
+    "GSE_Help_Initialize",
     -- GSE
     "GSE2",
     "GSEGUI",
@@ -375,6 +377,7 @@ globals = {
     "IsSpellKnownOrOverridesKnown",
     "RegisterStateDriver",
     "UnregisterStateDriver",
+    "GetNumShapeshiftForms",
     "GetShapeshiftFormInfo",
     "GetSpecializationInfoByID",
     "GetSpecializationRole",

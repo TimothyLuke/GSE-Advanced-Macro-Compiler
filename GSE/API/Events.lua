@@ -551,6 +551,30 @@ local SHOWGRID_ALWAYS = [[
     local grid = b:GetAttribute("showgrid") or 0
     if grid % 2 == 0 then b:SetAttribute("showgrid", grid + 1) end
 ]]
+-- GSE's menu on an empty action button needs a button to click. The classic
+-- clients' default Edit Mode layout has "Always Show Buttons" off on every bar
+-- (Blizzard_EditMode/Classic/EditModePresetLayouts.lua): an empty button there
+-- is hidden and only its slot art shows, so the right-click reaches nothing
+-- (Larry, 2026-11-22, Burning Crusade). Where the menu is on, GSE shows
+-- Blizzard's empty buttons itself there, with the bit an override's button is
+-- kept shown by; WoW's own setting stays as the player has it. Forever and
+-- Retail show them by default, so nothing is done there.
+local EMPTY_BUTTON_BAR = {}
+for _, prefix in ipairs({ "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
+    "MultiBarRightButton", "MultiBarLeftButton", "MultiBar5Button", "MultiBar6Button", "MultiBar7Button" }) do
+    for index = 1, 12 do EMPTY_BUTTON_BAR[prefix .. index] = true end
+end
+function GSE.ShowsEmptyButtons()
+    return GSE.GameMode < 11 and GSEOptions.actionBarOverridePopup ~= false
+end
+-- The bit on, and the button shown where the bar has it in use (gseGridShow).
+local SHOWGRID_EMPTY = [[
+    local b = self:GetFrameRef("gseGridButton")
+    if not b then return end
+    local grid = b:GetAttribute("showgrid") or 0
+    if math.floor(grid / 262144) % 2 == 0 then b:SetAttribute("showgrid", grid + 262144) end
+    if self:GetAttribute("gseGridShow") then b:Show() end
+]]
 local function barAlwaysShowsButtons(bar)
     local setting = Enum and Enum.EditModeActionBarSetting and Enum.EditModeActionBarSetting.AlwaysShowButtons
     if not (setting and bar.GetSettingValueBool) then return false end
@@ -563,12 +587,44 @@ local function setOverrideButtonForcedShown(buttonOrName, shown)
     if btn.SetShowGridInsecure then
         btn:SetShowGridInsecure(shown and true or false, GSE_FORCE_SHOWGRID_REASON, true)
     elseif btn.GetShowGrid and btn.bar and btn.bar.UpdateShownButtons then
+        -- An empty button GSE shows anyway keeps the bit (GSE.UpdateEmptyButtons).
+        if not shown and EMPTY_BUTTON_BAR[btn:GetName() or ""] and GSE.ShowsEmptyButtons() then return end
         -- Only when the bit has to change: repaints call this often.
         local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
         if hasBit == (shown and true or false) and (not shown or btn:IsShown()) then return end
         SHBT:SetFrameRef("gseGridButton", btn)
         if not shown and barAlwaysShowsButtons(btn.bar) then SHBT:Execute(SHOWGRID_ALWAYS) end
         SHBT:Execute(shown and SHOWGRID_ON or SHOWGRID_OFF)
+    end
+end
+
+--- Show Blizzard's empty action buttons where GSE does (GSE.ShowsEmptyButtons),
+--- or let go of the ones it showed once the menu is turned off. Out of combat:
+--- the buttons are secure, so it is run again when combat ends.
+function GSE.UpdateEmptyButtons()
+    if InCombatLockdown() or GSE.GameMode >= 11 then return end
+    local show = GSE.ShowsEmptyButtons()
+    for name in pairs(EMPTY_BUTTON_BAR) do
+        local btn = _G[name]
+        local bar = btn and btn.bar
+        if bar and btn.GetShowGrid and bar.UpdateShownButtons then
+            if show then
+                -- Shown now where the bar has the button in use. One it is not
+                -- showing (its icon count, a vehicle's bar) gets the bit alone,
+                -- and the bar shows it when it next has it in use.
+                local inUse = btn.index ~= nil and btn.index <= (bar.numButtonsShowable or 0)
+                    and not btn:GetAttribute("statehidden")
+                local hasBit = math.floor((btn:GetAttribute("showgrid") or 0) / GSE_FORCE_SHOWGRID_REASON) % 2 == 1
+                if not hasBit or (inUse and not btn:IsShown()) then
+                    SHBT:SetFrameRef("gseGridButton", btn)
+                    SHBT:SetAttribute("gseGridShow", inUse)
+                    SHBT:Execute(SHOWGRID_EMPTY)
+                end
+            elseif not btn:GetAttribute("gse-button") then
+                -- shortcut: the bit comes off and the bar hides the button at its next update, not at once.
+                setOverrideButtonForcedShown(btn, false)
+            end
+        end
     end
 end
 
@@ -1422,7 +1478,8 @@ local function showGSEButtonTooltip(btn)
             rightLine:Show()
         end
     else
-        GameTooltip:SetText(seqName, 1, 1, 1)
+        -- The sequence's own name: seqName is its id, which is what its button is called.
+        GameTooltip:SetText(GSE.SequenceName(seqName) or seqName, 1, 1, 1)
         GameTooltip:AddLine(L["GSE Sequence"], 0.6, 0.6, 0.6)
     end
     GameTooltip:Show()
@@ -2421,8 +2478,8 @@ function LoadKeyBindings(payload)
             ClearOverrideBindings(keybindingframe)
         end
     end
-    -- Keybinding switched off (WoW Forever and Retail 12.1.7, or the GSE Action
-    -- Bar carries the keys): released above, bind nothing.
+    -- Keybinding switched off (every client, Init.lua; the GSE Action Bar
+    -- carries the keys): released above, bind nothing.
     if not GSE.KeybindingsEnabled() then return end
 
     -- A keybind holds the sequence's id; it clicks that sequence's button. The
@@ -2913,15 +2970,13 @@ function GSE.ClearKeyBinding(key)
     return true
 end
 
--- Where WoW no longer honours GSE's own keybinds (Retail 12.1.7 on; Forever
--- never had any to move), a character with some gets the GSE Action Bar
+-- GSE's own keybinds are retired on every client (Init.lua; Forever never
+-- had any to move), so a character with some gets the GSE Action Bar
 -- turned on, once per account,
 -- with both bars hidden: its keybinds move onto the bar's buttons
 -- (GSE_Actionbar/Migration.lua) and keep working, and nothing new shows until
 -- the player chooses to show it. There is no reload: GSE loads the bar itself (loadActionBar). Turned off again
--- afterwards, it stays off. Everywhere else
--- the keybinds still work, and moving them is the player's choice: the switch
--- in GSE's options.
+-- afterwards, it stays off.
 local function enableActionBarForKeybinds()
     if not GSE.DirectKeybindsRetired or GSE.IsForever then return end
     if GSE.ActionBarActive() or type(GSE_C) ~= "table" or GSEOptions.ActionBarAutoEnabled then return end
@@ -3001,6 +3056,7 @@ function GSE:PLAYER_ENTERING_WORLD()
     -- The GSE Action Bar's buttons have to exist before Button Bindings go on.
     loadActionBar()
     LoadOverrides()
+    GSE.UpdateEmptyButtons()
     GSE.ManageMacros()
     scheduleGSEOverrideIconRepaint()
     -- Migrate any remaining classes in the background so login is not blocked.
@@ -3016,13 +3072,14 @@ function GSE:PLAYER_ENTERING_WORLD()
         GSE.UnsavedOptions.UpdateNotesShown = true
         GSE:ShowUpdateNotes()
     end
-    local menuOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.menu
-    if menuOpts and menuOpts.open and GSEOptions.ToolbarEnabled ~= false then
-        C_Timer.After(0, function()
-            if GSE.CheckGUI() and GSE.ShowMenu then
-                GSE.ShowMenu()
-            end
-        end)
+    -- The Editor comes back if it was left open. GSE_GUI is loaded on demand,
+    -- and loading it reopens the Editor where it was (Editor.lua,
+    -- RestoreSequenceEditorIfNeeded). The toolbar's return at login was what
+    -- loaded it; with the toolbar gone nothing did, and the Editor stayed
+    -- shut after a /reload (Larry, 2026-11-23).
+    local editorOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.sequenceeditor
+    if editorOpts and editorOpts.open then
+        C_Timer.After(0, function() GSE.CheckGUI() end)
     end
 end
 
@@ -3215,6 +3272,7 @@ function GSE:PLAYER_REGEN_ENABLED(unit, event, addon)
     -- The GSE Action Bar waited for combat to end to load (loadActionBar).
     if actionBarWaiting then GSE.StartActionBar() end
     LoadOverrides()
+    GSE.UpdateEmptyButtons()
     GSE:RegisterEvent("PLAYER_REGEN_ENABLED")
 end
 
@@ -3238,17 +3296,6 @@ function GSE:PLAYER_LOGOUT()
         GSE.GUI.ForgetLastSequenceEditorNode()
     end
     if not GSE.UnsavedOptions["GUI"] then
-        if GSE["MenuFrame"] then
-            if GSE.isEmpty(GSEOptions.frameLocations) then
-                GSEOptions.frameLocations = {}
-            end
-
-            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
-                GSEOptions.frameLocations.menu = {}
-            end
-            GSEOptions.frameLocations.menu.top  = GSE.MenuFrame:GetTop()
-            GSEOptions.frameLocations.menu.left = GSE.MenuFrame:GetLeft()
-        end
         if GSE["GUIVariableFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
                 GSEOptions.frameLocations.variablesframe = {}
@@ -3638,6 +3685,17 @@ function GSE.CheckGUI()
         elseif reason == "INTERFACE_VERSION" then
             GSE.Print(L["The GUI needs updating.  Please ensure that your GSE install is complete."])
         end
+    end
+    return loaded
+end
+
+--- Loads GSE's help (GSE_Help, LoadOnDemand) the first time it is asked for.
+-- What it shows is on GSE once it is loaded (GSE.ShowKeybindGuideIn).
+-- @return true when it is loaded; otherwise why not is said in chat.
+function GSE.CheckHelp()
+    local loaded, reason = C_AddOns.LoadAddOn("GSE_Help")
+    if not loaded then
+        GSE.Print(string.format(L["GSE's help could not be loaded: %s"], tostring(reason)))
     end
     return loaded
 end

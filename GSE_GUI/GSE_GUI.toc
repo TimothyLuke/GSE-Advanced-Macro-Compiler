@@ -46,5 +46,4 @@ GUIFunctions.lua
 MacroCompare.lua
 MacroPreview.lua
 SpellCache.lua
-Menu.lua
 Init.lua

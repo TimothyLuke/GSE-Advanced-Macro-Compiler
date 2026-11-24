@@ -244,6 +244,7 @@ L["Filter Sequence Selection"] = true
 L["Editor Scroll Speed"] = true
 L["Pixels scrolled per mouse-wheel notch in the Sequence Editor. Higher = faster scrolling. Default 280."] = true
 L["All Sequences"] = true
+L["All Variables"] = true
 L["Show All Sequences in Editor"] = true
 L["Show Class Sequences in Editor"] = true
 
@@ -817,6 +818,12 @@ L["modified in other window.  This view is now behind the current sequence."] = 
 L["New Sequence"] = true
 L["Default"] = true
 L["New Variable"] = true
+L["New Macro"] = true
+L["Enter a name for the new macro:"] = true
+L["A macro cannot be made in combat."] = true
+L["There is no room for another macro."] = true
+L["Editor"] = true
+L["New Editor Window"] = true
 
 L["Button Settings"] = true
 
@@ -855,26 +862,8 @@ L["GSE Message"] = true
 L["WoW Event"] = true
 L["Addon Message"] = true
 -- Menu orientation & lock
-L["Toolbar"] = true
-L["Toolbar Options"] = true
-L["Growth Direction"] = true
-L["Up"] = true
-L["Down"] = true
-L["Left"] = true
-L["Right"] = true
-L["Lock Position"] = true
-L["Lock Toolbar Position"] = true
-L["Strata"] = true
-L["Static Toolbar"] = true
-L["Slide Out Toolbar"] = true
-L["When checked, the toolbar icons stay always visible (Static Toolbar). When unchecked, icons stay hidden until you mouseover the logo, then slide out."] = true
-L["Background"] = true
 L["Low"] = true
 L["High"] = true
-L["Dialog"] = true
-L["Right-Click for Options"] = true
-L["Shift + Right-Click to copy version"] = true
-L["Position Locked"] = true
 L["Change"] = true
 L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
 
@@ -890,21 +879,19 @@ L["When enabled, holding Ctrl makes GSE send an empty macro and stops the sequen
 L["Friendly target"] = true
 L["Hostile target"] = true
 L["WhatsNewTLDR"] =
-[[|cFFFFD100TL;DR:|r A sequence now goes straight onto an action bar button: drag it there from the editor, or right-click an empty button and pick it. From |cFF00FFFFRetail 12.1.7|r your GSE keybinds move onto the optional GSE Action Bar. See it animated on gse.tools -- copy the link:]]
+[[|cFFFFD100TL;DR:|r A sequence now goes straight onto an action bar button: drag it there from the editor, or right-click an empty button and pick it. Your GSE keybinds move onto the optional GSE Action Bar, on every version of WoW. See it animated on gse.tools -- copy the link:]]
 
 L["WhatsNew"] =
 [[|cFFFFFFFFGS|r|cFF00FFFFE|r |cFFFFD100The GSE Action Bar|r
 
 |cFFFFD100Why GSE keybinds are changing|r
-WoW's controller update changed the APIs that GSE's keybinds have used since The War Within. On |cFF00FFFFWoW Forever|r and from |cFF00FFFFRetail 12.1.7|r, WoW ignores a key GSE binds to a sequence by itself. WoW now wants every key to go to a fixed button that an addon declares, the way action bars and action bar addons do.
+WoW's controller update changed the APIs that GSE's keybinds have used since The War Within. On |cFF00FFFFWoW Forever|r and from |cFF00FFFFRetail 12.1.7|r, WoW ignores a key GSE binds to a sequence by itself. WoW now wants every key to go to a fixed button that an addon declares, the way action bars and action bar addons do. GSE now works that one way on every version of WoW.
 
 |cFFFFD100The GSE Action Bar|r
 GSE now comes with an optional action bar of its own: two bars of twelve buttons, |cFF00BFFFGSEButton1|r to |cFF00BFFFGSEButton24|r. Their keys are set in WoW's |cFF00BFFFOptions > Keybindings|r, under GSE, with every other keybind. Like any action bar, its buttons hold spells, items and macros. Put a sequence on a button in |cFF00BFFFButton Bindings|r, by right-clicking the button, or by dragging the sequence from the editor onto it -- the same as any other action bar button.
 
 |cFFFFD100Moving your keybinds|r
-On |cFF00FFFFRetail 12.1.7|r on, if you had GSE keybinds, the GSE Action Bar has been turned on for you, |cFFFFD100hidden|r. Each key now sits on a GSE button in WoW's Keybindings, and that button runs the sequence the key ran, for each spec and talent loadout. A reload finishes the move. Nothing new shows on screen.
-
-On the other versions of WoW your GSE keybinds still work, and moving them is up to you: turn on the GSE Action Bar in |cFF00BFFFGSE Options > Action Bar|r and they move the same way. Once Retail reaches 12.1.7 that is no longer optional there.
+If you had GSE keybinds, the GSE Action Bar has been turned on for you, |cFFFFD100hidden|r. Each key now sits on a GSE button in WoW's Keybindings, and that button runs the sequence the key ran, for each spec and talent loadout. A reload finishes the move. Nothing new shows on screen.
 
 |cFFFFD100Showing, moving and turning it off|r
 Show either bar, show it on mouseover, move it, size it, or turn the bar off in |cFF00BFFFGSE Options > Action Bar|r. A hidden bar still works -- its keys run their sequences -- and shows while you drag a sequence, so you can drop it on a button. Masque can skin the buttons.
@@ -1127,6 +1114,7 @@ L["Buttons per row"] = true
 L["How many buttons each row of the bar holds."] = true
 L["Scale"] = true
 L["The GSE Action Bar could not be loaded: %s"] = true
+L["GSE's help could not be loaded: %s"] = true
 L["A macro named %s already exists."] = true
 L["What class or spec is this for?  If it is for all classes choose Global.  It is only loaded for that class."] = true
 L["The version used where no other version has been configured."] = true

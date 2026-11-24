@@ -140,8 +140,13 @@ end
 -- Bindings.xml declares. There a sequence reaches a key only through an action
 -- button: any bar's (Button Bindings), or the GSE Action Bar's, whose buttons
 -- are declared bindings (GSE_Actionbar). GSE.KeybindingsEnabled reads this.
-local _, _, _, tocVersion = GetBuildInfo()
-GSE.DirectKeybindsRetired = GSE.IsForever or (tonumber(tocVersion) or 0) >= 120107
+--
+-- The other clients still honour those keybinds for a patch or two, but GSE
+-- works one way on every client (Tim, #2235: "migrating all clients at the
+-- same time so as not needing to maintain multiple setups within the mod"),
+-- so they are retired everywhere: no Keybindings pages, and a character's
+-- keybinds move onto the GSE Action Bar (Events.lua, enableActionBarForKeybinds).
+GSE.DirectKeybindsRetired = true
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)
@@ -284,7 +289,7 @@ GSE.DebugProfile("init")
 -- ---------------------------------------------------------------------------
 -- Submodule init dispatch
 --
--- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL, GSE_Actionbar) cannot reach
+-- Submodules (GSE_Utils, GSE_Options, GSE_GUI, GSE_LDB, GSE_QoL, GSE_Actionbar, GSE_Help) cannot reach
 -- this addon's private namespace at parse-time. Each one exposes a single
 -- global `<name>_Initialize` function that takes the GSE table and runs the
 -- submodule's deferred setup. Reinit guards live inside each submodule.
@@ -297,6 +302,8 @@ local SUBMODULES = {
     GSE_QoL = true,
     -- LoadOnDemand: GSE loads it while it is turned on (Events.lua, loadActionBar).
     GSE_Actionbar = true,
+    -- LoadOnDemand: GSE loads it when help is asked for (Events.lua, GSE.CheckHelp).
+    GSE_Help = true,
     GSE_Companion = true,
 }
 
