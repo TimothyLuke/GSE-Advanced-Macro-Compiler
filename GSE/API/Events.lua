@@ -1273,9 +1273,10 @@ end
 local pressShownUntil = setmetatable({}, {__mode = "k"})
 local function showCastPress(spellID, name, macrotext)
     if isSecretValue(spellID) or not (spellID or name) then return end
-    -- Only with a target, and alive: riding, eating or standing about with
-    -- nothing targeted, a press is not a cast and the bar stays still.
-    if not UnitExists("target") or UnitIsDeadOrGhost("player") then return end
+    -- Only in combat (Larry, 2026-11-23: "Stream mode should not work when out
+    -- of combat"), with a target, and alive: riding, eating or standing about
+    -- with nothing targeted, a press is not a cast and the bar stays still.
+    if not InCombatLockdown() or not UnitExists("target") or UnitIsDeadOrGhost("player") then return end
     -- The spell as the game names it: a sequence's can carry its rank.
     local info = GSE.GetSpellInfo(spellID or name)
     spellID = spellID or (info and info.spellID)

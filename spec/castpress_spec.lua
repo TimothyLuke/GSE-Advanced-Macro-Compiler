@@ -14,9 +14,9 @@
 -- Run: busted spec/castpress_spec.lua   /   lua5.1 spec/run51.lua
 describe("A sequence's press shown as a button press", function()
   local GLOBALS = { "GSE", "GSEOptions", "GetActionInfo", "GetTime", "C_Timer", "FindBaseSpellByID", "UnitIsDeadOrGhost",
-    "UnitExists", "UnitIsUnit", "C_Spell", "QueryCastSequence",
+    "UnitExists", "UnitIsUnit", "C_Spell", "QueryCastSequence", "InCombatLockdown",
     "ActionButton1", "ActionButton2", "MultiBar5Button3" }
-  local saved, showCastPress, stepShown, timers, secret, now, dead, target, onSelf, held
+  local saved, showCastPress, stepShown, timers, secret, now, dead, target, onSelf, held, combat
 
   local function button(slot, fields)
     local b = fields or {}
@@ -67,6 +67,7 @@ describe("A sequence's press shown as a button press", function()
     _G.GetTime = function() return now end
     _G.UnitIsDeadOrGhost = function(unit) return unit == "player" and dead end
     _G.UnitExists = function(unit) return unit == "target" and target end
+    _G.InCombatLockdown = function() return combat end
     _G.UnitIsUnit = function(a, b) return a == "target" and b == "player" and onSelf end
     -- 100 only harms, 200 harms and helps (as a spell that heals a friend
     -- and hurts an enemy does), 300 only helps.
@@ -124,7 +125,7 @@ describe("A sequence's press shown as a button press", function()
   end)
 
   before_each(function()
-    timers, now, dead, target, onSelf, held = {}, 10, false, true, false, {}
+    timers, now, dead, target, onSelf, held, combat = {}, 10, false, true, false, {}, true
     _G.QueryCastSequence = nil
     GSEOptions.actionBarShowCastPress = true
     _G.ActionButton1, _G.ActionButton2, _G.MultiBar5Button3 = button(1), button(2), button(147)
@@ -207,6 +208,17 @@ describe("A sequence's press shown as a button press", function()
     dead = true
     showCastPress(100)
     assert.are.equal(0, ActionButton1.shown + MultiBar5Button3.shown)
+  end)
+
+  -- Larry, 2026-11-23: "Stream mode should not work when out of combat".
+  it("shows nothing out of combat, and shows again once combat starts", function()
+    combat = false
+    showCastPress(100)
+    assert.are.equal(0, ActionButton1.shown + MultiBar5Button3.shown)
+    assert.are.equal(0, #timers)
+    combat = true
+    showCastPress(100)
+    assert.are.equal(1, ActionButton1.shown)
   end)
 
   it("shows nothing without a target", function()
