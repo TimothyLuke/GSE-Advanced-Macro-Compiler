@@ -63,15 +63,54 @@ function GSE.GetInstalledSkinProviderName()
     return nil
 end
 
+--- The style EllesmereUI is on (its Style page: EllesmereUI Style, Blizzard
+--- Style, Classic WoW UI, and WoW Forever on that client), as EllesmereUI
+--- names the look the active profile's windows take: "eui", "blizzard",
+--- "classic" or "forever". Nil when EllesmereUI is not loaded or records no
+--- look, which is its own.
+function GSE.EllesmereUIWindowLook()
+    local EUI = _G.EllesmereUI
+    local db = _G.EllesmereUIDB
+    if type(EUI) ~= "table" or type(db) ~= "table" then return nil end
+    local prof = type(db.profiles) == "table" and db.profiles[db.activeProfile or "Default"]
+    if type(prof) ~= "table" then prof = nil end
+    -- EllesmereUI's own answer, where its window skins are loaded.
+    if type(EUI.ProfileWindowSkinLook) == "function" then
+        local ok, look = pcall(EUI.ProfileWindowSkinLook, prof, db.fonts)
+        if ok then return type(look) == "string" and look or nil end
+    end
+    -- Without them, the two records that answer is read from.
+    local look = prof and prof.windowSkinLook
+    if type(look) ~= "string" then
+        local slots = type(db.fonts) == "table" and db.fonts._styleSlots
+        look = type(slots) == "table" and slots.active
+    end
+    return type(look) == "string" and look or nil
+end
+
+-- EllesmereUI's stock styles: windows are left as Blizzard draws them.
+local ELLESMERE_STOCK_LOOKS = { blizzard = true, classic = true }
+
 --- Resolves GSEOptions.SkinMode to one of "NATIVE" / "MODERN" / "ADDON".
---- An explicit stored value is returned verbatim; nil (AUTO) becomes "ADDON"
---- when a provider is installed, else "NATIVE".
+--- An explicit "NATIVE" or "MODERN" is returned verbatim; nil (AUTO) becomes
+--- "ADDON" when a provider is installed, else "NATIVE". Following EllesmereUI
+--- (AUTO, or "ADDON" picked) follows the style it is on: on a stock one,
+--- Blizzard Style or Classic WoW UI, its windows are Blizzard's, and so are
+--- GSE's -- "NATIVE". GSE painted EllesmereUI's dark look whatever style was
+--- chosen (Larry, 2026-11-21, on Classic WoW UI).
 function GSE.GetEffectiveSkinMode()
     local mode = GSEOptions and GSEOptions.SkinMode
-    if mode == "NATIVE" or mode == "MODERN" or mode == "ADDON" then
+    if mode == "NATIVE" or mode == "MODERN" then
         return mode
     end
-    return GSE.GetInstalledSkinProviderName() and "ADDON" or "NATIVE"
+    local provider = GSE.GetInstalledSkinProviderName()
+    if provider == "EllesmereUI" and ELLESMERE_STOCK_LOOKS[GSE.EllesmereUIWindowLook() or ""] then
+        return "NATIVE"
+    end
+    if mode == "ADDON" then
+        return mode
+    end
+    return provider and "ADDON" or "NATIVE"
 end
 
 --- True only when the user has explicitly chosen the Modern skin. Modern is

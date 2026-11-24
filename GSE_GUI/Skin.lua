@@ -485,9 +485,11 @@ end
 --                          replaced the global GameFont objects, we force the
 --                          real default face here rather than inheriting theirs.
 --   ElvUI active        -> E.media.normFont (the user's chosen ElvUI font).
---   EllesmereUI active  -> EllesmereUI._font (the face EUI paints its panels
---                          with; EXPRESSWAY is its bundled fallback). EUI does
---                          NOT replace GameFontNormal, so it must be read direct.
+--   EllesmereUI active  -> EllesmereUI.GetFontPath() (the font the player
+--                          chose on EUI's Fonts page, Blizzard's own among
+--                          them), then EllesmereUI._font (older EUI), then
+--                          EXPRESSWAY, its bundled face. EUI does NOT replace
+--                          GameFontNormal, so it must be read direct.
 --   otherwise (Modern)  -> _G.STANDARD_TEXT_FONT, the WoW global font that any
 --                          font/skin addon overrides; Blizzard's locale default
 --                          when nothing replaced it (then it equals the face GSE
@@ -508,6 +510,13 @@ function GSE.Skin.HostFont()
     if GSE.Skin.providerName == "EllesmereUI" then
         local EUI = _G.EllesmereUI
         if type(EUI) == "table" then
+            -- EllesmereUI 9 has no _font: GSE read it, found nothing, and
+            -- showed Expressway whatever font the player had chosen (Larry,
+            -- 2026-11-21, Blizzard's font chosen in EllesmereUI).
+            if type(EUI.GetFontPath) == "function" then
+                local ok, path = pcall(EUI.GetFontPath)
+                if ok and type(path) == "string" and path ~= "" then return path end
+            end
             if type(EUI._font) == "string" then return EUI._font end
             if type(EUI.EXPRESSWAY) == "string" then return EUI.EXPRESSWAY end
         end
