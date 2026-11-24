@@ -1592,18 +1592,17 @@ local function drawMetadataTab(editframe, container)
     splitColumns()
 end
 
--- Notes written on gse.tools arrive as markdown in MetaData.Notes, and the
--- server renders them to WoW escape sequences into MetaData.Help on every
--- write. So Notes means "this text came from the website" and Help is the
--- rendering to show. Returns the text to render, or nil when the sequence has
--- no website notes. Read-only in that case: an in-game edit only changes Help,
--- and the server rebuilds Help from the untouched Notes on the next sync.
-local function websiteNotesText(sequence)
+-- A sequence's notes are MetaData.Notes (markdown), as a macro's and a
+-- variable's are; GSE.Tools renders them to WoW escape sequences into
+-- MetaData.Help on every write (#2128). Notes with a rendering beside them
+-- have been through the website, and are shown read-only as rendered: this
+-- returns that text. Nil while there is nothing rendered yet, or for a
+-- sequence from before Notes that has only the Help typed in game: the box is
+-- to type in then.
+local function renderedNotesText(sequence)
     local meta = sequence and sequence.MetaData
-    if not meta or GSE.isEmpty(meta.Notes) then return nil end
-    -- Fall back to the markdown source if a record arrives without a rendering.
-    if not GSE.isEmpty(meta.Help) then return meta.Help end
-    return meta.Notes
+    if not meta or GSE.isEmpty(meta.Notes) or GSE.isEmpty(meta.Help) then return nil end
+    return meta.Help
 end
 
 -- Help Information: the GSE.Tools notes read-only when opts.readOnly carries
@@ -1637,9 +1636,12 @@ local function addHelpInformationBox(editframe, container, height, opts)
     fit(height)
     helpeditbox:SetFullWidth(true)
     helpeditbox:DisableButton(true)
-    helpeditbox:SetText(meta[key] or "")
+    -- opts.seed: what to start from while the field itself is empty.
+    helpeditbox:SetText(GSE.isEmpty(meta[key]) and opts.seed or meta[key] or "")
     helpeditbox:SetCallback("OnTextChanged", function(_, _, text)
         meta[key] = text
+        -- opts.stale: a field that no longer says what was typed here.
+        if opts.stale then meta[opts.stale] = nil end
     end)
     if opts.onCommit then helpeditbox:SetCallback("OnEditFocusLost", opts.onCommit) end
     if opts.helpTip then
@@ -1718,7 +1720,9 @@ local NOTES_PAGE_CHROME = 8 + 3 * 2 + 18
 --- Help Information filling the rest of the pane, so long notes read as a page
 --- rather than four lines at a time. opts:
 ---   meta      the element's MetaData (Helplink and the notes live here)
----   key       the MetaData field the editable box writes ("Help" or "Notes")
+---   key       the MetaData field the editable box writes ("Notes")
+---   seed      text the box starts from while that field is empty, or nil
+---   stale     a MetaData field an edit clears, or nil
 ---   readOnly  the GSE.Tools notes to show read-only instead, or nil
 ---   linkTip   the Help Link tooltip; helpTip the Help Information one
 ---   onCommit  run after an edit, for an element written back as it changes
@@ -1780,15 +1784,21 @@ function GSE.GUI.DrawNotesPage(editframe, container, opts)
     editframe.notesFit = notesFit
 end
 
--- A sequence's Notes - Help page: it edits Help, read-only when GSE.Tools
--- notes arrived (websiteNotesText).
+-- A sequence's Notes - Help page: it edits Notes, as a macro's and a
+-- variable's do, read-only once GSE.Tools has rendered them
+-- (renderedNotesText). A sequence from before Notes starts from the Help typed
+-- in game, which is plain text and so valid markdown. An edit drops Help: it
+-- would be the old text, and with Notes beside it the page would lock on it.
+-- Until GSE.Tools renders the notes again, they are what is read.
 local function GUIDrawNotesEditor(editframe, container)
     if container.SetListPadding then container:SetListPadding(CONFIG_CONTENT_LEFT_PADDING, 5, CONFIG_CONTENT_LEFT_PADDING, CONFIG_CONTENT_LEFT_PADDING) end
     local pane = editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0
     GSE.GUI.DrawNotesPage(editframe, container, {
         meta = editframe.Sequence.MetaData,
-        key = "Help",
-        readOnly = websiteNotesText(editframe.Sequence),
+        key = "Notes",
+        seed = editframe.Sequence.MetaData.Help,
+        stale = "Help",
+        readOnly = renderedNotesText(editframe.Sequence),
         linkTip = T("Website or forum URL where a player can get more information or ask questions about this sequence."),
         helpTip = T("Notes and help on how this sequence works.  What things to remember.  This information is shown in the sequence browser."),
         height = pane - 5 - CONFIG_CONTENT_LEFT_PADDING,

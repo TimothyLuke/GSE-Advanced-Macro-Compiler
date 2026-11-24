@@ -174,6 +174,15 @@ local function shareableMacro(ref)
     return copy, name, GSE.StoredElementId("macro", name)
 end
 
+-- An element's help as another player reads it, the same for a sequence, a
+-- variable and a macro (#2128): what GSE.Tools rendered, else the notes as
+-- typed.
+local function summaryHelp(meta)
+    if type(meta) ~= "table" then return nil end
+    if not GSE.isEmpty(meta.Help) then return meta.Help end
+    return meta.Notes
+end
+
 --- What this player offers: { sequence = { [classid] = { [id] = row } },
 -- variable = { [id] = row }, macro = { [id] = row } }, row = { Label, Help,
 -- LastUpdated }. Keyed by name where an element has no id yet.
@@ -184,14 +193,14 @@ function GSE.GetShareableSummary()
             local seq, c, label = shareableSequence(id)
             if seq then
                 out.sequence[c] = out.sequence[c] or {}
-                out.sequence[c][id] = {Label = label, Help = seq.MetaData and seq.MetaData.Help,
+                out.sequence[c][id] = {Label = label, Help = summaryHelp(seq.MetaData),
                     LastUpdated = seq.LastUpdated or (seq.MetaData and seq.MetaData.LastUpdated)}
             end
         end
     end
     for name in pairs(GSE.Store("variable")) do
         local v, _, id = shareableVariable(name)
-        if v then out.variable[id or name] = {Label = name, Help = v.MetaData and v.MetaData.Notes, LastUpdated = v.LastUpdated} end
+        if v then out.variable[id or name] = {Label = name, Help = summaryHelp(v.MetaData), LastUpdated = v.LastUpdated} end
     end
     local macroNames = {}
     for k, v in pairs(GSE.Store("macro")) do
@@ -203,7 +212,7 @@ function GSE.GetShareableSummary()
     end
     for name in pairs(macroNames) do
         local m, _, id = shareableMacro(name)
-        if m then out.macro[id or name] = {Label = name, Help = m.MetaData.Notes, LastUpdated = m.LastUpdated} end
+        if m then out.macro[id or name] = {Label = name, Help = summaryHelp(m.MetaData), LastUpdated = m.LastUpdated} end
     end
     return out
 end
