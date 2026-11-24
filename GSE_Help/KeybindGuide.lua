@@ -113,8 +113,44 @@ local function fitKeybindGuide()
     if litStep then lightKeybindStep(litStep) end
 end
 
+-- The page's way back, in its top right corner (Larry, 2026-11-24): made the
+-- first time a page asks for one, and out of sight on a page that does not.
+local back, backButton
+local function showBackButton(parent)
+    if not back then
+        if backButton then backButton:Hide() end
+        return
+    end
+    if not backButton then
+        backButton = CreateFrame("Button", nil, guide)
+        backButton.icon = backButton:CreateTexture(nil, "ARTWORK")
+        backButton.icon:SetAllPoints()
+        backButton:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        backButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(back.text, 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        backButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        backButton:SetScript("OnClick", function()
+            GameTooltip:Hide()
+            back.click()
+        end)
+    end
+    backButton.icon:SetTexture(back.icon)
+    backButton:SetSize(back.size, back.size)
+    backButton:ClearAllPoints()
+    backButton:SetPoint("TOPRIGHT", guide, "TOPRIGHT", -back.right, -back.top)
+    -- Over the steps' parts of the picture, where the page is narrow.
+    backButton:SetFrameLevel(parent:GetFrameLevel() + 6)
+    backButton:Show()
+end
+
 --- Show the guide in a frame, filling it.
-function GSE.ShowKeybindGuideIn(parent)
+--- wayBack: nil, or a button for the page's top right corner that leads back
+--- from it: icon, text (its tooltip), click, size, and right and top (how far
+--- in from the corner).
+function GSE.ShowKeybindGuideIn(parent, wayBack)
     if not guide then
         guide = CreateFrame("Frame", nil, parent)
         -- Black where the page is larger than the picture, as the picture's
@@ -178,6 +214,8 @@ function GSE.ShowKeybindGuideIn(parent)
     picture:SetTexture(KEYBIND_GUIDE_TEXTURE)
     guide:Show()
     fitKeybindGuide()
+    back = wayBack
+    showBackButton(parent)
 end
 
 --- Take the guide off the page it was shown in.

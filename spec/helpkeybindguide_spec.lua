@@ -129,6 +129,7 @@ describe("the keybind guide", function()
       function f:SetSize(width, height) self.width, self.height = width, height end
       function f:SetAllPoints(p) self.fills = p end
       function f:SetFrameLevel(level) self.level = level end
+      function f:SetHighlightTexture() end
       function f:GetWidth() return self.fills and self.fills.w or 0 end
       function f:GetHeight() return self.fills and self.fills.h or 0 end
       function f:GetEffectiveScale() return scale end
@@ -230,6 +231,35 @@ describe("the keybind guide", function()
       gse.ShowKeybindGuideIn(page(2000, 1200))
       assert.is_true(frame.ground.fills)
       assert.are.same({ 0, 0, 0, 1 }, frame.ground.colour)
+    end)
+
+    -- Larry, 2026-11-24: "add a Keybind icon on the top right to bring users
+    -- back the Keybind Page (same location as the ? icon)".
+    it("has a way back in its top right corner for a page that asks for one, and none for one that does not", function()
+      local tip, savedTip = {}, _G.GameTooltip
+      _G.GameTooltip = { SetOwner = function(_, owner, anchor) tip.owner, tip.anchor = owner, anchor end,
+        SetText = function(_, text) tip.text = text end, Show = function() end, Hide = function() tip.text = nil end }
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      local before = #parts
+      local went = 0
+      gse.ShowKeybindGuideIn(page(2000, 2000), { icon = "key", text = "Button Bindings", size = 28, right = 55, top = 11,
+        click = function() went = went + 1 end })
+      assert.are.equal(before + 1, #parts, "made when first asked for")
+      local button = parts[#parts]
+      assert.are.equal("key", button.picture.path)
+      assert.are.same({ 28, 28 }, { button.width, button.height })
+      assert.are.same({ "TOPRIGHT", frame, "TOPRIGHT", -55, -11 }, button.point)
+      assert.are.equal(11, button.level, "over the steps' parts of the picture")
+      assert.is_true(button.shown)
+      button.scripts.OnEnter(button)
+      assert.are.equal("Button Bindings", tip.text)
+      assert.are.equal("ANCHOR_RIGHT", tip.anchor)
+      button.scripts.OnClick(button)
+      assert.are.equal(1, went)
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      assert.are.equal(before + 1, #parts)
+      assert.is_false(button.shown, "a page with no way back")
+      _G.GameTooltip = savedTip
     end)
 
     it("is no larger than the page has room for, and follows the page's size", function()

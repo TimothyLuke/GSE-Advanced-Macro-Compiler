@@ -136,7 +136,9 @@ describe("the Editor's tabs", function()
       "GSE.GUI.SetEditorTab not found")
     local all = assert(editor:match("\nlocal EDITOR_TAB_ALL = (%b{})\n"), "EDITOR_TAB_ALL not found")
     local root = assert(editor:match("\nlocal EDITOR_TAB_ROOT = (%b{})\n"), "EDITOR_TAB_ROOT not found")
+    local folded = assert(editor:match("\nlocal EDITOR_TAB_FOLDED_ROOT = (%b{})\n"), "EDITOR_TAB_FOLDED_ROOT not found")
     return assert(compile("local L, GSE = ...\nlocal EDITOR_TAB_ROOT = " .. root .. "\n"
+      .. "local EDITOR_TAB_FOLDED_ROOT = " .. folded .. "\n"
       .. "local EDITOR_TAB_ALL = " .. all .. "\n"
       .. "local EDITOR_TAB_TITLE = " .. assert(editor:match("\nlocal EDITOR_TAB_TITLE = (%b{})\n"), "EDITOR_TAB_TITLE not found") .. "\n"
       .. "return function(editframe, tab, quiet)\n" .. body .. "\nend"))(setmetatable({}, { __index = function(_, k) return k end }),
@@ -191,6 +193,35 @@ describe("the Editor's tabs", function()
     set(w, "variables")
     assert.are.equal("Variables", title)
     assert.are.equal(1, w.built)
+  end)
+
+  it("closes the other tabs' parts of the tree on a change of tab, and leaves what was open inside them", function()
+    local set, w = setTab({ on = true }), window()
+    local groups = { Sequences = true, ["Sequences\0014"] = true, VARIABLES = true, Macro = true, KEYBINDINGS = true }
+    w.treeContainer.status.groups = groups
+    set(w, "sequences", true)
+    assert.is_true(groups.VARIABLES, "already on it: nothing closes")
+    set(w, "variables", true)
+    assert.is_true(groups.VARIABLES)
+    assert.is_nil(groups.Sequences)
+    assert.is_nil(groups.Macro)
+    assert.is_nil(groups.KEYBINDINGS)
+    assert.is_true(groups["Sequences\0014"], "a class folder inside the closed part keeps its state")
+    groups.Macro = true
+    set(w, "variables", true)
+    assert.is_true(groups.Macro, "opened by hand on the same tab: left alone")
+    set(w, "sequences")
+    assert.is_true(groups.Sequences)
+    assert.is_nil(groups.VARIABLES)
+    assert.is_nil(groups.Macro)
+    -- Bindings' top row is its two levels in one (Larry, 2026-11-24): it
+    -- opens and closes by that row's own value.
+    set(w, "bindings", true)
+    assert.is_true(groups["KEYBINDINGS\001AO"])
+    assert.is_nil(groups.Sequences)
+    set(w, "macros", true)
+    assert.is_nil(groups["KEYBINDINGS\001AO"])
+    assert.is_nil(groups.KEYBINDINGS)
   end)
 
   it("keeps the two settings apart: the full tree with the tabs showing, and the tabs off with the tree whole", function()
@@ -359,12 +390,14 @@ describe("the Editor's tabs", function()
         "GSE.GUI.OpenEditorPage not found")
       local drawn, saved = {}, {}
       local GSE = { GUI = { DrawImportPage = function(_, room) drawn[#drawn + 1] = "import " .. tostring(room) end,
+        DrawKeybindGuide = function(_, back) drawn[#drawn + 1] = "guide" drawn.back = back end,
         EditorTabsHidden = function() return hidden == true end },
-        ShowImport = function() drawn[#drawn + 1] = "import window" end }
-      local open = assert(compile("local GSE, L, SetSequenceEditorOpenPreference = ...\n"
+        ShowImport = function() drawn[#drawn + 1] = "import window" end,
+        ShowKeyBindings = function(editframe) drawn.bindings = editframe end }
+      local open = assert(compile("local GSE, L, SetSequenceEditorOpenPreference, Statics = ...\n"
         .. "return function(editframe, page)\n" .. body .. "\nend"))(GSE,
         setmetatable({}, { __index = function(_, k) return k end }),
-        function(isOpen, mode) saved[#saved + 1] = mode end)
+        function(isOpen, mode) saved[#saved + 1] = mode end, { Icons = { Keybindings = "key" } })
       return open, drawn, saved
     end
     local function paged()
@@ -397,6 +430,83 @@ describe("the Editor's tabs", function()
       assert.are.equal("import", w.editorPage, "not pages")
     end)
 
+    it("draws the keybind guide as the help page, the Bindings tab lit, and a reload does not come back on it", function()
+      local open, drawn, saved = page()
+      local w = paged()
+      open(w, "help")
+      assert.are.equal("guide", drawn[1])
+      assert.are.equal("help", w.editorPage)
+      assert.is_true(w.lit.bindings, "help is the Bindings tab's flyout")
+      assert.is_false(w.lit.sequences)
+      assert.are.equal("GSE: Help", w.title)
+      assert.are.equal(1, w.released)
+      assert.are.same({}, saved, "no page saved for a reload")
+      -- Larry, 2026-11-24: a key in the corner leads back to the Bindings.
+      assert.are.equal("key", drawn.back.icon)
+      assert.are.equal("Button Bindings", drawn.back.text)
+      drawn.back.click()
+      assert.are.equal(w, drawn.bindings, "its own window's Bindings")
+      open(w, "help")
+      assert.are.equal(1, #drawn, "already on it")
+      open(w, "import")
+      assert.are.equal("import 480", drawn[2])
+      assert.is_true(w.lit.import)
+      assert.is_false(w.lit.bindings)
+    end)
+
+    -- Larry, 2026-11-24: "add a ? Icon incase the user has the tabs off".
+    it("has a ? at the right end of the Button Bindings page's title row, which opens the help page", function()
+      local body = assert(tree:match("\nlocal function addSectionDivider%(container, title, icon, help%)\n(.-)\nend\n"),
+        "addSectionDivider not found")
+      local made = {}
+      local function widget(kind)
+        local w = { kind = kind, children = {}, callbacks = {}, frame = { points = {} }, label = false, text = false, content = false }
+        function w.frame:GetPoint() return "TOPLEFT", nil, "TOPLEFT", 48, -7 end
+        function w.frame:ClearAllPoints() self.points = {} end
+        function w.frame:SetPoint(...) self.points[#self.points + 1] = { ... } end
+        function w.frame:CreateTexture() return setmetatable({}, { __index = function() return function() end end }) end
+        function w:AddChild(child) self.children[#self.children + 1] = child end
+        function w:SetCallback(event, fn) self.callbacks[event] = fn end
+        function w:SetImage(image) self.image = image end
+        made[#made + 1] = w
+        return setmetatable(w, { __index = function() return function() end end })
+      end
+      local tip = setmetatable({}, { __index = function() return function() end end })
+      local divider = assert(compile("local UI, GSE, Statics, L, GameTooltip, GameFontNormalHuge = ...\n"
+        .. "local SECTION_HEADER_HEIGHT, SECTION_HEADER_LEFT, SECTION_ICON_SIZE, SECTION_FONT_HEIGHT = 40, 10, 28, 30\n"
+        .. "return function(container, title, icon, help)\n" .. body .. "\nend"))(
+        { Create = function(_, kind) return widget(kind) end }, { GUI = {} }, { Icons = { Help = "help" } },
+        setmetatable({}, { __index = function(_, k) return k end }), tip, { GetFont = function() end })
+      local opened = 0
+      local page = widget("page")
+      divider(page, "Button Bindings", "button", function() opened = opened + 1 end)
+      local row = page.children[1]
+      assert.are.equal(3, #row.children, "the title's icon, the title, the ?")
+      local help = row.children[3]
+      assert.are.equal("help", help.image)
+      help.callbacks.OnClick()
+      assert.are.equal(1, opened)
+      assert.is_true(help.flowRightAlign, "at the row's right end")
+      assert.are.equal(-10, help.flowXOffset, "as far in as the title is at the left")
+      help.callbacks.OnEnter(help)
+      assert.truthy(body:find('GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")', 1, true), "its tip to its right (Larry, 2026-11-24)")
+      local plain = widget("page")
+      divider(plain, "Variables", "variables")
+      assert.are.equal(2, #plain.children[1].children, "no ? where none is asked for")
+      assert.truthy(tree:find('        local help = GSE.HelpEnabled() and function() GSE.GUI.OpenEditorPage(editframe, "help") end or nil\n', 1, true),
+        "only while the help is turned on")
+      -- The page's title has the key, as its row in the tree has (Larry, 2026-11-24).
+      assert.truthy(tree:find('        local rc = makeRightContainer({title = L["Button Bindings"] or "Button Bindings", icon = Statics.Icons.Keybindings, help = help})\n', 1, true))
+      assert.truthy(tree:find("            addSectionDivider(rc, withDivider.title, withDivider.icon, withDivider.help)\n", 1, true))
+    end)
+
+    it("a node picked by hand takes the Editor's own page down, so the page can be asked for again", function()
+      assert.truthy(tree:find("                if editframe.editorPage then\n                    editframe.editorPage = nil\n"
+        .. '                    local open = editframe.editorTab or "sequences"\n'
+        .. "                    for tabKey, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(tabKey == open) end\n"
+        .. "                end\n", 1, true))
+    end)
+
     it("is the Import window with the tabs turned off, where no tab would lead back from the page", function()
       local open, drawn, saved = page(true)
       local w = paged()
@@ -425,8 +535,16 @@ describe("the Editor's tabs", function()
     end)
 
     it("shows the guide from GSE's help in a group that takes it away with the page", function()
-      local draw = assert(editor:match("\nfunction GSE%.GUI%.DrawKeybindGuide%(container%)\n(.-)\nend\n"))
-      assert.truthy(draw:find("if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame) end", 1, true))
+      local draw = assert(editor:match("\nfunction GSE%.GUI%.DrawKeybindGuide%(container, back%)\n(.-)\nend\n"))
+      assert.truthy(draw:find("if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame, back) end", 1, true))
+      -- The way back is drawn where the Button Bindings page's ? is.
+      assert.truthy(draw:find("back.size, back.right, back.top = PAGE_CORNER_ICON.size, PAGE_CORNER_ICON.right, PAGE_CORNER_ICON.top", 1, true))
+      assert.truthy(editor:find("\nlocal PAGE_CORNER_ICON = { size = 28, right = 55, top = 11 }\n", 1, true))
+      local style = readSource("GSE_GUI/NativeUI.lua")
+      assert.truthy(style:find("    scrollBarReserve = 24,\n", 1, true), "24 of the 55")
+      assert.truthy(tree:find("\nGSE.GUI.CONTENT_PADDING = 20\n", 1, true), "20 of the 55")
+      assert.truthy(tree:find("local SECTION_HEADER_LEFT    = 10 ", 1, true), "10 of the 55")
+      assert.truthy(tree:find("local SECTION_HEADER_TOP     = 10 ", 1, true), "10 of the 11")
       assert.truthy(draw:find('outer:SetCallback("OnRelease", function()\n        if GSE.HideKeybindGuide then GSE.HideKeybindGuide() end', 1, true))
     end)
 
@@ -508,9 +626,10 @@ describe("the Editor's tabs", function()
 
   -- The Editor tab's flyout (Larry, 2026-11-23: "the Editor Tab needs a Flyout
   -- with a + to create a second Editor Window").
-  describe("the Editor tab's flyout", function()
+  describe("a tab's flyout", function()
+    local CreateTabs = assert(editor:match("\nfunction GSE%.GUI%.CreateEditorTabs%(editframe%)\n(.-)\nend\n"))
     local function flyout()
-      local body = assert(editor:match("\nlocal function addEditorTabFlyout%(tab, flat%)\n(.-)\nend\n"),
+      local body = assert(editor:match("\nlocal function addEditorTabFlyout%(tab, flat, def%)\n(.-)\nend\n"),
         "addEditorTabFlyout not found")
       local timers, opened, over = {}, {}, {}
       local function button(name)
@@ -527,13 +646,12 @@ describe("the Editor's tabs", function()
       local tab, plus = button("tab"), button("plus")
       local tip = { SetOwner = function() end, SetText = function(_, text) opened.tip = text end,
         Show = function() end, Hide = function() end }
-      local add = assert(compile("local EDITOR_FLYOUT_ICON_INSET = 5 local GSE, L, Statics, C_Timer, GameTooltip, newEditorTabButton, EDITOR_FLYOUT_GAP, "
-        .. "EDITOR_FLYOUT_LINGER = ...\nreturn function(tab, flat)\n" .. body .. "\nend"))(
-        { ShowSequences = function(existing) opened[#opened + 1] = existing == nil and "new" or "given" end },
-        setmetatable({}, { __index = function(_, k) return k end }), { ActionsIcons = { Add = "add" } },
+      local add = assert(compile("local C_Timer, GameTooltip, newEditorTabButton, EDITOR_FLYOUT_GAP, "
+        .. "EDITOR_FLYOUT_LINGER = ...\nreturn function(tab, flat, def)\n" .. body .. "\nend"))(
         { After = function(_, fn) timers[#timers + 1] = fn end }, tip,
         function(parent, icon, _, inset) plus.parent, plus.icon, plus.inset = parent, icon, inset return plus end, 6, 0.2)
-      add(tab, false)
+      add(tab, false, { icon = "add", inset = 5, text = "New Editor Window",
+        click = function() opened[#opened + 1] = "clicked" end })
       return tab, plus, over, timers, opened
     end
     local function runTimers(timers)
@@ -541,11 +659,11 @@ describe("the Editor's tabs", function()
       for i = #timers, 1, -1 do timers[i] = nil end
     end
 
-    it("is a + beside the tab, out of sight until the mouse is on the tab", function()
+    it("is a button beside the tab, out of sight until the mouse is on the tab", function()
       local tab, plus = flyout()
       assert.are.equal(tab, plus.parent)
       assert.are.equal("add", plus.icon)
-      assert.are.equal(5, plus.inset, "the + sits in from its button's edges")
+      assert.are.equal(5, plus.inset, "as far in from its button's edges as it is asked to sit")
       assert.is_false(plus.shown)
       tab.hooks.OnEnter()
       assert.is_true(plus.shown)
@@ -564,21 +682,38 @@ describe("the Editor's tabs", function()
       assert.is_false(plus.shown)
     end)
 
-    it("opens another Editor window, and names what it does", function()
+    it("does what it is for when clicked, and names it", function()
       local _, plus, _, _, opened = flyout()
       plus.scripts.OnEnter(plus)
       assert.are.equal("New Editor Window", opened.tip)
       plus.shown = true
       plus.scripts.OnClick(plus)
-      assert.are.same({ "new" }, { opened[1] })
+      assert.are.same({ "clicked" }, { opened[1] })
       assert.is_false(plus.shown)
     end)
 
-    it("is only there where more than one Editor window can be open", function()
-      local tabs = assert(editor:match("\nfunction GSE%.GUI%.CreateEditorTabs%(editframe%)\n(.-)\nend\n"))
-      assert.truthy(tabs:find("    if GSE.CanMultiWindow and GSE.CanMultiWindow() then\n"
-        .. "        editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat)\n", 1, true))
+    it("the Editor tab's is a + for another window, only where more than one can be open", function()
+      assert.truthy(CreateTabs:find("    if GSE.CanMultiWindow and GSE.CanMultiWindow() then\n"
+        .. "        editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat,\n"
+        .. '            { icon = Statics.ActionsIcons.Add, inset = EDITOR_FLYOUT_ICON_INSET, text = L["New Editor Window"],\n', 1, true))
+      assert.truthy(CreateTabs:find("              click = function() GSE.ShowSequences() end })\n", 1, true),
+        "no editor handed in: a new window")
       assert.truthy(readSource("GSE/Localization/ModL_enUS.lua"):find('\nL["New Editor Window"] = true\n', 1, true))
+    end)
+
+    -- Timothy, 2026-11-24: a ? should have been added. Larry: "make it a
+    -- Flyout from the Keybind Tab".
+    it("the Bindings tab's is a ? for the help page, only while the help is turned on", function()
+      assert.truthy(CreateTabs:find("    if GSE.HelpEnabled() then\n"
+        .. "        editframe.helpFlyout = addEditorTabFlyout(editframe.tabButtons.bindings, flat,\n"
+        .. '            { icon = Statics.Icons.Help, text = L["Help"],\n'
+        .. '              click = function() GSE.GUI.OpenEditorPage(editframe, "help") end })\n', 1, true))
+      assert.truthy(CreateTabs:find("    if editframe.tabFlyout or editframe.helpFlyout then room = room + EDITOR_FLYOUT_GAP + EDITOR_TAB_SIZE end\n", 1, true),
+        "room for either at the screen's edge")
+      assert.truthy(readSource("GSE/API/Statics.lua"):find('Statics.Icons.Help = "Interface\\\\Icons\\\\INV_Misc_QuestionMark"', 1, true))
+      assert.truthy(readSource("GSE/Localization/ModL_enUS.lua"):find('\nL["Help"] = true\n', 1, true))
+      local list = assert(editor:match("\nlocal function editorTabList%(%)\n(.-)\nend\n"))
+      assert.is_nil(list:find('"help"', 1, true), "not a tab of its own")
     end)
   end)
 
