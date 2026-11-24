@@ -1813,6 +1813,10 @@ local function getFirstMacroPath(scope)
 end
 
 local function onClick_Macro(editframe, container, group, unique, key)
+    if unique[2] == "NEWMACRO" then
+        GSE.GUINewMacroPrompt(editframe)
+        return
+    end
     if #unique < 3 then
         local firstMacroPath = getFirstMacroPath(unique[2])
         if firstMacroPath then editframe.treeContainer:SelectByValue(firstMacroPath .. "\001config") end
@@ -1915,11 +1919,14 @@ local function buildGroupedTree(editframe, grouping, classtree, bindings)
         end
     end
     for name in pairs(GSE.Store("variable") or {}) do
-        local e = { classid = GSE.ElementScopeClass("variable", name) or 0, sort = name,
-            node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables,
-                     children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(name)) } }
-        vars[#vars + 1] = e
-        varByName[name] = e
+        local classid = GSE.ElementScopeClass("variable", name) or 0
+        if GSE.GUI.TreeShowsVariable(classid) then
+            local e = { classid = classid, sort = name,
+                node = { value = "VARIABLES\001" .. name, text = name, icon = Statics.Icons.Variables,
+                         children = GSE.GUI.ElementTreeNodes(editframe, editframe.variableVersions(name)) } }
+            vars[#vars + 1] = e
+            varByName[name] = e
+        end
     end
     local maxAccount = GSE.GetMaxAccountMacros()
     for slot = 1, maxAccount + GSE.GetMaxCharacterMacros() + 2 do
@@ -2018,6 +2025,95 @@ local function buildGroupedTree(editframe, grouping, classtree, bindings)
     return groups, pathOf
 end
 
+-- ── The tree per tab ────────────────────────────────────────────────────────
+--
+-- Each of the Editor's tabs (Editor.lua, GSE.GUI.CreateEditorTabs) shows its
+-- own part of the tree: Editor the sequences, Variables the variables, Macros
+-- the macros. The top of the tree is the tab's own "New" row. Import is a
+-- tab, not a row here (Larry, 2026-11-23).
+local TAB_OF_AREA = { NewSequence = "sequences", Sequences = "sequences", KEYBINDINGS = "sequences",
+    VARIABLES = "variables", Macro = "macros" }
+local function areaOf(value)
+    return (tostring(value):match("^([^\001]*)"))
+end
+
+--- The tab a tree path is on, or nil for one that is no tab's.
+function GSE.GUI.TabOfTreePath(path)
+    if type(path) ~= "string" then return nil end
+    return TAB_OF_AREA[areaOf(stripGroup(path))]
+end
+
+-- The tree as built, cut down to a tab: its New row, then the tab's own
+-- part -- its top node in the by-type tree, or in a grouped tree each
+-- group with the members that are the tab's.
+local function narrowTreeToTab(tree, tab)
+    local head, body = {}, {}
+    if tab == "variables" then
+        head[1] = { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"], icon = Statics.ActionsIcons.Add }
+    elseif tab == "macros" then
+        head[1] = { value = "Macro\001NEWMACRO", text = L["New Macro"], icon = Statics.ActionsIcons.Add }
+    end
+    for _, node in ipairs(tree) do
+        local value = tostring(node.value)
+        if value == "NewSequence" then
+            if tab == "sequences" then table.insert(head, 1, node) end
+        elseif value == "VARIABLES\001NEWVARIABLES" then
+            -- A grouped tree's own New Variable row: the head has it.
+        elseif value:sub(1, #GROUP_PREFIX) == GROUP_PREFIX then
+            local kept = {}
+            for _, child in ipairs(node.children or {}) do
+                if TAB_OF_AREA[areaOf(child.value)] == tab then kept[#kept + 1] = child end
+            end
+            if #kept > 0 then
+                node.children = kept
+                body[#body + 1] = node
+            end
+        elseif TAB_OF_AREA[areaOf(value)] == tab then
+            if value == "VARIABLES" then
+                -- Its New Variable row is at the top of the tree now.
+                for i = #(node.children or {}), 1, -1 do
+                    if node.children[i].value == "NEWVARIABLES" then table.remove(node.children, i) end
+                end
+            end
+            body[#body + 1] = node
+        end
+    end
+    for _, node in ipairs(body) do head[#head + 1] = node end
+    return head
+end
+
+--- Ask for a name and make a WoW macro of it, an account macro while there is
+--- room for one, else this character's. It opens on its Configuration page.
+function GSE.GUICreateNewMacro(editor, name)
+    name = strtrim(name or "")
+    if name == "" then return end
+    if InCombatLockdown() then
+        GSE.Print(L["A macro cannot be made in combat."])
+        return
+    end
+    local account, character = GetNumMacros()
+    local perCharacter = (account or 0) >= GSE.GetMaxAccountMacros()
+    if perCharacter and (character or 0) >= GSE.GetMaxCharacterMacros() then
+        GSE.Print(L["There is no room for another macro."])
+        return
+    end
+    local slot = CreateMacro(name, "INV_Misc_QuestionMark", "", perCharacter)
+    if not slot then return end
+    if editor.ManageTree then editor.ManageTree() end
+    GSE.GUI.SelectEditorTreePath(editor, table.concat({ "Macro", perCharacter and "P" or "A", tostring(slot), "config" }, "\001"))
+end
+
+function GSE.GUINewMacroPrompt(editor)
+    GSE.UI.ShowInputDialog({
+        owner      = editor,
+        title      = L["New"] .. " " .. L["Macro"],
+        prompt     = L["Enter a name for the new macro:"],
+        acceptText = L["Create"],
+        maxLetters = 16,
+        onAccept   = function(name) GSE.GUICreateNewMacro(editor, name) end,
+    })
+end
+
 -- ---------------------------------------------------------------------------
 -- ManageTree(editframe)
 -- Builds the full sequence tree and wires up OnGroupSelected.
@@ -2031,11 +2127,6 @@ local function ManageTree(editframe)
             value = "NewSequence",
             text = L["New Sequence"],
             icon = Statics.ActionsIcons.Add
-        },
-        {
-            value = "Import",
-            text = L["Import"],
-            icon = Statics.Icons.Import
         }
     }
 
@@ -2305,22 +2396,21 @@ local function ManageTree(editframe)
             return path
         end
         treeContainer.SelectByValue = function(self, path, ...)
+            -- A node of another tab, or one picked while the Keybind or Import
+            -- page is up: the Editor turns to the node's tab first.
+            local tab = GSE.GUI.TabOfTreePath(path)
+            if tab and (tab ~= (editframe.editorTab or "sequences") or editframe.editorPage) and GSE.GUI.SetEditorTab then
+                GSE.GUI.SetEditorTab(editframe, tab)
+            end
             return raw(self, treeContainer.gseTreePath(path), ...)
         end
         treeContainer.gseGroupedSelect = true
     end
+    tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")
     treeContainer:SetTree(tree)
     --@debug@
     editframe.lastTreeSequences, editframe.lastTreeLoads = treeSequences, treeLoads
     --@end-debug@
-    treeContainer:SetCallback(
-        "OnClick",
-        function(container, event, group)
-            if group == "Import" and GSE.ShowImport then
-                GSE.ShowImport()
-            end
-        end
-    )
     -- A sequence node is built without its version children (see versionsWanted
     -- above). When one is expanded, rebuild the tree so that ONE sequence gets
     -- loaded and its versions appear. Only for sequence nodes -- a 4-segment
@@ -2537,8 +2627,6 @@ local function ManageTree(editframe)
                 -- Left-click dispatch table
                 if area == "NewSequence" then
                     GSE.GUILoadEditor(editframe)
-                elseif area == "Import" then
-                    GSE.ShowImport()
                 elseif area == "KEYBINDINGS" then
                     local path = unique
                     onClick_KEYBINDINGS(editframe, container, group, unique)

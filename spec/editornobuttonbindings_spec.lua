@@ -5,10 +5,9 @@
 -- talent loadout, the stance, and the button's key (GSE_Utils, Utils.lua). So
 -- the editor's Bindings area keeps only the Keybindings pages, and only where
 -- GSE still binds keys to sequences itself; anywhere else the editor has no
--- Bindings node and nothing that opens one, and the Keybindings icon on GSE's
--- menu opens the keybind guide, a picture of the steps (Larry, 2026-11-21: "I
--- want the Keybind Button back on the bar but just linked to a Pop up of this
--- image"). The guide itself is in GSE's help (GSE_Help; helpkeybindguide_spec).
+-- Bindings node and nothing that opens one, and the Editor's Keybind tab shows
+-- the keybind guide, a picture of the steps (editortabs_spec). The guide
+-- itself is in GSE's help (GSE_Help; helpkeybindguide_spec).
 -- The GSE_GUI files cannot be loaded here, so this reads them as text (line
 -- endings normalised).
 local function readSource(path)
@@ -29,7 +28,6 @@ describe("editor without a Button Bindings page", function()
   local keybind = readSource("GSE_GUI/Editor_Keybind.lua")
   local tree = readSource("GSE_GUI/Editor_Tree.lua")
   local editor = readSource("GSE_GUI/Editor.lua")
-  local menu = readSource("GSE_GUI/Menu.lua")
 
   it("leaves Button Bindings out of the tree, and the whole area where GSE binds no keys", function()
     local build = body(keybind, "local function buildKeybindMenu()", "\nend\n")
@@ -64,20 +62,10 @@ describe("editor without a Button Bindings page", function()
 
   it("offers Keybindings only where the editor has them", function()
     local show = body(editor, "function GSE.ShowKeyBindings()", "\nend\n")
-    assert.truthy(show:find("if not GSE.KeybindingsEnabled() then return GSE.ShowSequences() end", 1, true))
+    assert.truthy(show:find('if not GSE.KeybindingsEnabled() then return GSE.GUI.OpenEditorPage(GSE.CreateEditor(), "keybind") end', 1, true))
     assert.is_nil(show:find('GSE.GUI.BindingsPath("AO")', 1, true))
     assert.truthy(tree:find('if GSE.KeybindingsEnabled() then\n                rootDescription:CreateButton(L["Keybindings"]', 1, true),
       "a sequence's right-click menu")
-  end)
-
-  it("keeps the Keybindings icon on GSE's menu, on the guide where the editor has no Bindings area", function()
-    local click = body(menu, "        Statics.Icons.Keybindings,\n", "\n    },\n")
-    local pages = assert(click:find("if GSE.KeybindingsEnabled() then\n                GSE.ShowKeyBindings()", 1, true))
-    local guide = assert(click:find("elseif GSE.CheckHelp() and GSE.ToggleKeybindGuide then\n                GSE.ToggleKeybindGuide()", 1, true))
-    assert.is_true(pages < guide)
-    assert.is_nil(menu:find("table.remove(iconData", 1, true), "the icon is taken off the menu")
-    assert.is_nil(menu:find("iconsLeftOut", 1, true), "the strip is shortened for a missing icon")
-    assert.truthy(menu:find("    frame:SetSize(cfg.w, cfg.h)\n", 1, true))
   end)
 
   -- With the page gone the right-click menu is the one way to put a sequence

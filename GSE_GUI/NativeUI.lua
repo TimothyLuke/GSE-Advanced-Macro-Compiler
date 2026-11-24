@@ -2082,6 +2082,8 @@ local function createFrame()
     local widget = wrap("Frame", frame)
     widget.content = content
     widget.closebutton = closeButton
+    -- For what is placed by it (the tree's arrow, in the opposite corner).
+    frame.GSECloseButton = closeButton
     widget.titlebar = titleBar
     widget.titletext = title
     widget.statustext = status
@@ -5441,8 +5443,12 @@ local function createTreeGroup()
         allSeqCheckbox:SetPoint("BOTTOM", navContent, "BOTTOM", -math.floor((textWidth + NAV_CHECKBOX_GAP) / 2), NAV_ROW_BOTTOM)
     end
     recenterCheckbox()
+    -- The setting behind the box, and what it is while never chosen: the
+    -- sequences' "All" (off) until a tab says otherwise (GSESetAllCheckbox).
+    local allKey, allDefault = "All", false
     local function syncAllSeqCheckbox()
-        local val = GSEOptions and GSEOptions.filterList and GSEOptions.filterList["All"]
+        local val = GSEOptions and GSEOptions.filterList and GSEOptions.filterList[allKey]
+        if val == nil then val = allDefault end
         allSeqCheckbox:SetChecked(val and true or false)
         -- Re-measure on show in case the FontString hadn't computed its width
         -- on first construction (some clients defer text metrics until visible).
@@ -5451,7 +5457,7 @@ local function createTreeGroup()
     allSeqCheckbox:SetScript("OnClick", function(self)
         if not GSEOptions then GSEOptions = {} end
         if not GSEOptions.filterList then GSEOptions.filterList = {} end
-        GSEOptions.filterList["All"] = self:GetChecked() and true or false
+        GSEOptions.filterList[allKey] = self:GetChecked() and true or false
         if GSE.GUI and GSE.GUI.RefreshOpenEditorTrees then
             GSE.GUI.RefreshOpenEditorTrees()
         end
@@ -5460,6 +5466,42 @@ local function createTreeGroup()
     syncAllSeqCheckbox()
     navWindow.GSEAllSeqCheckbox = allSeqCheckbox
     navWindow.GSESyncAllSeqCheckbox = syncAllSeqCheckbox
+    -- What the tree is, in the panel's title bar: Sequences, Variables or
+    -- Macros, as the Editor's open tab has it (Larry, 2026-11-23). The
+    -- panel's own title text where its template has one, else one made for it
+    -- in the same place.
+    navWindow.GSESetTitle = function(text)
+        -- The template keeps its title text on the panel (Classic) or in the
+        -- panel's title container (Retail, WoW Forever).
+        local container = navWindow.TitleContainer
+        local title = navWindow.TitleText or (container and container.TitleText) or navWindow.GSETitleText
+        if not title then
+            -- In the title container where there is one: it is above the
+            -- panel's border art, which covers text drawn on the panel itself
+            -- (the first try, 2026-11-23: no title showed).
+            local host = container or navWindow
+            title = host:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            if container then
+                title:SetAllPoints(container)
+            else
+                title:SetPoint("TOPLEFT", navWindow, "TOPLEFT", STYLE.titleInsetX, -STYLE.frameEdge)
+                title:SetPoint("TOPRIGHT", navWindow, "TOPRIGHT", -STYLE.titleInsetX, -STYLE.frameEdge)
+            end
+            title:SetJustifyH("CENTER")
+            navWindow.GSETitleText = title
+        end
+        title:SetText(text or "")
+        title:Show()
+    end
+    -- The box is the open tab's: All Sequences or All Variables, each with a
+    -- setting of its own; no text, no box (the Macros tab) (Larry, 2026-11-23).
+    navWindow.GSESetAllCheckbox = function(text, key, default)
+        allSeqCheckbox:SetShown(text ~= nil)
+        if not text then return end
+        allKey, allDefault = key, default and true or false
+        if allSeqCheckbox.text then allSeqCheckbox.text:SetText(text) end
+        syncAllSeqCheckbox()
+    end
 
     -- How the tree groups content (GSEOptions.editorTreeGrouping, read by
     -- Editor_Tree's ManageTree): by type, by class -- each class's sequences,
@@ -5511,6 +5553,9 @@ local function createTreeGroup()
 
     local seOpts = GSEOptions and GSEOptions.frameLocations and GSEOptions.frameLocations.sequenceeditor
     local navVisible = (seOpts and seOpts.navVisible ~= nil) and seOpts.navVisible or true
+    -- Tucked away for a tab of the Editor that has no tree (Keybind, Import):
+    -- hidden whatever the player chose, and back as they had it afterwards.
+    local navTucked = false
 
 
     local content = CreateFrame("Frame", nil, border)
@@ -5550,7 +5595,7 @@ local function createTreeGroup()
         -- Keep the editor-edge nav controls (chevron/strip/bar) enabled only while
         -- the tree is docked; deactivate them on every editor while it floats.
         if updateNavControls then updateNavControls() end
-        if not navVisible then
+        if not navVisible or navTucked then
             navWindow.GSESideDetached = false
             navWindow:Hide()
             return
@@ -5685,14 +5730,15 @@ local function createTreeGroup()
     -- Chevron icon — points left when nav open (click to close), right when closed (click to open).
     -- Parented to UIParent so it is never clipped by the border frame whose left
     -- edge sits at frame's left edge (navStrip centre is ~11px outside that edge).
-    local chevronSize = 20
+    -- The size of the window's close button, whose place it mirrors.
+    local chevronSize = CLOSE_BUTTON_WIDTH
     local CHEVRON_LEFT  = "Interface\\AddOns\\GSE_GUI\\Assets\\chevron-left.png"
     local CHEVRON_RIGHT = "Interface\\AddOns\\GSE_GUI\\Assets\\chevron-right.png"
     navStrip:SetNormalTexture("")
     navStrip:SetHighlightTexture("")
     navStrip:SetPushedTexture("")
     local chevronFrame = CreateFrame("Frame", nil, frame)
-    chevronFrame:SetSize(chevronSize, chevronSize)
+    chevronFrame:SetSize(chevronSize, CLOSE_BUTTON_HEIGHT)
     chevronFrame:SetPoint("CENTER", frame, "LEFT", -11, 0)
     local chevron = chevronFrame:CreateTexture(nil, "OVERLAY", nil, 7)
     chevron:SetAllPoints(chevronFrame)
@@ -5707,6 +5753,8 @@ local function createTreeGroup()
     -- Set their level a fixed amount above the frame's current base level so they
     -- stay above the editor's own content children, while remaining in the same
     -- strata (so other windows at higher strata still draw over them).
+    local STRATA_ABOVE = { BACKGROUND = "LOW", LOW = "MEDIUM", MEDIUM = "HIGH", HIGH = "DIALOG",
+        DIALOG = "FULLSCREEN", FULLSCREEN = "FULLSCREEN_DIALOG", FULLSCREEN_DIALOG = "TOOLTIP" }
     local function syncChevronStrata()
         -- The chevron must clear the MAIN editor window's NineSlice border
         -- (level ~500) and chrome (~532). The left nav is created inside the
@@ -5716,35 +5764,89 @@ local function createTreeGroup()
         -- until the editor window is wired up.
         local win = getEditorFrame() or frame
         if navStrip:GetParent() ~= win then navStrip:SetParent(win) end
-        if chevronFrame:GetParent() ~= win then chevronFrame:SetParent(win) end
         local s = win:GetFrameStrata() or "MEDIUM"
         local base = win:GetFrameLevel() or 0
         navStrip:SetFrameStrata(s)
         navStrip:SetFrameLevel(base + 600)
-        chevronFrame:SetFrameStrata(s)
+        -- The arrow one strata above its window: the tree panel is a window of
+        -- its own in the window's strata, and its edge lies over the arrow's.
+        -- And not the window's child. As its child the arrow went back under
+        -- the tree whenever the tree was collapsed and opened again, and came
+        -- right when the window was resized (Larry, 2026-11-23): what is done
+        -- to the window's strata reaches its children, and holding the
+        -- arrow's with SetFixedFrameStrata did not keep it (asked for while
+        -- held, HIGH read back as MEDIUM). A frame of the screen's keeps the
+        -- strata it is given. It follows the window by its scale, by the
+        -- hooks that show and hide it with the tree's area, and by this.
+        if chevronFrame:GetParent() ~= UIParent then
+            if chevronFrame.SetFixedFrameStrata then chevronFrame:SetFixedFrameStrata(false) end
+            chevronFrame:SetParent(UIParent)
+        end
+        local screenScale = UIParent:GetEffectiveScale()
+        if screenScale and screenScale > 0 then chevronFrame:SetScale(win:GetEffectiveScale() / screenScale) end
+        chevronFrame:SetFrameStrata(STRATA_ABOVE[s] or s)
         chevronFrame:SetFrameLevel(base + 601)
+        chevronFrame:SetShown(frame:IsVisible() and not (navTucked or (GSE.GUI and GSE.GUI.navDetached)))
+        -- The close button's size, and as far in from the window's left edge
+        -- as the close button is from its right, half way down the window
+        -- (Larry, 2026-11-23). Read off the close button itself, so a skin
+        -- that moves or resizes the X moves this with it; until the window
+        -- has a place, by the close button's own figures.
+        local close = win.GSECloseButton
+        local cx
+        if close and close.GetCenter then cx = close:GetCenter() end
+        if close and close.GetSize then chevronFrame:SetSize(close:GetSize()) end
+        local right = win:GetRight()
+        chevronFrame:ClearAllPoints()
+        -- Half way down the tree's own area, as it was before it moved (the
+        -- window's middle is lower: its bottom bar is taller than its title
+        -- bar; Larry, 2026-11-23, "its lower than center").
+        local winLeft, areaLeft = win:GetLeft(), frame:GetLeft()
+        -- Two further left than the close button's mirror (Larry, 2026-11-23).
+        local nudge = -2
+        if cx and right and winLeft and areaLeft then
+            chevronFrame:SetPoint("CENTER", frame, "LEFT", (winLeft - areaLeft) + (right - cx) + nudge, 0)
+        elseif cx and right then
+            chevronFrame:SetPoint("CENTER", win, "LEFT", right - cx + nudge, 0)
+        else
+            chevronFrame:SetPoint("CENTER", win, "LEFT", CLOSE_BUTTON_WIDTH / 2 - STYLE.closeButtonOffsetX + nudge, 0)
+        end
     end
     frame:HookScript("OnShow",      function()
         navStrip:Show()
         if not (GSE.GUI and GSE.GUI.navDetached) then chevronFrame:Show() end
         syncChevronStrata()
+        -- Again once the window is placed, for the arrow's corner.
+        C_Timer.After(0, syncChevronStrata)
         if updateNavControls then updateNavControls() end
     end)
     frame:HookScript("OnHide",      function() navStrip:Hide(); chevronFrame:Hide() end)
     frame:HookScript("OnMouseDown", function() syncChevronStrata() end)
-    if not frame:IsShown() then chevronFrame:Hide() end
+    -- IsVisible, not IsShown: the arrow is not the window's child, so it does
+    -- not go with a window that is hidden.
+    if not frame:IsVisible() then chevronFrame:Hide() end
     syncChevronStrata()
 
     origToggle = toggleNavWindow
     toggleNavWindow = function()
         origToggle()
         updateChevron()
+        syncChevronStrata()
     end
+    -- The tree shown or hidden by anything else (a tab that tucks it away).
+    navWindow:HookScript("OnShow", function() syncChevronStrata() end)
+    navWindow:HookScript("OnHide", function() syncChevronStrata() end)
     widget.ToggleNavWindow = toggleNavWindow
 
     navStrip:SetScript("OnClick", function()
         -- While the tree is floating, the edge controls can't act on it.
         if GSE.GUI and GSE.GUI.navDetached then return end
+        toggleNavWindow()
+    end)
+    -- The arrow is in the title bar now, off the strip: it takes its own click.
+    chevronFrame:EnableMouse(true)
+    chevronFrame:SetScript("OnMouseUp", function(_, button)
+        if button ~= "LeftButton" or (GSE.GUI and GSE.GUI.navDetached) then return end
         toggleNavWindow()
     end)
 
@@ -5755,16 +5857,23 @@ local function createTreeGroup()
     -- editor activation all keep it in sync.
     updateNavControls = function()
         local detached = GSE.GUI and GSE.GUI.navDetached
-        if detached then
+        if detached or navTucked then
             navStrip:EnableMouse(false)
             if chevronFrame then chevronFrame:Hide() end
         else
             navStrip:EnableMouse(true)
-            if chevronFrame and frame:IsShown() then chevronFrame:Show() end
+            if chevronFrame and frame:IsVisible() then chevronFrame:Show() end
             updateChevron()
         end
     end
     updateNavControls()
+
+    widget.SetNavTucked = function(tucked)
+        tucked = tucked and true or false
+        if navTucked == tucked then return end
+        navTucked = tucked
+        refreshNavWindow()
+    end
 
     refreshNavWindow()
 

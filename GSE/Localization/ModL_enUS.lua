@@ -244,6 +244,7 @@ L["Filter Sequence Selection"] = true
 L["Editor Scroll Speed"] = true
 L["Pixels scrolled per mouse-wheel notch in the Sequence Editor. Higher = faster scrolling. Default 280."] = true
 L["All Sequences"] = true
+L["All Variables"] = true
 L["Show All Sequences in Editor"] = true
 L["Show Class Sequences in Editor"] = true
 
@@ -817,6 +818,12 @@ L["modified in other window.  This view is now behind the current sequence."] = 
 L["New Sequence"] = true
 L["Default"] = true
 L["New Variable"] = true
+L["New Macro"] = true
+L["Enter a name for the new macro:"] = true
+L["A macro cannot be made in combat."] = true
+L["There is no room for another macro."] = true
+L["Editor"] = true
+L["New Editor Window"] = true
 
 L["Button Settings"] = true
 
@@ -855,26 +862,8 @@ L["GSE Message"] = true
 L["WoW Event"] = true
 L["Addon Message"] = true
 -- Menu orientation & lock
-L["Toolbar"] = true
-L["Toolbar Options"] = true
-L["Growth Direction"] = true
-L["Up"] = true
-L["Down"] = true
-L["Left"] = true
-L["Right"] = true
-L["Lock Position"] = true
-L["Lock Toolbar Position"] = true
-L["Strata"] = true
-L["Static Toolbar"] = true
-L["Slide Out Toolbar"] = true
-L["When checked, the toolbar icons stay always visible (Static Toolbar). When unchecked, icons stay hidden until you mouseover the logo, then slide out."] = true
-L["Background"] = true
 L["Low"] = true
 L["High"] = true
-L["Dialog"] = true
-L["Right-Click for Options"] = true
-L["Shift + Right-Click to copy version"] = true
-L["Position Locked"] = true
 L["Change"] = true
 L["Add an Embed Block.  Embed Blocks allow you to incorporate another sequence into this sequence at the current block."] = true
 

@@ -5,9 +5,9 @@
 -- gse_help folder and put the help keybind stuff in it").
 --
 -- It holds the keybind guide: one picture of the steps that put a sequence on
--- an action button and a key on it, in Blizzard's own portrait window. GSE
+-- an action button and a key on it, shown in the Editor's Keybind tab. GSE
 -- loads the AddOn the first time help is asked for (GSE.CheckHelp), and the
--- guide's window is built the first time it is opened.
+-- guide is built the first time it is shown.
 local function readSource(path)
   local fh = assert(io.open(path, "rb"), path .. " is missing")
   local src = fh:read("*a")
@@ -77,6 +77,8 @@ end)
 describe("the keybind guide", function()
   local guide = readSource("GSE_Help/KeybindGuide.lua")
   local pixels = tonumber(guide:match("local KEYBIND_GUIDE_PIXELS%s*=%s*(%d+)"))
+  local largePixels = tonumber(guide:match("local KEYBIND_GUIDE_LARGE_PIXELS%s*=%s*(%d+)"))
+  local LARGE = "Interface\\AddOns\\GSE_Help\\Assets\\KeybindGuideLarge.png"
 
   it("shows a picture that ships in GSE_Help, at the size the code says", function()
     assert.truthy(guide:find('local KEYBIND_GUIDE_TEXTURE = "Interface\\\\AddOns\\\\GSE_Help\\\\Assets\\\\KeybindGuide.png"', 1, true))
@@ -90,121 +92,280 @@ describe("the keybind guide", function()
     assert.is_nil(io.open("GSE_GUI/Assets/KeybindGuide.png", "rb"), "a second copy is left in GSE_GUI")
   end)
 
-  it("is not in GSE's menu file any more: the menu asks GSE's help for it", function()
-    local menu = readSource("GSE_GUI/Menu.lua")
-    assert.is_nil(menu:find("KeybindGuide.png", 1, true))
-    assert.is_nil(menu:find("PortraitFrameTemplate", 1, true))
-    assert.truthy(menu:find("elseif GSE.CheckHelp() and GSE.ToggleKeybindGuide then\n                GSE.ToggleKeybindGuide()", 1, true))
+  -- A lit step is drawn from the picture as it was made, a quarter larger
+  -- (Larry, 2026-11-23: "can we make the area grow some and bit less fuzzy?").
+  it("ships the larger picture a lit step is drawn from, at the size the code says", function()
+    assert.truthy(guide:find('local KEYBIND_GUIDE_LARGE_TEXTURE = "Interface\\\\AddOns\\\\GSE_Help\\\\Assets\\\\KeybindGuideLarge.png"', 1, true))
+    local fh = assert(io.open("GSE_Help/Assets/KeybindGuideLarge.png", "rb"), "the larger picture is not in GSE_Help/Assets")
+    local head = fh:read(24)
+    fh:close()
+    local function be32(at) local a, b, c, d = head:byte(at, at + 3) return ((a * 256 + b) * 256 + c) * 256 + d end
+    assert.are.equal(largePixels, be32(17))
+    assert.are.equal(largePixels, be32(21))
+    assert.is_true(largePixels > pixels)
   end)
 
-  it("asks for what is not on every client's window template or client", function()
-    for _, method in ipairs({ "SetPortraitToAsset", "SetPortraitTexCoord", "SetTitleOffsets", "SetTitle" }) do
-      assert.truthy(guide:find("if keybindGuide." .. method .. " then keybindGuide:" .. method .. "(", 1, true),
-        method .. " is not on every client's template")
-    end
-    assert.truthy(guide:find("if keybindGuide.CloseButton then", 1, true))
-    assert.truthy(guide:find("if GetPhysicalScreenSize then", 1, true))
+  -- A tab opens no window of its own (Larry, 2026-11-23): the guide is a
+  -- picture in the Editor's Keybind tab.
+  it("has no window of its own", function()
+    assert.is_nil(guide:find("PortraitFrameTemplate", 1, true))
+    assert.is_nil(guide:find("UISpecialFrames", 1, true))
+    assert.is_nil(guide:find("ToggleKeybindGuide", 1, true))
+    assert.truthy(guide:find("if GetPhysicalScreenSize then", 1, true), "not on every client")
   end)
 
-  -- Run with a window that records what is done to it.
-  describe("opened", function()
-    local gse, created, frame, saved
+  -- Run with frames that record what is done to them.
+  describe("shown in a page", function()
+    local gse, created, frame, lines, saved
     local screenHeight, scale = 1440, 0.65
 
-    local function newFrame()
-      local methods = {
-        IsShown = function(self) return self.shown end,
-        SetShown = function(self, show)
-          if show == self.shown then return end
-          self.shown = show
-          local script = self.scripts[show and "OnShow" or "OnHide"]
-          if script then script(self) end
-        end,
-        Hide = function(self) self:SetShown(false) end,
-        SetScript = function(self, name, fn) self.scripts[name] = fn end,
-        SetSize = function(self, width, height) self.width, self.height = width, height end,
-        SetTitle = function(self, title) self.title = title end,
-        CreateTexture = function(self)
-          self.picture = setmetatable({ SetTexture = function(texture, path) texture.path = path or false end,
-            SetSize = function(texture, width, height) texture.width, texture.height = width, height end },
-            { __index = function() return function() end end })
-          return self.picture
-        end,
-      }
-      local closeButton = { SetScript = function(self, _, fn) self.click = fn end }
-      return setmetatable({ shown = true, scripts = {}, CloseButton = closeButton },
-        { __index = function(_, key) return methods[key] or function() end end })
+    local function newFrame(parent)
+      local f = { shown = true, scripts = {}, parent = parent, spots = {} }
+      function f:SetScript(name, fn) self.scripts[name] = fn end
+      function f:SetParent(p) self.parent = p end
+      function f:ClearAllPoints() end
+      function f:EnableMouse(on) self.mouse = on end
+      function f:SetPoint(...) self.point = { ... } end
+      function f:SetSize(width, height) self.width, self.height = width, height end
+      function f:SetAllPoints(p) self.fills = p end
+      function f:SetFrameLevel(level) self.level = level end
+      function f:GetWidth() return self.fills and self.fills.w or 0 end
+      function f:GetHeight() return self.fills and self.fills.h or 0 end
+      function f:GetEffectiveScale() return scale end
+      function f:Show()
+        if self.shown then return end
+        self.shown = true
+        if self.scripts.OnShow then self.scripts.OnShow(self) end
+      end
+      function f:Hide()
+        if not self.shown then return end
+        self.shown = false
+        if self.scripts.OnHide then self.scripts.OnHide(self) end
+      end
+      function f:CreateTexture(_, layer, _, sublevel)
+        local texture = { layer = layer, shown = true, ClearAllPoints = function() end,
+          SetPoint = function(t, ...) t.point = { ... } end,
+          SetAllPoints = function(t, over) t.fills = over or true end,
+          SetColorTexture = function(t, r, g, b, a) t.colour = { r, g, b, a } end,
+          SetTexture = function(t, path) t.path = path or false end,
+          SetTexCoord = function(t, ...) t.coords = { ... } end,
+          SetSize = function(t, width, height) t.width, t.height = width, height end,
+          GetWidth = function(t) return t.width end,
+          SetShown = function(t, on) t.shown = on end,
+          Show = function(t) t.shown = true end,
+          Hide = function(t) t.shown = false end }
+        if layer == "BACKGROUND" then self.ground = texture
+        elseif layer == "OVERLAY" then table.insert(self.spots, texture)
+        elseif sublevel then self.dim = texture
+        else self.picture = texture end
+        return texture
+      end
+      return f
     end
+    -- What is lit: each lit spot's box, in the pixels of the file it is drawn from.
+    local function litBoxes()
+      local boxes = {}
+      for _, spot in ipairs(frame.spots) do
+        if spot.shown then
+          local c = spot.coords
+          local filePixels = spot.path == LARGE and largePixels or pixels
+          local function px(v) return math.floor(v * filePixels * 100 + 0.5) / 100 end
+          table.insert(boxes, { px(c[1]), px(c[3]), px(c[2]), px(c[4]) })
+        end
+      end
+      return boxes
+    end
+    local function page(w, h) return { w = w, h = h, GetFrameLevel = function() return 5 end } end
 
     before_each(function()
-      saved = { CreateFrame = _G.CreateFrame, UIParent = _G.UIParent, UISpecialFrames = _G.UISpecialFrames,
-        GetPhysicalScreenSize = _G.GetPhysicalScreenSize, tinsert = _G.tinsert }
-      created, screenHeight = 0, 1440
-      _G.CreateFrame = function(_, name, _, template)
-        created = created + 1
-        frame = newFrame()
-        frame.name, frame.template = name, template
-        return frame
+      saved = { CreateFrame = _G.CreateFrame, UIParent = _G.UIParent, GetPhysicalScreenSize = _G.GetPhysicalScreenSize }
+      created, screenHeight, lines = 0, 1440, {}
+      _G.CreateFrame = function(_, _, parent)
+        local f = newFrame(parent)
+        -- The guide's own children are the lines of its list.
+        if created > 0 and parent == frame then
+          table.insert(lines, f)
+        else
+          created = created + 1
+          frame = f
+        end
+        return f
       end
-      _G.UIParent = { GetEffectiveScale = function() return scale end,
-        GetHeight = function() return 768 / scale end }
+      _G.UIParent = { name = "UIParent" }
       _G.GetPhysicalScreenSize = function() return 5120, screenHeight end
-      _G.UISpecialFrames = {}
-      _G.tinsert = table.insert
 
       local ns = {}
       assert(loadfile("GSE_Help/Bootstrap.lua"))("GSE_Help", ns)
       assert(loadfile("GSE_Help/KeybindGuide.lua"))("GSE_Help", ns)
-      gse = { L = { Keybindings = "Keybindings" }, Static = { Icons = { Keybindings = "key" } } }
-      assert.is_nil(gse.ToggleKeybindGuide)
+      gse = {}
       _G.GSE_Help_Initialize(gse)
     end)
 
     after_each(function()
-      _G.CreateFrame, _G.UIParent, _G.UISpecialFrames = saved.CreateFrame, saved.UIParent, saved.UISpecialFrames
-      _G.GetPhysicalScreenSize, _G.tinsert = saved.GetPhysicalScreenSize, saved.tinsert
+      _G.CreateFrame, _G.UIParent, _G.GetPhysicalScreenSize = saved.CreateFrame, saved.UIParent, saved.GetPhysicalScreenSize
       _G.GSE_Help_Initialize = nil
     end)
 
     it("builds nothing until it is asked for", function()
       assert.are.equal(0, created)
-      assert.are.equal("function", type(gse.ToggleKeybindGuide))
+      assert.are.equal("function", type(gse.ShowKeybindGuideIn))
+      gse.HideKeybindGuide()
+      assert.are.equal(0, created)
     end)
 
-    it("is Blizzard's portrait window, closed by Escape, with the picture one file pixel to a screen pixel", function()
-      gse.ToggleKeybindGuide()
-      assert.are.equal("GSEKeybindGuideFrame", frame.name)
-      assert.are.equal("PortraitFrameTemplate", frame.template)
-      assert.are.same({ "GSEKeybindGuideFrame" }, _G.UISpecialFrames)
-      assert.are.equal("Keybindings", frame.title)
+    it("fills the page that asks for it, the picture one file pixel to a screen pixel where there is room", function()
+      local big = page(2000, 2000)
+      gse.ShowKeybindGuideIn(big)
+      assert.are.equal(big, frame.parent)
+      assert.are.equal(big, frame.fills)
+      assert.are.equal(6, frame.level)
       assert.are.equal("Interface\\AddOns\\GSE_Help\\Assets\\KeybindGuide.png", frame.picture.path)
       local onScreen = frame.picture.width * scale * screenHeight / 768
       assert.is_true(math.abs(onScreen - pixels) < 0.001, "the game would resize the picture: " .. onScreen)
       assert.are.equal(frame.picture.width, frame.picture.height)
-      assert.is_true(frame.width > frame.picture.width and frame.height > frame.picture.height)
     end)
 
-    it("is no taller than the screen has room for", function()
-      screenHeight = 600
-      gse.ToggleKeybindGuide()
-      assert.is_true(frame.height <= 768 / scale * 0.9 + 0.001)
+    it("fills what the page has beyond the picture with black", function()
+      gse.ShowKeybindGuideIn(page(2000, 1200))
+      assert.is_true(frame.ground.fills)
+      assert.are.same({ 0, 0, 0, 1 }, frame.ground.colour)
     end)
 
-    it("closes when asked for again, and holds the picture only while it is open", function()
-      gse.ToggleKeybindGuide()
-      gse.ToggleKeybindGuide()
+    it("is no larger than the page has room for, and follows the page's size", function()
+      local small = page(500, 300)
+      gse.ShowKeybindGuideIn(small)
+      assert.are.equal(300 - 16, frame.picture.width)
+      assert.are.equal(frame.picture.width, frame.picture.height)
+      small.w, small.h = 200, 400
+      frame.scripts.OnSizeChanged(frame)
+      assert.are.equal(200 - 16, frame.picture.width)
+    end)
+
+    it("leaves the page when told to, holding the picture only while it shows, and is built once", function()
+      local first, second = page(900, 900), page(700, 700)
+      gse.ShowKeybindGuideIn(first)
+      gse.HideKeybindGuide()
       assert.is_false(frame.shown)
       assert.is_false(frame.picture.path)
-      gse.ToggleKeybindGuide()
+      assert.are.equal(_G.UIParent, frame.parent, "not left on a page that is reused")
+      gse.ShowKeybindGuideIn(second)
       assert.is_true(frame.shown)
+      assert.are.equal(second, frame.parent)
       assert.truthy(frame.picture.path)
-      assert.are.equal(1, created, "built once")
+      assert.are.equal(1, created)
     end)
 
-    it("closes on its close button", function()
-      gse.ToggleKeybindGuide()
-      frame.CloseButton.click()
-      assert.is_false(frame.shown)
+    -- Larry, 2026-11-23: "when I mouse over a line highlight that step".
+    it("has a line to point at for each step of the picture's list, placed on the picture", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      assert.are.equal(8, #lines)
+      local s = frame.picture.width / pixels
+      for step, line in ipairs(lines) do
+        assert.is_true(line.mouse)
+        assert.are.equal(frame.picture, line.point[2])
+        assert.is_true(math.abs(line.point[4] - 40 * s) < 0.001)
+        assert.is_true(math.abs(line.point[5] + (542 + (step - 1) * 27.25) * s) < 0.001, "line " .. step)
+        assert.is_true(math.abs(line.width - 420 * s) < 0.001)
+        assert.is_true(math.abs(line.height - 27.25 * s) < 0.001)
+      end
+      assert.is_false(frame.dim.shown, "nothing is dark until a line is pointed at")
+      assert.are.same({}, litBoxes())
+    end)
+
+    it("pointing at a line darkens the picture and lights that line and its step", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      lines[6].scripts.OnEnter()
+      assert.is_true(frame.dim.shown)
+      assert.are.equal(frame.picture, frame.dim.fills)
+      assert.are.same({ 0, 0, 0, 0.6 }, frame.dim.colour)
+      -- The line as it is in the picture; the step's two boxes from the larger
+      -- file, a quarter larger (260,366,405,452 and 405,372,562,418 there).
+      assert.are.same({
+        { 40, 542 + 5 * 27.25, 460, 542 + 6 * 27.25 },
+        { 325, 458, 506, 565 },
+        { 506, 465, 703, 523 },
+      }, litBoxes())
+      local s = frame.picture.width / pixels
+      local function near(want, got, what) assert.is_true(math.abs(want - got) < 0.001, what .. ": " .. got) end
+      local line, first, second = frame.spots[1], frame.spots[2], frame.spots[3]
+      assert.are.equal("Interface\\AddOns\\GSE_Help\\Assets\\KeybindGuide.png", line.path)
+      assert.are.equal(LARGE, first.path)
+      assert.are.equal(LARGE, second.path)
+      for _, spot in ipairs(frame.spots) do
+        assert.are.equal("OVERLAY", spot.layer)
+        assert.are.equal(frame.picture, spot.point[2])
+      end
+      near(40 * s, line.point[4], "the line stays where it is")
+      near(420 * s, line.width, "and the size it is")
+      -- The step grows about its middle: 260..562 becomes 222..600.
+      near(222 * s, first.point[4], "left")
+      near(-356 * s, first.point[5], "top")
+      near(403 * s, second.point[4], "the second box still meets the first")
+      near(-363 * s, second.point[5], "top of the second")
+      near(181, first.width * scale * screenHeight / 768, "one file pixel to a screen pixel")
+      near(107, first.height * scale * screenHeight / 768, "one file pixel to a screen pixel, down")
+    end)
+
+    it("lights only what the step has, and puts the picture back when the line is left", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      lines[1].scripts.OnEnter()
+      assert.are.same({ { 40, 542, 460, 569.25 }, { 18, 190, 356, 283 } }, litBoxes())
+      assert.is_false(frame.spots[3].shown, "a spot not in use is not shown")
+      assert.are.equal(0, frame.spots[2].point[4], "a step at the picture's edge grows inward, not off it")
+      lines[1].scripts.OnLeave()
+      assert.is_false(frame.dim.shown)
+      assert.are.same({}, litBoxes())
+    end)
+
+    it("keeps the next line lit when the one before is left after it", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      lines[1].scripts.OnEnter()
+      lines[2].scripts.OnEnter()
+      lines[1].scripts.OnLeave()
+      assert.is_true(frame.dim.shown)
+      assert.are.equal(390, litBoxes()[2][1])
+    end)
+
+    it("every step's boxes are inside the picture, clear of its list, and drawn on the picture in whole pixels", function()
+      gse.ShowKeybindGuideIn(page(2000, 2000))
+      local s = frame.picture.width / pixels
+      local grow = largePixels / pixels
+      for step, line in ipairs(lines) do
+        line.scripts.OnEnter()
+        local boxes = litBoxes()
+        assert.is_true(#boxes >= 2, "step " .. step .. " lights nothing in the picture")
+        for i, box in ipairs(boxes) do
+          local what = "step " .. step .. " box " .. i
+          local filePixels = i == 1 and pixels or largePixels
+          assert.is_true(box[1] >= 0 and box[1] < box[3] and box[3] <= filePixels, what)
+          assert.is_true(box[2] >= 0 and box[2] < box[4] and box[4] <= filePixels, what)
+          if i > 1 then
+            assert.is_true(box[4] <= 542 * grow or box[1] >= 460 * grow, what .. " lights part of the list")
+            local spot = frame.spots[i]
+            local left, top = spot.point[4] / s, -spot.point[5] / s
+            local right, bottom = left + spot.width / s, top + spot.height / s
+            assert.is_true(left > -0.001 and top > -0.001 and right < pixels + 0.001 and bottom < pixels + 0.001, what .. " is drawn off the picture")
+            for _, edge in ipairs({ left, top, right, bottom }) do
+              assert.is_true(math.abs(edge - math.floor(edge + 0.5)) < 0.001, what .. " is drawn between pixels: " .. edge)
+            end
+          end
+        end
+      end
+    end)
+
+    it("follows the page's size while a step is lit, and goes out when the guide is hidden", function()
+      local small = page(900, 900)
+      gse.ShowKeybindGuideIn(small)
+      lines[8].scripts.OnEnter()
+      small.w, small.h = 416, 416
+      frame.scripts.OnSizeChanged(frame)
+      assert.are.equal(400, frame.picture.width)
+      assert.are.equal(454 / 2, frame.spots[2].point[4])
+      assert.are.equal(340 / 2, frame.spots[2].width)
+      gse.HideKeybindGuide()
+      assert.is_false(frame.dim.shown)
+      assert.are.same({}, litBoxes())
+      for _, spot in ipairs(frame.spots) do assert.is_false(spot.path) end
     end)
   end)
 end)

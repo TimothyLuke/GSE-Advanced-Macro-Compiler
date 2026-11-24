@@ -2148,6 +2148,275 @@ local function SetSequenceEditorOpenPreference(isOpen, mode)
     if mode then seOpts.openMode = mode end
 end
 
+-- ── The Editor's tabs ───────────────────────────────────────────────────────
+--
+-- What GSE's toolbar opened is a tab down the Editor's right edge (Larry,
+-- 2026-11-23). Editor, Variables and Macros each show their own part of the
+-- left tree (Editor_Tree.lua, narrowTreeToTab) and come back on the page they
+-- were left on. Keybind and Import are a page each, with the tree tucked away
+-- (GSE.GUI.OpenEditorPage): a tab opens no window of its own. Options opens
+-- WoW's Options, as the toolbar's button did.
+--
+-- One tab on every client, drawn to match the window: Blizzard's spellbook
+-- side tab on the Native look -- its template's sizes and art, which every
+-- client has, though the template itself is only on the Classic clients --
+-- and flat and dark on the Modern and bar-addon looks.
+local EDITOR_TAB_SIZE = 32   -- SpellBookSkillLineTabTemplate
+local EDITOR_TAB_GAP = 12    -- the spellbook's sit 17 apart; closer here (Larry, 2026-11-23)
+local EDITOR_TAB_TOP = -40
+-- The tree's top node on each tab that has a tree.
+local EDITOR_TAB_ROOT = { sequences = "Sequences", variables = "VARIABLES", macros = "Macro" }
+-- The title over the tree on each.
+local EDITOR_TAB_TITLE = { sequences = "Sequences", variables = "Variables", macros = "Macros" }
+-- The box under the tree on each: its text, the setting behind it
+-- (GSEOptions.filterList) and what that is until chosen. Variables were all
+-- listed before the box was theirs, so theirs starts ticked. Macros have no
+-- class to filter by, so their tab has no box (Larry, 2026-11-23).
+local EDITOR_TAB_ALL = {
+    sequences = { "All Sequences", "All", false },
+    variables = { "All Variables", "AllVariables", true },
+}
+
+--- Whether the tree lists a variable of a class: every class while All
+--- Variables is ticked, else the player's own and Global.
+function GSE.GUI.TreeShowsVariable(classid)
+    local all = GSEOptions and GSEOptions.filterList and GSEOptions.filterList.AllVariables
+    if all == nil or all then return true end
+    classid = tonumber(classid) or 0
+    return classid == 0 or classid == GSE.GetCurrentClassID()
+end
+
+--- Turn an editor to a tab of the tree: the tab lights, its part of the tree
+--- opens, and the tree is built again for it. quiet: the caller builds it.
+function GSE.GUI.SetEditorTab(editframe, tab, quiet)
+    if not (editframe and EDITOR_TAB_ROOT[tab]) then return end
+    local changed = (editframe.editorTab or "sequences") ~= tab
+    editframe.editorTab = tab
+    -- Coming off the Keybind or Import tab: its page goes and the tree is back.
+    if editframe.editorPage then
+        editframe.editorPage = nil
+        local container = editframe.treeContainer
+        if container then
+            if container.SetNavTucked then container.SetNavTucked(false) end
+            container:ReleaseChildren()
+        end
+        editframe.loaded = nil
+    end
+    for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == tab) end
+    local tree = editframe.treeContainer
+    local nav = tree and tree.navWindowFrame
+    -- The tree's title: what it lists.
+    if nav and nav.GSESetTitle then nav.GSESetTitle(L[EDITOR_TAB_TITLE[tab]]) end
+    if nav and nav.GSESetAllCheckbox then
+        local box = EDITOR_TAB_ALL[tab]
+        if box then nav.GSESetAllCheckbox(L[box[1]], box[2], box[3]) else nav.GSESetAllCheckbox(nil) end
+    end
+    local status = tree and (tree.status or tree.localstatus)
+    if status then
+        status.groups = status.groups or {}
+        status.groups[EDITOR_TAB_ROOT[tab]] = true
+    end
+    if changed and not quiet and editframe.ManageTree then editframe.ManageTree() end
+end
+
+-- The Keybind tab's page: the guide picture (GSE_Help, loaded by the tab
+-- that asks for it), in a group of the pane's own so that it leaves with the
+-- page.
+local function drawKeybindPage(container)
+    local outer = UI:Create("SimpleGroup")
+    outer:SetFullWidth(true)
+    outer:SetFullHeight(true)
+    outer:SetLayout("Fill")
+    container:AddChild(outer)
+    outer:SetCallback("OnRelease", function()
+        if GSE.HideKeybindGuide then GSE.HideKeybindGuide() end
+    end)
+    if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame) end
+end
+
+--- Turn an editor to a tab with a page of its own and no tree: "keybind" (the
+--- guide) or "import". The tree is tucked away while it shows.
+function GSE.GUI.OpenEditorPage(editframe, page)
+    if not (editframe and (page == "keybind" or page == "import")) then return end
+    if editframe.editorPage == page and editframe.loaded then
+        editframe:Show()
+        return
+    end
+    local container = editframe.treeContainer
+    editframe.editorPage = page
+    for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == page) end
+    if container.SetNavTucked then container.SetNavTucked(true) end
+    container:ReleaseChildren()
+    editframe.loaded = nil
+    SetSequenceEditorOpenPreference(true, page)
+    editframe:Show()
+    if page == "import" then
+        editframe:SetTitle("GSE: " .. L["Import"])
+        GSE.GUI.DrawImportPage(container, editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0)
+    else
+        editframe:SetTitle("GSE: " .. L["Keybind"])
+        drawKeybindPage(container)
+    end
+    editframe.loaded = true
+end
+
+-- The editor a Show function works on: the one it is handed -- a tab's own
+-- window -- else GSE.CreateEditor's, which is a NEW window where more than one
+-- is allowed (GSE.CanMultiWindow, GSE_QoL). A tab that asked for one opened a
+-- second window (Larry, 2026-11-23). Anything else handed in (a button, as a
+-- click handler is) is not an editor.
+local function editorFor(existing)
+    if type(existing) == "table" and existing.treeContainer and existing.ManageTree then return existing end
+    return GSE.CreateEditor()
+end
+
+-- The tabs, top to bottom. A tab with a tree is named for it (key); Keybind
+-- and Import are pages; Options opens WoW's Options.
+local function editorTabList()
+    return {
+        { key = "sequences", icon = Statics.Icons.Sequences, text = L["Editor"],
+            click = function(editframe) GSE.ShowSequences(editframe) end },
+        { key = "import", icon = Statics.Icons.Import, text = L["Import"],
+            click = function(editframe) GSE.GUI.OpenEditorPage(editframe, "import") end },
+        { key = "variables", icon = Statics.Icons.Variables, text = L["Variables"],
+            click = function(editframe) GSE.ShowVariables(editframe) end },
+        { key = "macros", icon = Statics.Icons.Macros, text = L["Macros"],
+            click = function(editframe) GSE.ShowMacros(editframe) end },
+        { key = "keybind", icon = Statics.Icons.Keybindings, text = L["Keybind"],
+            click = function(editframe) GSE.GUI.OpenEditorPage(editframe, "keybind") end },
+        { key = "options", icon = Statics.Icons.Options, text = L["Options"],
+            click = function() GSE.OpenOptionsPanel() end },
+    }
+end
+
+-- A tab's button: an icon on the look the window has, lit while it is the
+-- open tab (SetTabChecked) or the mouse is on it. inset: how far in from the
+-- button's edges the icon sits, for one that should not fill it.
+local function newEditorTabButton(parent, iconTexture, flat, inset)
+    inset = inset or 0
+    local tab = CreateFrame("Button", nil, parent, flat and "BackdropTemplate" or nil)
+    tab:SetSize(EDITOR_TAB_SIZE, EDITOR_TAB_SIZE)
+    tab:RegisterForClicks("LeftButtonUp")
+    local icon = tab:CreateTexture(nil, "ARTWORK")
+    icon:SetTexture(iconTexture)
+    if flat then
+        tab:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+        icon:SetPoint("TOPLEFT", 4 + inset, -4 - inset)
+        icon:SetPoint("BOTTOMRIGHT", -4 - inset, 4 + inset)
+        function tab:PaintTab()
+            local lit = self.tabChecked or self.tabHovered
+            self:SetBackdropColor(lit and 0.14 or 0.04, lit and 0.14 or 0.04, lit and 0.14 or 0.04, 0.95)
+            if self.tabChecked then
+                -- The bar addon's accent colour, else gold.
+                local r, g, b
+                if GSE.Skin and GSE.Skin.HostAccentColor then r, g, b = GSE.Skin.HostAccentColor() end
+                if not (r and g and b) then r, g, b = 1, 0.82, 0 end
+                self:SetBackdropBorderColor(r, g, b, 1)
+            else
+                self:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+            end
+        end
+    else
+        local back = tab:CreateTexture(nil, "BACKGROUND")
+        back:SetTexture("Interface\\SpellBook\\SpellBook-SkillLineTab")
+        back:SetSize(64, 64)
+        back:SetPoint("TOPLEFT", -3, 11)
+        icon:SetPoint("TOPLEFT", inset, -inset)
+        icon:SetPoint("BOTTOMRIGHT", -inset, inset)
+        tab:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        local checked = tab:CreateTexture(nil, "OVERLAY")
+        checked:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+        checked:SetBlendMode("ADD")
+        checked:SetAllPoints()
+        checked:Hide()
+        function tab:PaintTab() checked:SetShown(self.tabChecked == true) end
+    end
+    function tab:SetTabChecked(on)
+        self.tabChecked = on and true or false
+        self:PaintTab()
+    end
+    tab:SetTabChecked(false)
+    return tab
+end
+
+local function createEditorTab(editframe, index, def, flat)
+    local tab = newEditorTabButton(editframe.frame, def.icon, flat)
+    local step = EDITOR_TAB_SIZE + (flat and 4 or EDITOR_TAB_GAP)
+    tab:SetPoint("TOPLEFT", editframe.frame, "TOPRIGHT", flat and 2 or 0, EDITOR_TAB_TOP - (index - 1) * step)
+    tab:SetScript("OnEnter", function(self)
+        self.tabHovered = true
+        self:PaintTab()
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(def.text, 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    tab:SetScript("OnLeave", function(self)
+        self.tabHovered = false
+        self:PaintTab()
+        GameTooltip:Hide()
+    end)
+    tab:SetScript("OnClick", function() def.click(editframe) end)
+    return tab
+end
+
+-- The Editor tab's flyout: a + beside it while the mouse is on the tab or on
+-- the +, which opens another Editor window (Larry, 2026-11-23). Only where
+-- more than one window can be open (GSE.CanMultiWindow, GSE_QoL): without it
+-- GSE.CreateEditor hands back the window there already is.
+local EDITOR_FLYOUT_GAP = 6
+local EDITOR_FLYOUT_ICON_INSET = 5   -- the + a bit smaller than its button (Larry, 2026-11-23)
+local EDITOR_FLYOUT_LINGER = 0.2   -- seconds, to cross from the tab to the +
+local function addEditorTabFlyout(tab, flat)
+    local plus = newEditorTabButton(tab, Statics.ActionsIcons.Add, flat, EDITOR_FLYOUT_ICON_INSET)
+    plus:SetPoint("LEFT", tab, "RIGHT", EDITOR_FLYOUT_GAP, 0)
+    plus:Hide()
+    local function hideOnceLeft()
+        C_Timer.After(EDITOR_FLYOUT_LINGER, function()
+            if not (tab:IsMouseOver() or plus:IsMouseOver()) then plus:Hide() end
+        end)
+    end
+    tab:HookScript("OnEnter", function() plus:Show() end)
+    tab:HookScript("OnLeave", hideOnceLeft)
+    plus:SetScript("OnEnter", function(self)
+        self.tabHovered = true
+        self:PaintTab()
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["New Editor Window"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    plus:SetScript("OnLeave", function(self)
+        self.tabHovered = false
+        self:PaintTab()
+        GameTooltip:Hide()
+        hideOnceLeft()
+    end)
+    plus:SetScript("OnClick", function(self)
+        self:Hide()
+        GameTooltip:Hide()
+        -- Asked for with no editor of its own: a new window.
+        GSE.ShowSequences()
+    end)
+    return plus
+end
+
+--- The tabs of an editor window, made once with it.
+function GSE.GUI.CreateEditorTabs(editframe)
+    if editframe.tabButtons then return end
+    editframe.tabButtons = {}
+    local flat = GSE.GetEffectiveSkinMode ~= nil and GSE.GetEffectiveSkinMode() ~= "NATIVE"
+    for index, def in ipairs(editorTabList()) do
+        editframe.tabButtons[def.key] = createEditorTab(editframe, index, def, flat)
+    end
+    editframe.tabButtons[editframe.editorTab or "sequences"]:SetTabChecked(true)
+    -- Room for them when the window is held on screen, the flyout too.
+    local room = EDITOR_TAB_SIZE + 4
+    if GSE.CanMultiWindow and GSE.CanMultiWindow() then
+        editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat)
+        room = room + EDITOR_FLYOUT_GAP + EDITOR_TAB_SIZE
+    end
+    editframe.frame:SetClampRectInsets(10, room, 0, 0)
+end
+
 function GSE.CreateEditor()
     if GSE.isEmpty(GSE.GUI.editors) then
         GSE.GUI.editors = {}
@@ -2945,6 +3214,7 @@ function GSE.CreateEditor()
     end
 
     editframe.treeContainer = treeContainer
+    GSE.GUI.CreateEditorTabs(editframe)
     treeContainer:SetCallback("OnTreeResize", function()
         SaveSequenceEditorLocation()
     end)
@@ -8123,7 +8393,7 @@ end
 
 --@end-debug@
 
-function GSE.ShowSequences()
+function GSE.ShowSequences(existing)
     -- End-to-end open cost. ManageTree and DrawSequenceEditor time themselves;
     -- this brackets everything, so a gap between them and this total says the
     -- time is going somewhere neither of those covers -- which is exactly how
@@ -8132,7 +8402,8 @@ function GSE.ShowSequences()
     --@debug@
     local openStartedAt = GSE.NowMs()
     --@end-debug@
-    local editframe = GSE.CreateEditor()
+    local editframe = editorFor(existing)
+    GSE.GUI.SetEditorTab(editframe, "sequences", true)
     --@debug@
     local afterCreate = GSE.NowMs()
     --@end-debug@
@@ -8499,7 +8770,7 @@ function GSE.ShowKeyBindings()
     -- The editor has a Bindings area only where GSE binds keys to sequences
     -- itself (Editor_Keybind.lua, buildKeybindMenu); anywhere else this opens
     -- the editor where it was.
-    if not GSE.KeybindingsEnabled() then return GSE.ShowSequences() end
+    if not GSE.KeybindingsEnabled() then return GSE.GUI.OpenEditorPage(GSE.CreateEditor(), "keybind") end
     local editor = GSE.CreateEditor()
     editor.ManageTree()
     -- Down to the class node, wherever the tree's grouping puts Bindings.
@@ -8509,16 +8780,18 @@ function GSE.ShowKeyBindings()
     editor:Show()
 end
 
-function GSE.ShowVariables()
-    local editor = GSE.CreateEditor()
+function GSE.ShowVariables(existing)
+    local editor = editorFor(existing)
+    GSE.GUI.SetEditorTab(editor, "variables", true)
     editor.ManageTree()
     SelectLastAreaNode(editor, "VARIABLES")
     SetSequenceEditorOpenPreference(true, "variables")
     editor:Show()
 end
 
-function GSE.ShowMacros()
-    local editor = GSE.CreateEditor()
+function GSE.ShowMacros(existing)
+    local editor = editorFor(existing)
+    GSE.GUI.SetEditorTab(editor, "macros", true)
     editor.ManageTree()
     SelectLastAreaNode(editor, "Macro")
     SetSequenceEditorOpenPreference(true, "macros")
@@ -8552,7 +8825,9 @@ local function RestoreSequenceEditorIfNeeded()
         or (mode == "macros" and not GSE.GUI.HasLastAreaPage("Macro")) then
         mode = "sequences"
     end
-    if mode == "keybindings" then
+    if mode == "keybind" or mode == "import" then
+        GSE.GUI.OpenEditorPage(GSE.CreateEditor(), mode)
+    elseif mode == "keybindings" then
         GSE.ShowKeyBindings()
     elseif mode == "variables" then
         GSE.ShowVariables()

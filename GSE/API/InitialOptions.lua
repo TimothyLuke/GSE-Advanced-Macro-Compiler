@@ -63,7 +63,6 @@ function GSE.SetDefaultOptions()
     GSEOptions.DisabledSequences = {}
     GSEOptions.DebugModules = {}
     GSEOptions.shownew = true
-    if GSEOptions.ToolbarEnabled == nil then GSEOptions.ToolbarEnabled = true end
     -- Announce a manual sequence reset in chat. Off by default (#1991): the
     -- user pressed the reset themselves, so the message is noise unless they
     -- are actively checking whether a reset binding fires.

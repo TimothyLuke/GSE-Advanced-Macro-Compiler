@@ -2383,50 +2383,46 @@ function GSE:GSSlash(input)
     else
         GSE.CheckGUI()
         if GSE.UnsavedOptions["GUI"] then
-            -- Route to Editor when the Toolbar is disabled (see Options.lua's
-            -- "GSE Toolbar ON / OFF" checkbox). Default ToolbarEnabled=true.
-            if GSEOptions and GSEOptions.ToolbarEnabled == false then
-                -- 1) An editor already exists this session. With multi-window
-                --    support each /gse opens an ADDITIONAL editor window; without
-                --    it, CreateEditor returns the single shared editor, so just
-                --    bring the existing one forward.
-                if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
-                    local multiWindow = GSE.CanMultiWindow and GSE.CanMultiWindow()
-                    if multiWindow and GSE.ShowSequences then
-                        -- Open an additional editor window.
-                        GSE.ShowSequences()
-                    else
-                        local existing = GSE.GUI.editors[#GSE.GUI.editors]
-                        if existing and existing.Show then existing:Show() end
-                    end
-                    return
+            -- /gse opens the Editor. The toolbar it once opened is the Editor's
+            -- tabs now (Larry, 2026-11-23).
+            -- 1) An editor already exists this session. With multi-window
+            --    support each /gse opens an ADDITIONAL editor window; without
+            --    it, CreateEditor returns the single shared editor, so just
+            --    bring the existing one forward.
+            if GSE.GUI and GSE.GUI.editors and #GSE.GUI.editors > 0 then
+                local multiWindow = GSE.CanMultiWindow and GSE.CanMultiWindow()
+                if multiWindow and GSE.ShowSequences then
+                    -- Open an additional editor window.
+                    GSE.ShowSequences()
+                else
+                    local existing = GSE.GUI.editors[#GSE.GUI.editors]
+                    if existing and existing.Show then existing:Show() end
                 end
-
-                -- 2) No editor exists yet. On the FIRST /gse this session,
-                --    GSE.CheckGUI() above just lazy-loaded GSE_GUI which
-                --    queued Editor.lua's RestoreSequenceEditorIfNeeded for
-                --    the next tick. If the user had the editor open last
-                --    session (seOpts.open=true), that restore WILL create
-                --    one — calling ShowSequences here would create a 2nd.
-                --    Detect "restore is pending" via the saved open state
-                --    AND a flag the restore sets after it runs. If pending,
-                --    let the restore handle it.
-                local seOpts = GSEOptions and GSEOptions.frameLocations
-                    and GSEOptions.frameLocations.sequenceeditor
-                local restorePending = seOpts and seOpts.open
-                    and not GSE.SequenceEditorRestoreFired
-                if restorePending then
-                    return
-                end
-
-                -- 3) Restore either won't fire (seOpts.open false) or
-                --    already fired without producing an editor (e.g. it
-                --    ran but the user X-closed it since) — safe to create
-                --    one ourselves now, synchronously.
-                if GSE.ShowSequences then GSE.ShowSequences() end
-            else
-                GSE.ShowMenu()
+                return
             end
+
+            -- 2) No editor exists yet. On the FIRST /gse this session,
+            --    GSE.CheckGUI() above just lazy-loaded GSE_GUI which
+            --    queued Editor.lua's RestoreSequenceEditorIfNeeded for
+            --    the next tick. If the user had the editor open last
+            --    session (seOpts.open=true), that restore WILL create
+            --    one — calling ShowSequences here would create a 2nd.
+            --    Detect "restore is pending" via the saved open state
+            --    AND a flag the restore sets after it runs. If pending,
+            --    let the restore handle it.
+            local seOpts = GSEOptions and GSEOptions.frameLocations
+                and GSEOptions.frameLocations.sequenceeditor
+            local restorePending = seOpts and seOpts.open
+                and not GSE.SequenceEditorRestoreFired
+            if restorePending then
+                return
+            end
+
+            -- 3) Restore either won't fire (seOpts.open false) or
+            --    already fired without producing an editor (e.g. it
+            --    ran but the user X-closed it since) — safe to create
+            --    one ourselves now, synchronously.
+            if GSE.ShowSequences then GSE.ShowSequences() end
         end
     end
 end

@@ -3072,13 +3072,14 @@ function GSE:PLAYER_ENTERING_WORLD()
         GSE.UnsavedOptions.UpdateNotesShown = true
         GSE:ShowUpdateNotes()
     end
-    local menuOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.menu
-    if menuOpts and menuOpts.open and GSEOptions.ToolbarEnabled ~= false then
-        C_Timer.After(0, function()
-            if GSE.CheckGUI() and GSE.ShowMenu then
-                GSE.ShowMenu()
-            end
-        end)
+    -- The Editor comes back if it was left open. GSE_GUI is loaded on demand,
+    -- and loading it reopens the Editor where it was (Editor.lua,
+    -- RestoreSequenceEditorIfNeeded). The toolbar's return at login was what
+    -- loaded it; with the toolbar gone nothing did, and the Editor stayed
+    -- shut after a /reload (Larry, 2026-11-23).
+    local editorOpts = not GSE.isEmpty(GSEOptions.frameLocations) and GSEOptions.frameLocations.sequenceeditor
+    if editorOpts and editorOpts.open then
+        C_Timer.After(0, function() GSE.CheckGUI() end)
     end
 end
 
@@ -3295,17 +3296,6 @@ function GSE:PLAYER_LOGOUT()
         GSE.GUI.ForgetLastSequenceEditorNode()
     end
     if not GSE.UnsavedOptions["GUI"] then
-        if GSE["MenuFrame"] then
-            if GSE.isEmpty(GSEOptions.frameLocations) then
-                GSEOptions.frameLocations = {}
-            end
-
-            if GSE.isEmpty(GSEOptions.frameLocations.menu) then
-                GSEOptions.frameLocations.menu = {}
-            end
-            GSEOptions.frameLocations.menu.top  = GSE.MenuFrame:GetTop()
-            GSEOptions.frameLocations.menu.left = GSE.MenuFrame:GetLeft()
-        end
         if GSE["GUIVariableFrame"] then
             if GSE.isEmpty(GSEOptions.frameLocations.variablesframe) then
                 GSEOptions.frameLocations.variablesframe = {}
@@ -3700,7 +3690,7 @@ function GSE.CheckGUI()
 end
 
 --- Loads GSE's help (GSE_Help, LoadOnDemand) the first time it is asked for.
--- Its windows are on GSE once it is loaded (GSE.ToggleKeybindGuide).
+-- What it shows is on GSE once it is loaded (GSE.ShowKeybindGuideIn).
 -- @return true when it is loaded; otherwise why not is said in chat.
 function GSE.CheckHelp()
     local loaded, reason = C_AddOns.LoadAddOn("GSE_Help")

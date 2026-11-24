@@ -308,9 +308,6 @@ function GSE.ApplyMenuUIScale()
             end
         end
     end
-    if GSE.MenuFrame then
-        GSE.ApplyMenuScaleToFrame(GSE.MenuFrame)
-    end
 end
 
 end
