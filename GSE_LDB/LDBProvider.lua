@@ -294,6 +294,15 @@ end
 local minimapButton = icon.GetMinimapButton and icon:GetMinimapButton(dataObjectName)
 if minimapButton then
   minimapButton:RegisterForClicks("AnyUp")
+  -- The icon sat right of the middle of its ring: one to the left centres it
+  -- (Larry, 2026-11-23: two left, then one back). Moved from where the
+  -- library put it, whichever client's placement that is.
+  local tex = minimapButton.icon
+  if tex and tex.GetPoint and tex:GetNumPoints() == 1 then
+    local point, relativeTo, relativePoint, x, y = tex:GetPoint(1)
+    tex:ClearAllPoints()
+    tex:SetPoint(point, relativeTo, relativePoint, (x or 0) - 1, y or 0)
+  end
 end
 
 
