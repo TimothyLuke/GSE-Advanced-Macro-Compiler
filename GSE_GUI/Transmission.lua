@@ -76,7 +76,6 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
   -- Everything this player can send: sequences, variables and macros, keyed
   -- "kind:ref" (ref is the id, or the name of one not yet filed) and shown by
   -- label. Protected content is left out; TransmitElement would refuse it.
-  -- inckey preselects a sequence: its id, its label, or a tree key.
   local offered = GSE.GetShareableSummary()
   local names, order = {}, {}
   local preselect
@@ -98,8 +97,14 @@ function GSE.GUIShowTransmissionGui(inckey, editframe)
       end
     end
   end
-  for id, row in pairs(offered.variable) do offer("variable:" .. id, L["Variable"] .. ": " .. row.Label) end
-  for id, row in pairs(offered.macro) do offer("macro:" .. id, L["Macro"] .. ": " .. row.Label) end
+  for id, row in pairs(offered.variable) do
+    offer("variable:" .. id, L["Variable"] .. ": " .. row.Label)
+    if inckey == "variable:" .. row.Label then preselect = "variable:" .. id end
+  end
+  for id, row in pairs(offered.macro) do
+    offer("macro:" .. id, L["Macro"] .. ": " .. row.Label)
+    if inckey == "macro:" .. row.Label then preselect = "macro:" .. id end
+  end
   table.sort(order, function(a, b)
     local ka, kb = a:match("^%a+"), b:match("^%a+")
     if ka ~= kb then return ka == "sequence" or (ka == "variable" and kb == "macro") end

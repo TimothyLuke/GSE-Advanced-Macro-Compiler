@@ -208,6 +208,14 @@ function GSE.GetShareableSummary()
     return out
 end
 
+function GSE.IsShareableElement(kind, ref)
+    if GSE.isEmpty(ref) then return false end
+    if kind == "sequence" then return shareableSequence(ref) ~= nil end
+    if kind == "variable" then return shareableVariable(ref) ~= nil end
+    if kind == "macro" then return shareableMacro(ref) ~= nil end
+    return false
+end
+
 --- Send one element to another player. kind is "sequence", "variable" or
 -- "macro"; ref its id (or name). Refuses protected content.
 function GSE.TransmitElement(kind, ref, channel, target, transmissionFrame)
@@ -389,11 +397,22 @@ function GSE.SequenceChatPattern(sequenceName, classID)
     return "[GSE: " .. (playerName or "?") .. " - " .. (sequenceName or "?") .. " - " .. (classID or "0") .. "]"
 end
 
+local CHAT_LINK_KIND = {V = "variable", M = "macro"}
+
+function GSE.ElementChatPattern(kind, name)
+    return GSE.SequenceChatPattern(name, kind == "variable" and "V" or "M")
+end
+
 function GSE.CreateSequenceLink(sequenceName, classID, playerName)
     if GSE.isEmpty(playerName) then
         playerName = UnitName("player")
     end
-    local message = "GSE Sequence: " .. sequenceName .. "' (" .. GSE.GetClassName(classID) .. ")"
+    local message
+    if CHAT_LINK_KIND[classID] then
+        message = "GSE " .. (classID == "V" and L["Variable"] or L["Macro"]) .. ": " .. sequenceName
+    else
+        message = "GSE Sequence: " .. sequenceName .. "' (" .. (GSE.GetClassName(classID) or "?") .. ")"
+    end
     local command = "seq@" .. sequenceName .. "@" .. playerName .. "@" .. classID
     local link = "|cFFFFFF00|Hgarrmission:GSE:" .. command .. "|h[" .. message .. "]|h|r"
     return link
@@ -412,7 +431,7 @@ local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
     local done
     repeat
         local start, finish, characterName, sequenceName, classID =
-            remaining:find("%[GSE: ([^%s]+) %- ([^%s]+) %- ([^]]+)")
+            remaining:find("%[GSE: ([^%s]+) %- (.-) %- ([^]]+)")
         if (characterName and sequenceName and classID) then
             characterName = characterName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
             sequenceName = sequenceName:gsub("|c[Ff][Ff]......", ""):gsub("|r", "")
@@ -481,7 +500,30 @@ hooksecurefunc(
         local linkType, addon, param1 = string.split(":", link)
         if linkType == "garrmission" and addon == "GSE" then
             local cmd, sequenceName, player, ClassID = string.split("@", param1)
-            if cmd == "seq" then
+            local kind = CHAT_LINK_KIND[ClassID]
+            if cmd == "seq" and kind then
+                if player == UnitName("player") then
+                    -- Our own link: open it.
+                    local path
+                    if kind == "variable" then
+                        path = GSE.Store("variable")[sequenceName] and ("VARIABLES\001" .. sequenceName)
+                    else
+                        local slot = GetMacroIndexByName(sequenceName)
+                        if slot and slot > 0 then
+                            path = table.concat({"Macro", slot > GSE.GetMaxAccountMacros() and "P" or "A", tostring(slot), "config"}, "\001")
+                        end
+                    end
+                    if path then
+                        local editor = GSE.CreateEditor()
+                        editor.ManageTree()
+                        editor:Show()
+                        GSE.GUI.SelectEditorTreePath(editor, path)
+                    end
+                else
+                    GSE.Print("Requested " .. sequenceName .. " from " .. player, Statics.SourceTransmission)
+                    GSE.RequestElement(kind, nil, sequenceName, nil, player, "WHISPER")
+                end
+            elseif cmd == "seq" then
                 if player == UnitName("player") then
                     -- Our own link: open it. GUILoadEditor takes the tree's
                     -- "classid,spec,id" key; this used to hand it "classid,name".

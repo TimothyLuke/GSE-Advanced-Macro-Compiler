@@ -819,20 +819,164 @@ local function onRightClick_Sequences(editframe, container, group, unique, class
     )
 end
 
+local function addShareButtons(editframe, rootDescription, kind, name, group, unique)
+    local shareable = GSE.IsShareableElement(kind, name)
+    local sendButton = rootDescription:CreateButton(L["Send"], function()
+        GSE.GUIShowTransmissionGui(kind .. ":" .. name, editframe)
+    end)
+    if sendButton and sendButton.SetEnabled then sendButton:SetEnabled(shareable) end
+    if GSE.OnTreeContextMenuExtras then
+        GSE.OnTreeContextMenuExtras(rootDescription, {sequencename = name, group = group, unique = unique})
+    end
+    local linkButton = rootDescription:CreateButton(L["Chat Link"], function()
+        GSE.UI.ShowLinkDialog({
+            owner      = editframe,
+            title      = L["Chat Link"],
+            prompt     = L["Copy this Link and Paste into a Chat Window."],
+            link       = GSE.ElementChatPattern(kind, name),
+            buttonText = CLOSE,
+            note       = L["Text selected. Press Ctrl+C to Copy"],
+        })
+    end)
+    if linkButton and linkButton.SetEnabled then linkButton:SetEnabled(shareable) end
+end
+
 local function onRightClick_VARIABLES(editframe, container, group, unique, key)
     MenuUtil.CreateContextMenu(
         editframe.frame,
         function(ownerRegion, rootDescription)
-            rootDescription:CreateTitle(L["Manage Variables"])
+            rootDescription:CreateTitle(L["Variable Editor"])
+            rootDescription:CreateButton(L["New"], function()
+                GSE.GUINewVariablePrompt(editframe)
+            end)
+            -- The Variables heading and New Variable: nothing to act on.
+            if GSE.isEmpty(key) or key == "NEWVARIABLES" or GSE.Store("variable")[key] == nil then return end
             local varOk, varDecoded = GSE.DecodeMessage(GSE.Store("variable")[key])
-            if not (varOk and varDecoded and varDecoded.MetaData and varDecoded.MetaData.noExport) then
-                rootDescription:CreateButton(L["Export Variable"], function()
+            local isProtected = not varOk or GSE.IsProtectedAtRest(GSE.Store("variable")[key], varDecoded)
+                or (type(varDecoded) == "table" and varDecoded.noExport) and true or false
+            local dupButton = rootDescription:CreateButton(L["Duplicate"], function()
+                UI.ShowInputDialog({
+                    owner      = editframe,
+                    title      = L["Duplicate"],
+                    prompt     = L["Enter NEW Name for the Duplicated Variable:"],
+                    default    = key .. "Copy",
+                    acceptText = L["Create"],
+                    maxLetters = 60,
+                    onAccept   = function(name)
+                        GSE.GUIDuplicateVariable(editframe, key, name)
+                    end,
+                })
+            end)
+            if dupButton and dupButton.SetEnabled then dupButton:SetEnabled(not isProtected) end
+            if not isProtected then
+                rootDescription:CreateButton(L["Export"], function()
                     GSE.GUIExport(nil, key, "VARIABLE")
                 end)
             end
+            addShareButtons(editframe, rootDescription, "variable", key, group, unique)
             rootDescription:CreateButton(L["Delete"], function()
-                GSE.DeleteVariable(key)
-                editframe.ManageTree()
+                -- Asked first, as a sequence's and a macro's Delete are.
+                GSE.UI.ShowConfirmDialog({
+                    owner       = editframe,
+                    title       = L["Delete Variable"],
+                    message     = L["Are you sure you want to Delete"]
+                        .. "\n\n|cFFFFFFFF" .. tostring(key) .. "|r\n\n"
+                        .. L["This will Delete the Variable and all Versions."]
+                        .. "\n\n|cFFFF3030" .. L["This Action Cannot be Undone!"] .. "|r",
+                    width       = 360,
+                    height      = 220,
+                    confirmText = L["Delete"],
+                    cancelText  = L["Cancel"],
+                    onConfirm   = function()
+                        GSE.DeleteVariable(key)
+                        if editframe.loaded then
+                            container:ReleaseChildren()
+                            editframe.loaded = nil
+                        end
+                        editframe.ManageTree()
+                    end,
+                })
+            end)
+        end
+    )
+end
+
+local function storedMacroNode(name)
+    local store = GSE.Store("macro")
+    if type(store) ~= "table" then return nil end
+    if GSE.IsStoredMacroNode(store[name]) then return store[name] end
+    local bucket = store[GSE.CharacterMacroBucketKey()]
+    local node = type(bucket) == "table" and bucket[name] or nil
+    return GSE.IsStoredMacroNode(node) and node or nil
+end
+
+local function onRightClick_Macro(editframe, container, group, unique, slot)
+    slot = tonumber(slot)
+    local mname = slot and GetMacroInfo(slot)
+    MenuUtil.CreateContextMenu(
+        editframe.frame,
+        function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["Macro Editor"])
+            rootDescription:CreateButton(L["New"], function()
+                GSE.GUINewMacroPrompt(editframe)
+            end)
+            if not mname then return end
+            local node = storedMacroNode(mname)
+            -- Sealed, or protected content: not this player's to copy.
+            local isProtected = node ~= nil
+                and (type(node.GSEProtected) == "string" or GSE.IsProtectedContent(node))
+            local dupButton = rootDescription:CreateButton(L["Duplicate"], function()
+                UI.ShowInputDialog({
+                    owner      = editframe,
+                    title      = L["Duplicate"],
+                    prompt     = L["Enter NEW Name for the Duplicated Macro:"],
+                    default    = mname:sub(1, 12) .. "Copy",
+                    acceptText = L["Create"],
+                    maxLetters = 16,
+                    onAccept   = function(name)
+                        GSE.GUIDuplicateMacro(editframe, mname, name)
+                    end,
+                })
+            end)
+            if dupButton and dupButton.SetEnabled then dupButton:SetEnabled(not isProtected) end
+            if not isProtected then
+                rootDescription:CreateButton(L["Export"], function()
+                    GSE.GUIExport(nil, mname, "MACRO")
+                end)
+            end
+            addShareButtons(editframe, rootDescription, "macro", mname, group, unique)
+            rootDescription:CreateButton(L["Delete"], function()
+                GSE.UI.ShowConfirmDialog({
+                    owner       = editframe,
+                    title       = L["Delete Macro"],
+                    message     = L["Are you sure you want to Delete"]
+                        .. "\n\n|cFFFFFFFF" .. tostring(mname) .. "|r\n\n"
+                        .. L["This will Delete the Macro from GSE and from WoW."]
+                        .. "\n\n|cFFFF3030" .. L["This Action Cannot be Undone!"] .. "|r",
+                    width       = 360,
+                    height      = 220,
+                    confirmText = L["Delete"],
+                    cancelText  = L["Cancel"],
+                    onConfirm   = function()
+                        -- WoW will not delete a macro in combat; leave GSE's
+                        -- copy too, so the two do not drift apart.
+                        if InCombatLockdown() then
+                            GSE.Print(L["A macro cannot be deleted in combat."], L["Macros"])
+                            return
+                        end
+                        -- By name: the slot may have moved while the dialog was up.
+                        local current = GetMacroIndexByName(mname)
+                        if current and current > 0 then DeleteMacro(current) end
+                        GSE.DeleteMacro(mname)
+                        -- Slots after it have shifted, and the page on the right
+                        -- may be the macro that just went.
+                        if editframe.loaded then
+                            container:ReleaseChildren()
+                            editframe.loaded = nil
+                        end
+                        if editframe.ManageTree then editframe.ManageTree() end
+                    end,
+                })
             end)
         end
     )
@@ -2088,7 +2232,7 @@ end
 
 --- Ask for a name and make a WoW macro of it, an account macro while there is
 --- room for one, else this character's. It opens on its Configuration page.
-function GSE.GUICreateNewMacro(editor, name)
+function GSE.GUICreateNewMacro(editor, name, icon, body, preferCharacter)
     name = strtrim(name or "")
     if name == "" then return end
     if InCombatLockdown() then
@@ -2096,15 +2240,52 @@ function GSE.GUICreateNewMacro(editor, name)
         return
     end
     local account, character = GetNumMacros()
-    local perCharacter = (account or 0) >= GSE.GetMaxAccountMacros()
-    if perCharacter and (character or 0) >= GSE.GetMaxCharacterMacros() then
+    local accountFull = (account or 0) >= GSE.GetMaxAccountMacros()
+    local characterFull = (character or 0) >= GSE.GetMaxCharacterMacros()
+    if accountFull and characterFull then
         GSE.Print(L["There is no room for another macro."])
         return
     end
-    local slot = CreateMacro(name, "INV_Misc_QuestionMark", "", perCharacter)
+    local perCharacter = accountFull or (preferCharacter and not characterFull) or false
+    local slot = CreateMacro(name, icon or "INV_Misc_QuestionMark", body or "", perCharacter)
     if not slot then return end
     if editor.ManageTree then editor.ManageTree() end
     GSE.GUI.SelectEditorTreePath(editor, table.concat({ "Macro", perCharacter and "P" or "A", tostring(slot), "config" }, "\001"))
+end
+
+function GSE.GUIDuplicateMacro(editor, sourceName, newName)
+    newName = strtrim(newName or "")
+    local slot = GetMacroIndexByName(sourceName or "")
+    if newName == "" or not slot or slot == 0 then return end
+    local existing = GetMacroIndexByName(newName)
+    if existing and existing > 0 then
+        GSE.Print(string.format(L["Macro Name %s is in Use. Please choose a different name."], newName), "ERROR")
+        return
+    end
+    local _, icon, body = GetMacroInfo(slot)
+    GSE.GUICreateNewMacro(editor, newName, icon, body, slot > GSE.GetMaxAccountMacros())
+end
+
+function GSE.GUIDuplicateVariable(editor, sourceName, newName)
+    newName = strtrim(newName or "")
+    local stored = GSE.Store("variable")[sourceName]
+    if newName == "" or stored == nil then return end
+    if GSE.Store("variable")[newName] ~= nil then
+        GSE.Print(string.format(L["Variable Name %s is in Use. Please choose a different name."], newName), "ERROR")
+        return
+    end
+    local ok, decoded = GSE.DecodeMessage(stored)
+    if not ok or type(decoded) ~= "table" or GSE.IsProtectedAtRest(stored, decoded) or decoded.noExport then return end
+    local clone = GSE.UpgradeVariable(GSE.CloneSequence(decoded), sourceName)
+    clone.MetaData.Name = newName
+    clone.MetaData.PlatformID = nil
+    clone.MetaData.OriginKey = nil
+    clone.LastUpdated = GSE.GetTimestamp()
+    GSE.UpdateVariable(clone, newName)
+    for _, v in ipairs(GSE.GUI.editors) do
+        if v.ManageTree then v.ManageTree() end
+    end
+    GSE.GUI.SelectEditorTreePath(editor, "VARIABLES\001" .. newName)
 end
 
 function GSE.GUINewMacroPrompt(editor)
@@ -2621,8 +2802,10 @@ local function ManageTree(editframe)
                 elseif area == "VARIABLES" then
                     -- The variable, whether on it or on one of its pages.
                     onRightClick_VARIABLES(editframe, container, group, unique, unique[2])
+                elseif area == "Macro" then
+                    -- The headings and New Macro offer New alone.
+                    onRightClick_Macro(editframe, container, group, unique, unique[3])
                 end
-                -- area == "Macro": no right-click menu
             elseif mbutton == "LeftButton" and IsShiftKeyDown() then
                 if classid and seqid then
                     GSE.UI.ShowLinkDialog({
@@ -2634,6 +2817,23 @@ local function ManageTree(editframe)
                         buttonText = CLOSE,
                         note       = L["Text selected. Press Ctrl+C to Copy"],
                     })
+                else
+                    local kind, name
+                    if area == "VARIABLES" and unique[2] ~= "NEWVARIABLES" then
+                        kind, name = "variable", unique[2]
+                    elseif area == "Macro" and tonumber(unique[3]) then
+                        kind, name = "macro", (GetMacroInfo(tonumber(unique[3])))
+                    end
+                    if kind and name and GSE.IsShareableElement(kind, name) then
+                        GSE.UI.ShowLinkDialog({
+                            owner      = editframe,
+                            title      = L["Chat Link"],
+                            prompt     = L["Copy this Link and Paste into a Chat Window."],
+                            link       = GSE.ElementChatPattern(kind, name),
+                            buttonText = CLOSE,
+                            note       = L["Text selected. Press Ctrl+C to Copy"],
+                        })
+                    end
                 end
             else
                 -- Reopen in the area last used, on the node last used in it.

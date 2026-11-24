@@ -274,16 +274,16 @@ GSE.OnBuildClickTimingOptions = function(optionsCategory)
     end
 end
 
--- Editor tree context-menu extras (right-click a sequence in the editor tree).
 GSE.OnTreeContextMenuExtras = function(rootDescription, ctx)
     rootDescription:CreateButton(
         string.format(L["Open %s in New Window"], ctx.sequencename),
         function()
             local targetGroup = ctx.group
-            if ctx.unique[1] == "Sequences" and #ctx.unique == 3 then
+            local depth = ctx.unique[1] == "VARIABLES" and 2 or 3
+            if #ctx.unique == depth then
                 targetGroup = ctx.group .. "\001config"
             elseif ctx.unique[#ctx.unique] == "newversion" then
-                targetGroup = table.concat({ctx.unique[1], ctx.unique[2], ctx.unique[3], "config"}, "\001")
+                targetGroup = ctx.group:gsub("newversion$", "config")
             end
             local editor = GSE.CreateEditor()
             editor.ManageTree()
