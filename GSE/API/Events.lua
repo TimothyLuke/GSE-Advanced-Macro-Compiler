@@ -3222,6 +3222,21 @@ end
 GSE.UPDATE_STEALTH = stanceChanged
 GSE.UPDATE_SHAPESHIFT_FORM = stanceChanged
 
+-- A /castsequence line moves on when its spell goes off, and back to the
+-- start on a new target or out of combat, with no new step: its icon follows
+-- (GSE.GetMacroTextIconInfo), as it does a new block (Larry, 2026-11-25).
+-- Its own frame: GSE's UNIT_SPELLCAST_SUCCEEDED handler belongs to GSE_Utils.
+local castSequenceWatcher = CreateFrame("Frame")
+if castSequenceWatcher.RegisterUnitEvent then
+    castSequenceWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "pet")
+else
+    castSequenceWatcher:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+end
+castSequenceWatcher:RegisterEvent("PLAYER_TARGET_CHANGED")
+castSequenceWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+castSequenceWatcher:RegisterEvent("PLAYER_DEAD")
+castSequenceWatcher:SetScript("OnEvent", function() queueCurrentSpellIconRefresh() end)
+
 function GSE.GetDeveloperDebugWarningReasons()
     local reasons = {}
     if GSEOptions then

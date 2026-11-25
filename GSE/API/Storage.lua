@@ -3664,6 +3664,17 @@ local function readConditionGroup(group)
     return fails, modified
 end
 
+-- Where a /castsequence clause is in its list now, as WoW keeps it
+-- (Blizzard's QueryCastSequence, keyed by the text after the conditions), so
+-- its icon moves on as the line does, as a new block's does (Larry,
+-- 2026-11-25). 1 where WoW has nothing for it.
+local function castSequenceIndex(clause)
+    if type(QueryCastSequence) ~= "function" then return 1 end
+    local sequence = (clause:gsub("%b[]", "")):match("^%s*(.-)%s*$")
+    local ok, index = pcall(QueryCastSequence, sequence)
+    return ok and tonumber(index) or 1
+end
+
 -- The clause's candidate, or nil when it names nothing with an icon.
 local function clauseCandidate(cmd, clause)
     local groups = {}
@@ -3681,10 +3692,12 @@ local function clauseCandidate(cmd, clause)
     end
     if not alive then modified = false end
 
-    -- /castsequence reset=3 A, B: A. A clause naming nothing with an icon
-    -- falls back to the spell its known: asks for.
+    -- /castsequence reset=3 A, B: A, then B once A has gone off. A clause
+    -- naming nothing with an icon falls back to the spell its known: asks for.
     local target = GSE.GetMacroClauseTarget(clause)
-    target = GSE.GetMacroClauseTarget(GSE.SplitCastSequence(target)[1] or target)
+    local elements = GSE.SplitCastSequence(target)
+    local index = cmd == "castsequence" and castSequenceIndex(clause) or 1
+    target = GSE.GetMacroClauseTarget(elements[index] or elements[1] or target)
     local preferItem = cmd == "use" or cmd == "usetoy" or cmd == "toy"
     local info = target ~= "" and getMacroIconSpellOrItemInfo(target, preferItem) or nil
     if not (info and info.iconID) then
