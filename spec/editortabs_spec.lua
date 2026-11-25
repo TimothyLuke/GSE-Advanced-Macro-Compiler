@@ -436,7 +436,12 @@ describe("the Editor's tabs", function()
       assert.truthy(import:find("local function LandingPage(host, room)", 1, true))
       assert.truthy(import:find("  host:AddChild(pastePanel)\n", 1, true))
       assert.truthy(import:find("          if not inEditor then importframe:Hide() end\n", 1, true))
-      assert.truthy(import:find("          GSE.GUIShowCollectionImport(actiontable.payload)\n", 1, true), "a collection's review page")
+      -- Larry, 2026-11-24: "this import confirmation should have popped up IN the Import window".
+      assert.truthy(import:find("          processCollection(actiontable.payload, host, room, function() LandingPage(host, room) end)\n", 1, true),
+        "a collection's review page, in the Editor's page")
+      assert.is_nil(import:find("          GSE.GUIShowCollectionImport(actiontable.payload)\n", 1, true), "not the Import window")
+      assert.truthy(import:find("        if done then done() else importframe:Hide() end\n", 1, true), "the paste box back after it")
+      assert.truthy(import:find("  local parent = host or importframe\n  parent:AddChild(toolbarrow)\n", 1, true), "its Import button under it")
       assert.truthy(import:find("      inWindow(processQueue)\n", 1, true), "the platform queue")
       assert.truthy(import:find("function GSE.ShowImport()", 1, true), "the Import window is still there")
     end)

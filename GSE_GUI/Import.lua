@@ -447,12 +447,22 @@ importframe:AddChild(UI:Create("Label"))
 -- Create the scrolling content area used by both import flows. Children added to
 -- the returned ScrollFrame scroll inside the fixed-height container, leaving the
 -- Import button (added to `importframe` directly) anchored at the bottom.
-local function setupScrollContent()
-  importframe:ReleaseChildren()
-  prepareImportFrame()
-  local scrollContainer = createImportPanel((importframe.frame:GetHeight() or 400) - 116)
+-- host/room: the Editor's Import page, as LandingPage takes them; nil for the
+-- Import window.
+local function setupScrollContent(host, room)
+  local scrollContainer
+  if host then
+    host:ReleaseChildren()
+    -- What the page has, less the Import button's row.
+    scrollContainer = createImportPanel(math.max(160, (room or 0) - 52))
+    host:AddChild(scrollContainer)
+  else
+    importframe:ReleaseChildren()
+    prepareImportFrame()
+    scrollContainer = createImportPanel((importframe.frame:GetHeight() or 400) - 116)
+    importframe:AddChild(scrollContainer)
+  end
   scrollContainer:SetLayout("Fill")
-  importframe:AddChild(scrollContainer)
   local scroll = UI:Create("ScrollFrame")
   scroll:SetLayout("List")
   local S = UI.NativeStyle or {}
@@ -463,8 +473,10 @@ local function setupScrollContent()
   return scroll
 end
 
-local function processCollection(payload)
-  local scroll = setupScrollContent()
+-- host/room/done: drawn in the Editor's Import page, done() after the import;
+-- nil for the Import window.
+local function processCollection(payload, host, room, done)
+  local scroll = setupScrollContent(host, room)
   local header = UI:Create("Heading")
   header:SetText(string.format(L["Processing Collection of %s Elements."], payload.ElementCount))
   header:SetFullWidth(true)
@@ -676,7 +688,7 @@ local function processCollection(payload)
           GSE.IncomingQueue = {}
           importframe.fromQueue = false
         end
-        importframe:Hide()
+        if done then done() else importframe:Hide() end
       else
         GSE.GUIShowImportFailure()
       end
@@ -685,7 +697,8 @@ local function processCollection(payload)
   -- The Import button centred under the list.
   if toolbarrow.SetFlowHAlign then toolbarrow:SetFlowHAlign("CENTER") end
   toolbarrow:AddChild(importbutton)
-  importframe:AddChild(toolbarrow)
+  local parent = host or importframe
+  parent:AddChild(toolbarrow)
 end
 
 -- Derive a display heading from what is actually inside a collection payload.
@@ -1167,8 +1180,8 @@ local function LandingPage(host, room)
     prepareImportFrame()
     importframe.fromQueue = false
   end
-  -- From the Editor, the platform queue and a collection's review page open
-  -- in the Import window, as they always have.
+  -- From the Editor, the platform queue opens in the Import window, as it
+  -- always has.
   local function inWindow(fn)
     if inEditor then openImportWindow() end
     fn()
@@ -1267,8 +1280,9 @@ local function LandingPage(host, room)
       local decompresssuccess, actiontable = GSE.DecodeMessage(importstring)
       if decompresssuccess and actiontable.type == "COLLECTION" then
         if inEditor then
-          importsequencebox:SetText("")
-          GSE.GUIShowCollectionImport(actiontable.payload)
+          -- The review page in the Editor's Import page, and the paste box
+          -- back once it is imported.
+          processCollection(actiontable.payload, host, room, function() LandingPage(host, room) end)
         else
           processCollection(actiontable.payload)
         end
@@ -1313,8 +1327,8 @@ function GSE.ShowImport()
 end
 
 --- The Import page in the Editor (its Import tab): the paste box and the
---- Import button, in `container`, with `room` high. The platform queue and a
---- collection's review page still open in the Import window.
+--- Import button, in `container`, with `room` high. A collection's review page
+--- is drawn there too; the platform queue still opens in the Import window.
 function GSE.GUI.DrawImportPage(container, room)
   local outer = UI:Create("SimpleGroup")
   outer:SetFullWidth(true)
