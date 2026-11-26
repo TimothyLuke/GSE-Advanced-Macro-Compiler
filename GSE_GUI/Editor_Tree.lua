@@ -1477,6 +1477,26 @@ local function CorruptPanelFonts()
     return {header = {file, math.floor(size * 1.5), flags}, text = {file, size, flags}}
 end
 
+-- A version node the loaded sequence does not have. New Version shows its node
+-- from GSE.Library before any Save, so the node -- and the last page remembered
+-- for it -- outlives an Editor closed, or moved to another sequence, without
+-- saving. Drawing it indexed a nil version. Put the tree back on what is saved
+-- and open the sequence's Configuration instead. True when it did.
+local function leaveMissingVersion(editframe, classid, id, path, key)
+    local versions = editframe.Sequence and editframe.Sequence.Versions
+    if versions and versions[tonumber(key)] then return false end
+    classid = tonumber(classid)
+    if classid and GSE.Library[classid] then
+        GSE.Library[classid][id] = nil
+        GSE.EnsureSequenceLoaded(classid, id)
+    end
+    if editframe.ManageTree then editframe.ManageTree() end
+    local configPath = table.concat(path, "\001") .. "\001config"
+    C_Timer.After(0, function()
+        GSE.GUI.SelectEditorTreePath(editframe, configPath)
+    end)
+    return true
+end
 
 local function onClick_Sequences(editframe, container, group, unique, path, key, classid, id)
     if #unique < 3 then return end
@@ -1835,6 +1855,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         if editframe.SequenceID ~= id then
             GSE.GUILoadEditor(editframe, path[#path])
         end
+        if leaveMissingVersion(editframe, classid, id, path, key) then return end
         if container.SetListPadding then container:SetListPadding(nil, nil, nil, nil) end
         ShowSequenceFooter(editframe)
         if editframe.RefreshMacroLimitSaveState then editframe:RefreshMacroLimitSaveState() end

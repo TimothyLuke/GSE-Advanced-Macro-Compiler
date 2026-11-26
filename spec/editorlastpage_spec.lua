@@ -108,4 +108,47 @@ describe("where the editor comes back after a reload", function()
     assert.are.equal("ShowKeyBindings", reopen({ open = true, openMode = "keybindings" }, {}))
     assert.is_nil(reopen({ open = false, openMode = "variables" }, { VARIABLES = true }), "closed stays closed")
   end)
+
+  -- New Version shows its node before any Save. Close the Editor without saving
+  -- and the node, and the last page remembered for it, are still there, but the
+  -- sequence that loads has no such version (Lua error at Editor.lua
+  -- GUIDrawMacroEditor, seen on release 3.3.40 and by Larry 2026-11-26).
+  local function missingVersion(saved, key)
+    local body = assert(tree:match("\nlocal function leaveMissingVersion%(editframe, classid, id, path, key%)\n(.-)\nend\n"),
+      "leaveMissingVersion not found")
+    local did = { rebuilt = 0 }
+    local GSE = { GUI = {}, Library = { [7] = { abc = { Versions = { {}, {}, {} } } } } }
+    function GSE.EnsureSequenceLoaded(classid, id)
+      if not GSE.Library[classid][id] then GSE.Library[classid][id] = { Versions = { {}, {} } } end
+    end
+    function GSE.GUI.SelectEditorTreePath(_, path) did.selected = path end
+    local timer = { After = function(_, fn) fn() end }
+    local frame = { Sequence = saved, ManageTree = function() did.rebuilt = did.rebuilt + 1 end }
+    local fn = assert(compile("local GSE, C_Timer = ...\nreturn function(editframe, classid, id, path, key)\n"
+      .. body .. "\nend"))(GSE, timer)
+    did.left = fn(frame, "7", "abc", { "Sequences", "7", "7,1,abc" }, key)
+    did.library = GSE.Library[7].abc
+    return did
+  end
+
+  it("draws a version the loaded sequence has", function()
+    local did = missingVersion({ Versions = { {}, {} } }, "2")
+    assert.is_false(did.left)
+    assert.is_nil(did.selected)
+    assert.are.equal(0, did.rebuilt)
+    assert.are.equal(3, #did.library.Versions, "the tree's copy is left alone")
+  end)
+
+  it("opens Configuration for a version that was never saved, and drops its node", function()
+    local did = missingVersion({ Versions = { {}, {} } }, "3")
+    assert.is_true(did.left)
+    assert.are.equal("Sequences\0017\0017,1,abc\001config", did.selected)
+    assert.are.equal(1, did.rebuilt)
+    assert.are.equal(2, #did.library.Versions, "the tree is back on what is saved")
+  end)
+
+  it("opens Configuration when no sequence loaded at all", function()
+    assert.is_true(missingVersion(nil, "1").left)
+    assert.is_true(missingVersion({}, "1").left)
+  end)
 end)
