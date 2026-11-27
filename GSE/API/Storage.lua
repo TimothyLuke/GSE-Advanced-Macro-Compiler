@@ -2449,10 +2449,16 @@ local function compileVariable(name, variable)
     if type(chunk) == "function" then
         GSE.V[name] = chunk()
     end
-    -- The extra parentheses keep one value: a variable may return nothing at
-    -- all (one that only acts on events), and type() of nothing is an error.
-    if type(GSE.V[name]) == "function" and type((GSE.V[name]())) == "boolean" then
-        GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
+    -- A variable may return nothing at all (one that only acts on events);
+    -- pcall's result is then nil, which type() takes. A variable that errors
+    -- here (one reading AuraUtil while Edit Mode has swapped AuraUtil's data
+    -- source for one without GetAuraDataBySpellName) must not stop every
+    -- sequence reloading: every other call of a variable is guarded too.
+    if type(GSE.V[name]) == "function" then
+        local ok, result = pcall(GSE.V[name])
+        if ok and type(result) == "boolean" then
+            GSE.BooleanVariables["GSE.V['" .. name .. "']()"] = "GSE.V['" .. name .. "']()"
+        end
     end
     if active.eventEnabled and not GSE.isEmpty(active.eventNames) then
         GSE.RegisterVariableEvents(name, active.eventNames)
