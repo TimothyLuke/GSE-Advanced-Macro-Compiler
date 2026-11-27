@@ -2780,6 +2780,7 @@ function GSE.CreateEditor()
             if GSE.After and GSE.GUI.ClearUndoIfNoVisibleEditors then
                 C_Timer.After(0, GSE.GUI.ClearUndoIfNoVisibleEditors)
             end
+            if GSE.GUI.DropUnsavedVersions then GSE.GUI.DropUnsavedVersions(self) end
             self.Sequence = nil
             self.SequenceName = nil
             self.ElementKind, self.ElementName = nil, nil
@@ -8690,6 +8691,7 @@ function GSE.GUICreateNewSequence(editor, name, recordedstring)
     editor.ElementKind, editor.ElementName = nil, nil
     editor.newname          = nil
     editor.Sequence         = sequence
+    editor.SavedVersions    = #sequence.Versions
     editor.ClassID          = classid
     editor.OrigClassID      = classid
     -- A recorded sequence arrives with actions and no icons, and the tree lands
@@ -8797,6 +8799,9 @@ function GSE.GUILoadEditor(editor, key, recordedstring)
     editor.ElementKind, editor.ElementName = nil, nil
     editor.newname = nil
     editor.Sequence = sequence
+    -- How many versions the SAVED sequence has; a version past it is unsaved
+    -- (Editor_Tree.lua rememberSequencePage, GSE.GUI.DropUnsavedVersions).
+    editor.SavedVersions = type(sequence.Versions) == "table" and #sequence.Versions or 0
     editor.ClassID = classid
     -- Where this sequence currently LIVES. The Specialization/Class dropdown
     -- reassigns editor.ClassID in place, so without this the save cannot tell

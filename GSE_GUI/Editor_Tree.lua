@@ -588,6 +588,31 @@ local function SaveLastSequenceEditorPath(group, unique)
     end
 end
 
+-- A version that is not saved yet is not somewhere to come back to (Tim on
+-- #2263): the Editor reopens on the last saved page it was on, and the page is
+-- remembered once the version is saved (the Save button calls this again).
+-- editframe.SavedVersions is how many versions the saved sequence has.
+local function rememberSequencePage(editframe, group, unique, id)
+    local version = tonumber(unique[#unique])
+    if version and editframe.SequenceID == id and version > (editframe.SavedVersions or version) then
+        editframe.unsavedPage = { group, unique }
+        return
+    end
+    editframe.unsavedPage = nil
+    SaveLastSequenceEditorPath(group, unique)
+end
+
+--- The Editor is closing: versions added and never saved leave the tree with
+--- it. New Version shows them from GSE.Library, which outlives the Editor.
+function GSE.GUI.DropUnsavedVersions(editframe)
+    local versions = editframe.Sequence and editframe.Sequence.Versions
+    local classid, id = tonumber(editframe.OrigClassID or editframe.ClassID), editframe.SequenceID
+    if not (versions and editframe.SavedVersions and #versions > editframe.SavedVersions) then return end
+    if not (classid and id and GSE.Library[classid]) then return end
+    GSE.Library[classid][id] = nil
+    GSE.EnsureSequenceLoaded(classid, id)
+end
+
 function GSE.GUI.GetLastSequenceEditorPath()
     local opts = GetSequenceEditorOptions()
     local path = opts and opts.lastSequencePath
@@ -1198,6 +1223,10 @@ local function InitEditorFooterButtons(editframe)
                     editframe.Sequence
                 )
                 if queued then
+                    -- Saved: a new version is somewhere to come back to now.
+                    editframe.SavedVersions = #editframe.Sequence.Versions
+                    local page = editframe.unsavedPage
+                    if page then rememberSequencePage(editframe, page[1], page[2], editframe.SequenceID) end
                     if GSE.ProcessOOCQueue and not (InCombatLockdown and InCombatLockdown()) then
                         C_Timer.After(0, function()
                             if not (InCombatLockdown and InCombatLockdown()) then
@@ -1690,7 +1719,7 @@ local function onClick_Sequences(editframe, container, group, unique, path, key,
         editframe:SetTitle("GSE: " .. L["Corrupt Sequence"])
         return
     end
-    SaveLastSequenceEditorPath(group, unique)
+    rememberSequencePage(editframe, group, unique, id)
     ReleaseEditorFooterButtons(editframe)
 
     -- The native widget layer has no widget pool, so stale child frames must be

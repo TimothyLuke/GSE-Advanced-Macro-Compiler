@@ -151,4 +151,75 @@ describe("where the editor comes back after a reload", function()
     assert.is_true(missingVersion(nil, "1").left)
     assert.is_true(missingVersion({}, "1").left)
   end)
+
+  -- Tim on #2263: a version that is not saved yet is not somewhere to come back
+  -- to. The Editor reopens on the last saved page; the new version is remembered
+  -- once it is saved.
+  local function remembering()
+    local body = assert(tree:match("\nlocal function rememberSequencePage%(editframe, group, unique, id%)\n(.-)\nend\n"),
+      "rememberSequencePage not found")
+    local saved = {}
+    local remember = assert(compile("local SaveLastSequenceEditorPath = ...\n"
+      .. "return function(editframe, group, unique, id)\n" .. body .. "\nend"))(function(group)
+        saved[#saved + 1] = group
+      end)
+    return remember, saved
+  end
+  local function page(key) return "Sequences\0017\0017,1,abc\001" .. key, { "Sequences", "7", "7,1,abc", key } end
+
+  it("remembers a saved version and the Configuration page", function()
+    local remember, saved = remembering()
+    local frame = { SequenceID = "abc", SavedVersions = 2 }
+    local version, versionNode = page("2")
+    local config, configNode = page("config")
+    remember(frame, version, versionNode, "abc")
+    remember(frame, config, configNode, "abc")
+    assert.are.same({ version, config }, saved)
+    assert.is_nil(frame.unsavedPage)
+  end)
+
+  it("does not remember a version until it is saved", function()
+    local remember, saved = remembering()
+    local frame = { SequenceID = "abc", SavedVersions = 2 }
+    local group, unique = page("3")
+    remember(frame, group, unique, "abc")
+    assert.are.same({}, saved, "the last saved page stays the one to come back to")
+    -- The Save button: the sequence has three versions now.
+    frame.SavedVersions = 3
+    remember(frame, frame.unsavedPage[1], frame.unsavedPage[2], frame.SequenceID)
+    assert.are.same({ group }, saved)
+    assert.is_nil(frame.unsavedPage)
+  end)
+
+  it("remembers another sequence's version, and one of a sequence that never said how many it has", function()
+    local remember, saved = remembering()
+    local group, unique = page("3")
+    remember({ SequenceID = "other", SavedVersions = 1 }, group, unique, "abc")
+    remember({ SequenceID = "abc" }, group, unique, "abc")
+    assert.are.same({ group, group }, saved)
+  end)
+
+  -- The Editor closing: the version that was never saved leaves the tree.
+  local function closing(frame)
+    local body = assert(tree:match("\nfunction GSE%.GUI%.DropUnsavedVersions%(editframe%)\n(.-)\nend\n"),
+      "DropUnsavedVersions not found")
+    local GSE = { Library = { [7] = { abc = { Versions = { {}, {}, {} } } } } }
+    function GSE.EnsureSequenceLoaded(classid, id)
+      if not GSE.Library[classid][id] then GSE.Library[classid][id] = { Versions = { {}, {} } } end
+    end
+    assert(compile("local GSE = ...\nreturn function(editframe)\n" .. body .. "\nend"))(GSE)(frame)
+    return #GSE.Library[7].abc.Versions
+  end
+
+  it("drops an unsaved version from the tree when the Editor closes", function()
+    assert.are.equal(2, closing({ SequenceID = "abc", ClassID = 7, SavedVersions = 2,
+      Sequence = { Versions = { {}, {}, {} } } }))
+  end)
+
+  it("leaves the tree alone when every version is saved, or nothing is loaded", function()
+    assert.are.equal(3, closing({ SequenceID = "abc", ClassID = 7, SavedVersions = 3,
+      Sequence = { Versions = { {}, {}, {} } } }))
+    assert.are.equal(3, closing({ SequenceID = "abc", ClassID = 7, Sequence = { Versions = { {}, {}, {} } } }))
+    assert.are.equal(3, closing({}))
+  end)
 end)
