@@ -6,7 +6,7 @@ ns.deferred = ns.deferred or {}
 --
 -- These used to live in GSE/API/InitialOptions.lua (core GSE), but the macro
 -- engine never calls any of them -- every consumer is a front-end addon
--- (GSE_GUI, GSE_Options, and GSE_Utils/Tracker). They are gathered here in
+-- (GSE_GUI and GSE_Options). They are gathered here in
 -- GSE_Utils because that is the lowest shared front-end dependency:
 -- GSE_Options -> GSE_Utils and GSE_GUI -> GSE + GSE_Utils, so every caller can
 -- reach them, whereas GSE_GUI is LoadOnDemand and may never load.
@@ -16,8 +16,8 @@ ns.deferred = ns.deferred or {}
 --      built-in Modern dark skin, or an installed UI addon's skin: ElvUI /
 --      EllesmereUI). See GSE.GetEffectiveSkinMode below for the resolution.
 --   2. UI scaling + frame positioning -- the per-window / menu scale sliders
---      and the absolute-pixel reposition math the editor, debugger and
---      tracker windows use.
+--      and the absolute-pixel reposition math the editor and debugger
+--      windows use.
 -- =========================================================================
 
 local function setup()

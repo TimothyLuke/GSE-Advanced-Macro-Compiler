@@ -1409,11 +1409,11 @@ end
 local function onClick_KEYBINDINGS(editframe, container, group, unique)
     if not unique then return end
 
-    -- Where GSE binds no keys itself (buildKeybindMenu) there is no chooser
-    -- and there are no keybind pages. The Keybindings section shows the
-    -- keybind guide from GSE's help while that is turned on; the Bindings
-    -- node, and anything else, land on the current spec's Button Bindings.
-    if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
+    -- GSE binds no keys itself, so there are no keybind pages. The Keybindings
+    -- section shows the keybind guide from GSE's help while that is turned on;
+    -- the Bindings node, and anything else, land on the current spec's Button
+    -- Bindings.
+    if #unique == 1 or unique[2] == "KB" then
         if unique[2] == "KB" and GSE.HelpEnabled() then
             ShowSectionFooter(editframe)
             container:ReleaseChildren()
@@ -1439,23 +1439,6 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return
     end
 
-    -- The Keybindings node itself fell through the guard below and left the
-    -- pane blank.  Land on the chooser instead: two tiles that select the
-    -- Button Bindings or Keybindings node for you.
-    if #unique == 1 then
-        ShowSectionFooter(editframe)
-        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeScrollableRightPane(container)
-        -- The chooser covers both, so it is titled for both.
-        local sectionName = L["Bindings"] or "Bindings"
-        addSectionDivider(rc, sectionName, Statics.Icons.Keybindings)
-        editframe.showKeybindChooser(rc)
-        editframe.loaded = true
-        editframe:SetTitle("GSE: " .. sectionName)
-        return
-    end
-
-    if #unique < 2 then return end
     ShowSectionFooter(editframe)
 
     -- The tree stops at spec, and at the spec's talent loadouts.  Paths are
@@ -1477,13 +1460,7 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         return rc
     end
 
-    if kbtype == "KB" and specialization then
-        if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer({title = L["Keybindings"] or "Keybindings", icon = Statics.Icons.Keybindings})
-        editframe.showKeybind(nil, nil, specialization, loadout, "KB", rc)
-        editframe.loaded = true
-        editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
-    elseif kbtype == "AO" and specialization then
+    if kbtype == "AO" and specialization then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
         local rc = makeRightContainer({title = L["Button Bindings"] or "Button Bindings", icon = Statics.Icons.Button})
         editframe.showKeybind(nil, nil, specialization, loadout, "AO", rc)

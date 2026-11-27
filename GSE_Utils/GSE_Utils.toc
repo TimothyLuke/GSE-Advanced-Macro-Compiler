@@ -1,4 +1,4 @@
-﻿## Interface: 11509, 16001, 20506, 50504, 120105, 120107
+﻿## Interface: 11509, 16001, 20506, 50504, 120107
 ## Title: |cFFFFFFFFGS|r|cFF00FFFFE|r |cFF808080Utility Functions|r
 ## Notes: Optional Utilities for GSE
 ## Author: TimothyLuke
@@ -34,5 +34,4 @@ Events.lua
 StaticPopup.lua
 Utils.lua
 Appearance.lua
-Tracker.lua
 MacroSync.lua

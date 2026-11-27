@@ -2077,7 +2077,7 @@ function GSE.PrintGnomeHelp()
     GSE.Print(
         GSEOptions.CommandColour ..
             L[
-                "GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
+                "GSE registers additional subcommands of /gse: /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."
             ],
         GNOME
     )
@@ -2159,18 +2159,6 @@ function GSE:GSSlash(input)
     elseif command == "forceclean" then
         GSE.CleanMacroLibrary(true)
         if not InCombatLockdown() then
-            if not GSE.isEmpty(GSE_C["KeyBindings"]) then
-                for _, specData in pairs(GSE_C["KeyBindings"]) do
-                    for key, _ in pairs(specData) do
-                        if key ~= "LoadOuts" then SetBinding(key) end
-                    end
-                    if not GSE.isEmpty(specData["LoadOuts"]) then
-                        for _, loadoutData in pairs(specData["LoadOuts"]) do
-                            for key, _ in pairs(loadoutData) do SetBinding(key) end
-                        end
-                    end
-                end
-            end
             GSE_C["KeyBindings"] = {}
             GSE_C["ActionBarBinds"] = {}
             -- This character's binds only: the shared profiles belong to every
@@ -2271,21 +2259,6 @@ function GSE:GSSlash(input)
         if GSE.UnsavedOptions["GUI"] then
             GSE.ShowImport()
         end
-    elseif string.lower(command) == "bind" then
-        -- /gse bind spec sequence key
-        local spec = tostring(params[2])
-        local sequence = tostring(params[3])
-        local physicalkey = tostring(params[4])
-        if not GSE.KeybindingsEnabled() then
-            GSE.Print(L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."])
-        elseif spec and sequence and physicalkey then
-            -- Into the binds in force for that spec: the shared profile's, or
-            -- this character's own (Profiles.lua).
-            GSE.SpecKeyBinds(spec, true)[physicalkey] = sequence
-            GSE.ReloadKeyBindings()
-        else
-           GSE.Print("Invalid Bind - /gse bind spec sequence key")
-        end
 
     -- ----------------------------------------------------------------
     -- Icon-resolver commands. Reach back into Editor.lua-owned routines
@@ -2298,42 +2271,6 @@ function GSE:GSSlash(input)
         if GSE.ScanSequenceActionIcons then GSE.ScanSequenceActionIcons() end
     elseif command == "saveallsequences" then
         if GSE.SaveAllSequenceActionIcons then GSE.SaveAllSequenceActionIcons() end
-
-    -- ----------------------------------------------------------------
-    -- Tracker layout slot save / apply. Backed by routines defined in
-    -- GSE_Utils/Tracker.lua. Layout slots X and Y are independent.
-    -- ----------------------------------------------------------------
-    elseif command == "savelayoutx" then
-        if GSE.SequenceIconSaveLayout and GSE.SequenceIconSaveLayout("X") then
-            GSE.Print("Tracker Layout X saved with the current positions and configuration.")
-        end
-    elseif command == "savelayouty" then
-        if GSE.SequenceIconSaveLayout and GSE.SequenceIconSaveLayout("Y") then
-            GSE.Print("Tracker Layout Y saved with the current positions and configuration.")
-        end
-    elseif command == "applylayoutx" then
-        if GSE.SequenceIconApplyLayout and GSE.SequenceIconApplyLayout("X") then
-            GSE.Print("Tracker Layout X applied.")
-        else
-            GSE.Print("Tracker Layout X is not saved. Save it first with /gse savelayoutx.")
-        end
-    elseif command == "applylayouty" then
-        if GSE.SequenceIconApplyLayout and GSE.SequenceIconApplyLayout("Y") then
-            GSE.Print("Tracker Layout Y applied.")
-        else
-            GSE.Print("Tracker Layout Y is not saved. Save it first with /gse savelayouty.")
-        end
-
-    -- ----------------------------------------------------------------
-    -- Tracker defaults. Chat-side equivalent of the Options panel's
-    -- "Restore Defaults" button. Safe to call any time -- does not
-    -- touch saved layout slots X or Y.
-    -- ----------------------------------------------------------------
-    elseif command == "resettracker" then
-        if GSE.ResetTrackerToDefaultLayout then
-            GSE.ResetTrackerToDefaultLayout()
-            GSE.Print("Tracker reset to the default layout.")
-        end
 
     -- ----------------------------------------------------------------
     -- Widget pool kill switch, for reproducing and bisecting recycled-

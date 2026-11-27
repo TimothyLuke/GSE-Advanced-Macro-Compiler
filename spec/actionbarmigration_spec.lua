@@ -151,7 +151,7 @@ describe("GSE Action Bar keybind migration", function()
   end)
 end)
 
-describe("GSE keybinds", function()
+describe("the GSE Action Bar's switch", function()
   setup(function()
     require("../spec/mockGSE")
     require("../GSE/API/Statics")
@@ -169,51 +169,28 @@ describe("GSE keybinds", function()
     }
   end)
 
-  it("are GSE's own where WoW honours them and the bar is off", function()
-    GSE.DirectKeybindsRetired = false
-    _G.GSEOptions = {}
-    assert.is_true(GSE.KeybindingsEnabled())
-  end)
-
-  it("are off where WoW retired them (Forever, Retail 12.1.7)", function()
-    GSE.DirectKeybindsRetired = true
-    assert.is_false(GSE.KeybindingsEnabled())
-  end)
-
-  it("are off with the GSE Action Bar on, which carries the keys", function()
-    GSE.DirectKeybindsRetired = false
-    _G.GSEOptions = { ActionBarEnabled = true }
-    loaded = true
-    assert.is_false(GSE.KeybindingsEnabled())
-  end)
-
-  it("are off as soon as the bar is turned on, before it has loaded", function()
-    GSE.DirectKeybindsRetired = false
+  it("is on with the setting, before the bar has loaded as after", function()
     _G.GSEOptions = { ActionBarEnabled = true }
     loaded = false
-    assert.is_false(GSE.KeybindingsEnabled())
-  end)
-
-  it("come back with the bar turned off, though WoW still has it loaded", function()
-    GSE.DirectKeybindsRetired = false
-    _G.GSEOptions = { ActionBarEnabled = false }
+    assert.is_true(GSE.ActionBarEnabled())
+    assert.is_false(GSE.ActionBarActive())
     loaded = true
-    assert.is_true(GSE.KeybindingsEnabled())
+    assert.is_true(GSE.ActionBarActive())
+    _G.GSEOptions = { ActionBarEnabled = false }
+    assert.is_false(GSE.ActionBarEnabled(), "turned off, though WoW still has it loaded")
   end)
 
-  it("are GSE's own where the module is missing or turned off in WoW's AddOns list, whatever GSE's setting", function()
-    GSE.DirectKeybindsRetired = false
+  it("is off where the module is missing or turned off in WoW's AddOns list, whatever GSE's setting", function()
     _G.GSEOptions = { ActionBarEnabled = true }
     installed = false
     assert.is_false(GSE.ActionBarInstalled())
     assert.is_false(GSE.ActionBarEnabled())
-    assert.is_true(GSE.KeybindingsEnabled())
     installed, enableState = true, 0
     assert.is_false(GSE.ActionBarInstalled())
-    assert.is_true(GSE.KeybindingsEnabled())
+    assert.is_false(GSE.ActionBarEnabled())
     enableState = 2
     assert.is_true(GSE.ActionBarInstalled())
-    assert.is_false(GSE.KeybindingsEnabled())
+    assert.is_true(GSE.ActionBarEnabled())
   end)
 end)
 

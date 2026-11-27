@@ -905,69 +905,6 @@ Statics.VariableEventList = {
 }
 
 -- =========================================================================
--- Tracker configuration constants
---
--- Centralised tunables that govern the Sequence Icon Frame / Tracker
--- subsystem behaviour. Previously these lived as file-locals at the top
--- of GSE_Utils/Tracker.lua, where (a) they were invisible to readers of
--- the rest of the project and (b) they pushed Tracker.lua's chunk-level
--- local-variable count uncomfortably close to Lua 5.1's hard 200-per-
--- function ceiling. Moving them onto the Statics namespace solves both:
--- one documented home, and 6 freed local slots in Tracker.lua's main
--- chunk for future feature work.
---
--- Each value's purpose, with rationale where the number isn't obvious:
---
---   DefaultIconCount = 10
---       How many sequence-icon slots the Tracker frame shows by default
---       in its horizontal/vertical strip. Caps at 10 because the
---       Tracker options panel slider also tops out at 10.
---
---   KeyHistoryLimit = 1
---       How many recent activation keys to retain for diagnostic
---       display. Set to 1 because GSE only shows the most recent
---       key in the "Activation Key:" Tracker text line.
---
---   MirrorIconGap = 8
---       Horizontal pixel gap between the Sequence Icon Frame and its
---       Successful Cast mirror panel when both are shown linked
---       (current sequence icon + the mirrored "you just cast" icon).
---
---   SuccessCastWindow = 1.5
---       Window in seconds after a GSE activity event (sequence step
---       advance) during which a successful spell cast can be
---       attributed to the same sequence. Past this window the
---       successful-cast indicator does not light up even if a cast
---       lands -- protects against unrelated cast events crediting GSE.
---
---   DefaultGCDGraceWindow = 1.5
---       Seconds added to the calculated GCD when deciding whether the
---       sequence step's spell is "still on cooldown" for icon display
---       purposes. Matches SuccessCastWindow by design -- both are
---       grace periods of the same order.
---
---   ActiveSpamKeyHoldSeconds = 0.45
---       How long the active spam-key indicator (the "yellow flash"
---       that shows your binding key while you are mashing it) stays
---       visible after the most recent press. Below this, brief taps
---       wouldn't register; above, the indicator lingers awkwardly.
--- =========================================================================
-Statics.TrackerConfig = {
-    DefaultIconCount         = 10,
-    KeyHistoryLimit          = 1,
-    MirrorIconGap            = 8,
-    SuccessCastWindow        = 1.5,
-    DefaultGCDGraceWindow    = 1.5,
-    ActiveSpamKeyHoldSeconds = 0.45,
-    -- Single source of truth for the tracker's "show the sequence name"
-    -- default. Previously this literal `true` was duplicated in five
-    -- places (Tracker.lua's X/Y layout presets + EnsureSequenceIconFrameOptions,
-    -- and Options.lua's EnsureSequenceIconFrameOptions + ResetTrackerToDefaultLayout).
-    -- All five now read this constant so the default can never drift.
-    DefaultShowSequenceName  = true,
-}
-
--- =========================================================================
 -- Centralised "is this icon a placeholder?" predicate.
 --
 -- Returns true if `icon` is one of GSE's fallback / placeholder icons --
@@ -977,14 +914,13 @@ Statics.TrackerConfig = {
 -- a real spell icon, a real macro icon, a user-picked custom icon --
 -- returns false.
 --
--- Centralised here so that the four call sites (actionIconIsFallback in
+-- Centralised here so that the call sites (actionIconIsFallback in
 -- Storage.lua's GetCurrentButtonIconInfo, isGSEFallbackTexture in
--- Events.lua, IsFallbackIcon in Tracker.lua, isManagedMacroFallbackIcon
--- in Storage.lua) all share one definition. Previously these four were
--- maintained independently and drifted -- the Events.lua copy notably
--- was missing the Statics.QuestionMark string check that the other
--- three had. Routing all four through this single helper closes that
--- gap and means future additions (e.g. macro.png, new logo files) only
+-- Events.lua, isManagedMacroFallbackIcon in Storage.lua) all share one
+-- definition. Previously these were maintained independently and drifted
+-- -- the Events.lua copy notably was missing the Statics.QuestionMark
+-- string check that the others had. Routing them through this single
+-- helper closes that gap and means future additions (e.g. macro.png, new logo files) only
 -- need to be considered in one place.
 --
 -- Note: GSE.isEmpty is defined in Init.lua, which loads strictly before

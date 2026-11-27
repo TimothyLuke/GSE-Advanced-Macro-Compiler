@@ -2400,14 +2400,6 @@ local function LoadOverrides(force)
     end
 end
 
--- Every key LoadKeyBindings bound on its last run. The rebuild is otherwise
--- add-only: it re-binds what is in GSE_C now and never releases what it bound
--- before, so a key that was deleted, rebound, or belonged to the loadout you
--- just switched away from keeps firing its old sequence for the rest of the
--- session. Session scope only -- GSE keybinds are rebuilt from GSE_C on every
--- login, so nothing needs to survive one.
-local boundKeys = {}
-
 -- Which spec + saved talent loadout the last rebuild bound for, and whether a
 -- re-check is already scheduled. Blizzard updates BOTH GetSpecialization and
 -- GetLastSelectedSavedConfigID only AFTER the events GSE rebuilds on, so a
@@ -2428,17 +2420,10 @@ local function currentBindingContext()
     return GetSpec() .. "\001" .. (GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey() or "")
 end
 
-local keybindingframe
-if GSE.GameMode == 5 then
-    keybindingframe = CreateFrame("Frame", "GSEKeyBinds", UIParent)
-    keybindingframe:Hide()
-end
-
 -- Older builds stored mouse buttons 4/5 (and the middle button) using the
 -- frame-script names ("Button4"/"Button5"/"MiddleButton") rather than valid WoW
--- binding names ("BUTTON4"/"BUTTON5"/"BUTTON3"), so SetBindingClick silently
--- failed and the bind did nothing in game. Normalise any stored key to the
--- binding name so legacy saves keep working without needing to be re-bound.
+-- binding names ("BUTTON4"/"BUTTON5"/"BUTTON3"). Normalise any stored key to
+-- the binding name so legacy saves move onto the GSE Action Bar intact.
 local function normalizeBindKey(key)
     if type(key) ~= "string" then
         return key
@@ -2462,65 +2447,11 @@ function LoadKeyBindings(payload)
     -- What this rebuild is about to bind for. See scheduleBindingRecheck.
     lastBindingContext = currentBindingContext()
 
-    -- Release everything the previous rebuild bound, then let the loops below
-    -- re-bind exactly what still exists. Without this the rebuild only ever
-    -- adds: deleting a keybind, rebinding it to another key, or switching to a
-    -- talent loadout that does not define it all leave the old key bound and
-    -- still firing the old sequence. On MoP the same keys also sit in the
-    -- override layer, which has no per-key remove call, so drop the whole
-    -- layer for our owner frame as well.
-    if not InCombatLockdown() then
-        for k in pairs(boundKeys) do
-            SetBinding(k)
-        end
-        wipe(boundKeys)
-        if GSE.GameMode == 5 and keybindingframe then
-            ClearOverrideBindings(keybindingframe)
-        end
-    end
-    -- Keybinding switched off (every client, Init.lua; the GSE Action Bar
-    -- carries the keys): released above, bind nothing.
-    if not GSE.KeybindingsEnabled() then return end
-
-    -- A keybind holds the sequence's id; it clicks that sequence's button. The
-    -- spec's binds are the shared profile's, or this character's own.
-    for k, v in pairs(GSE.SpecKeyBinds(GetSpec(), false) or {}) do
-        local button = k ~= "LoadOuts" and GSE.StoredSequenceId(v)
-        if button and not InCombatLockdown() then
-            local target = GSE.GetKeybindClickTarget(button)
-            k = normalizeBindKey(k)
-            SetBindingClick(k, target, "LeftButton")
-            boundKeys[k] = true
-            if GSE.GameMode == 5 then
-                SetOverrideBindingClick(keybindingframe, false, k, target)
-            end
-        -- print("Bound", k, v)
-        end
-    end
-
+    -- GSE binds no keys itself: a sequence reaches a key through an action
+    -- button (Button Bindings, or the GSE Action Bar's declared bindings). The
+    -- keys saved in GSE_C.KeyBindings are kept only to be moved onto the GSE
+    -- Action Bar (GSE_Actionbar/Migration.lua).
     if payload and not InCombatLockdown() then
-        do
-            local selected = GSE.GetBindingLoadoutKey and GSE.GetBindingLoadoutKey()
-            local loadouts = GSE.SpecLoadoutKeyBinds(GetSpec(), false)
-            if selected and loadouts and loadouts[selected] then
-                --@debug@
-                GSE.PrintDebugMessage(
-                    "changing from " .. tostring(payload) .. " " .. tostring(GSE.GetSelectedLoadoutConfigID()),
-                    "EVENTS"
-                )
-                --@end-debug@
-                for k, v in pairs(loadouts[selected]) do
-                    k = normalizeBindKey(k)
-                    SetBinding(k)
-                    local target = GSE.GetKeybindClickTarget(GSE.StoredSequenceId(v) or v)
-                    SetBindingClick(k, target, "LeftButton")
-                    boundKeys[k] = true
-                    if GSE.GameMode == 5 then
-                        SetOverrideBindingClick(keybindingframe, false, k, target)
-                    end
-                end
-            end
-        end
         -- The spec and loadout read above may still name the ones being left,
         -- and can stay stale for seconds. See scheduleBindingRecheck.
         scheduleBindingRecheck(BINDING_RECHECK_ATTEMPTS)
@@ -2943,33 +2874,6 @@ function GSE.ReloadKeyBindings()
     LoadKeyBindings(true)
 end
 
---- Release a physical key GSE had bound to a sequence. ONE path for every
---- delete/rebind in the editor (tree right-click, panel Delete, panel Save):
----  * normalises legacy mouse-button names, so the key that is actually bound
----    is the one cleared (#1954 normalised on load only);
----  * rebuilds the keybind tables afterwards, which releases every key the last
----    rebuild bound before re-adding the ones that survive;
----  * in combat, where SetBinding is protected, defers itself to the OOC queue
----    instead of silently doing nothing (which is exactly how a "deleted" key
----    kept firing its old sequence). Callers remove the GSE_C entry FIRST so
----    the rebuild cannot re-add it.
---- Deliberately does NOT call SaveBindings: GSE_C is the source of truth and
---- the rebuild on login is the persistence. Writing the live binding table to
---- bindings-cache.wtf would bake whatever GSE has bound right now into the
---- character's (or, on an account-wide set, every character's) saved bindings.
-function GSE.ClearKeyBinding(key)
-    if GSE.isEmpty(key) then return false end
-    key = normalizeBindKey(key)
-    if InCombatLockdown() then
-        GSE.EnqueueOOC({ action = "clearkeybind", key = key })
-        GSE.Print(string.format(L["Keybind %s will be cleared when combat ends."], key))
-        return false
-    end
-    SetBinding(key)
-    LoadKeyBindings(true)
-    return true
-end
-
 -- GSE's own keybinds are retired on every client (Init.lua; Forever never
 -- had any to move), so a character with some gets the GSE Action Bar
 -- turned on, once per account,
@@ -2978,7 +2882,7 @@ end
 -- the player chooses to show it. There is no reload: GSE loads the bar itself (loadActionBar). Turned off again
 -- afterwards, it stays off.
 local function enableActionBarForKeybinds()
-    if not GSE.DirectKeybindsRetired or GSE.IsForever then return end
+    if GSE.IsForever then return end
     if GSE.ActionBarActive() or type(GSE_C) ~= "table" or GSEOptions.ActionBarAutoEnabled then return end
     if not GSE.ActionBarInstalled() then return end
     local hasKeys = false
@@ -3612,8 +3516,6 @@ function GSE:ProcessOOCQueue()
                 if GSE.OpenOptionsPanel then
                     GSE.OpenOptionsPanel()
                 end
-            elseif v.action == "clearkeybind" then
-                GSE.ClearKeyBinding(v.key)
             elseif v.action == "deletesequence" then
                 -- Generic OOC sequence delete. Used by the Companion bridge
                 -- after the user confirms a delete (the website record has

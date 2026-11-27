@@ -616,8 +616,6 @@ L["Unrecognised Import"] = true
 -- #1202
 L["Troubleshooting"] = true
 L["Common Solutions to game quirks that seem to affect some people."] = true
-L["CVar Settings"] = true
-L["ActionButtonUseKeyDown"] = true
 
 -- #1209
 
@@ -697,12 +695,6 @@ L["Nothing to undo yet."] = true
 L["Only valid after a spell."] = true
 L["Must be alone in the block - clear the block first."] = true
 L["The block holds a macro name or variable - it must stay alone."] = true
-L[
-        "The UI has been set to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)  You will need to check your macros and adjust your click commands."
-    ] = true
-L[
-        "The UI has been set to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME` You will need to check your macros and adjust your click commands."
-    ] = true
 L["Import Sequence from Forums"] = true
 L["Gnome Sequencer Enhanced"] = true
 L["GSE: Record your rotation to a sequence."] = true
@@ -750,7 +742,6 @@ L["Insert Test Case"] = true
 
 -- #1525
 L["Talent Loadout"] = true
-L["%s is bound more than once.  Change or remove one before saving."] = true
 L["All Talent Loadouts"] = true
 L["Changed for talent loadout %s only."] = true
 L["Each stance's bar now has its own sequences. Yours were put on every stance, where they ran before."] = true
@@ -780,18 +771,7 @@ L["Remove this row."] = true
 L["Pick a button"] = true
 L["Limit of %d rows."] = true
 L["Set All of your Binds and Click Save!"] = true
-L["Right Click an Empty Action Button"] = true
-L["Assign a Sequence / Same for Clearing"] = true
-L["-or-"] = true
-L["Set in the Left Menu"] = true
-L["Sets Store by:"] = true
-L["Class / Spec"] = true
-L["Class / Spec / State"] = true
 L["%s is overridden more than once.  Change or remove one before saving."] = true
-L["Puts a sequence on an action bar button, so the button fires the sequence.  Right-click a button on your bar and pick the sequence; that is the quickest setup."] = true
-L["Binds a key straight to a sequence, bypassing the action bar.  This is what The War Within requires: a macro can no longer call another macro."] = true
-L["Binds are per spec, and optionally per talent loadout; the spec binds are the fallback."] = true
-L["Controllers work: /console GamePadEnable 1.  PAD1-4 are A, B, X, Y."] = true
 L["When flying, the Sky Riding bar's own binds override these on keys 1-7.  The alternative is to use [flying] in the sequence, eg /click [flying] ActionButton2."] = true
 
 L["Processing Collection of %s Elements."] = true
@@ -990,7 +970,7 @@ L["|r. As a result this macro was not created.  Please delete some macros and re
 -- Added so enUS is complete (used == defined) and translators see them.
 L["Delay spell translations to reduce lag for users with older machines. When on, the sequence editor waits until you click out of a box to translate and colour spell IDs and names instead of doing it as you type. Off by default (live as you type while editing). This only affects the editor; nothing is translated during normal gameplay."] = true
 L["Delayed Spell Translations"] = true
-L["GSE registers additional subcommands of /gse: /gse resettracker (restore the tracker to its default layout), /gse savelayoutx and /gse savelayouty (save the current tracker layout to slot X or Y), /gse applylayoutx and /gse applylayouty (apply a saved layout), /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."] = true
+L["GSE registers additional subcommands of /gse: /gse iconscan and /gse spelliconreset and /gse saveallsequences (action-icon maintenance)."] = true
 L["How the sequence editor turns spell IDs into spell names as you edit."] = true
 
 -- =========================================================================
@@ -999,8 +979,6 @@ L["How the sequence editor turns spell IDs into spell names as you edit."] = tru
 -- L["..."] in source so the static audit missed them; AceLocale errored
 -- at runtime on first lookup until these were registered.
 -- =========================================================================
-L["Tracker: On"] = true
-L["Tracker: Off"] = true
 L["Stats: On"] = true
 L["Stats: Off"] = true
 L["Hardware: On"] = true
@@ -1026,9 +1004,7 @@ L["Specialisation / Class ID"] = true
 -- appear at runtime (Options tooltips, About panel, supporter list, OOC update
 -- prompt, auto-repair chat print); they previously fell through AceLocale's
 -- key-as-value fallback.
-L["A WoW setting shared by every addon: on, your action buttons act when you press a key; off, when you let it go. Neither up nor down affects GSE's buttons: a press runs one step either way, on GSE's action bar, any other bar, or a GSE keybind."] = true
 L["Version %d is in use by: %s.  Point %s at another version on the Configuration tab before deleting this one."] = true
-L["Keybind %s will be cleared when combat ends."] = true
 L["it"] = true
 L["them"] = true
 L["Announce Manual Sequence Resets"] = true
@@ -1045,7 +1021,6 @@ L["Enter the frame name of the button:"] = true
 L["For a bar addon GSE does not detect yet.  The button must exist right now -- /fstack over it in game to read its name."] = true
 L["Use"] = true
 L["%s is not an actionbar button on this client."] = true
-L["Works with any action bar addon, and with key-up or key-down."] = true
 -- The section holding BOTH; its children keep their own names.
 L["Bindings"] = true
 
@@ -1097,7 +1072,6 @@ L["Shared Profile"] = true
 L["Ticked, this spec's keybinds and action bar overrides are shared by every character of this class, on any realm or faction. Unticked, this character keeps its own. Talent loadout binds are always this character's own."] = true
 L["Use Shared"] = true
 L["Share these Specialization Level Bindings on Across All Realms / Factions / Characters Loadouts with this Class."] = true
-L["GSE does not bind keys to sequences here. Put the sequence on an action bar button instead (Button Bindings) -- the GSE Action Bar's buttons take keys in WoW's Key Bindings."] = true
 -- GSE Action Bar (GSE_Actionbar)
 L["GSE Action Bar"] = true
 L["GSE Action Bar %d"] = true

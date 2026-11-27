@@ -1952,8 +1952,7 @@ function GSE.ResetAllSequenceActionIcons()
 end
 
 -- Slash commands previously defined here (/gsespelliconreset,
--- /gseiconscan, /gsesaveallsequences, /gsesavelayoutx/y,
--- /gseapplylayoutx/y, /gseresettracker) were moved to
+-- /gseiconscan, /gsesaveallsequences) were moved to
 -- GSE_Utils/SlashCommands.lua so all GSE native slash commands live
 -- together. The handlers still reach back into Editor.lua-owned
 -- functions (GSE.ResetAllSequenceActionIcons, GSE.ScanSequenceActionIcons,
@@ -8827,7 +8826,6 @@ function GSE.ShowKeyBindings(existing)
     editor.ManageTree()
     -- Down to the class node, wherever the tree's grouping puts Bindings.
     GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("AO"))
-    if GSE.KeybindingsEnabled() then GSE.GUI.ExpandBindingsPath(editor, GSE.GUI.BindingsPath("KB")) end
     SelectLastAreaNode(editor, "KEYBINDINGS")
     SetSequenceEditorOpenPreference(true, "keybindings")
     editor:Show()

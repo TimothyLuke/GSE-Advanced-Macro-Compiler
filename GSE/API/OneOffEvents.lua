@@ -35,6 +35,11 @@ function GSE.PerformOneOffEvents()
     -- A sequence's button shows its first step's icon, at rest as when running:
     -- the picked base icons are gone, and what was saved for them with them.
     GSEOptions.SequenceBaseIcons = nil
+    -- The Tracker is gone (a fuller one is a separate addon): so are its
+    -- settings, layouts and positions.
+    GSEOptions.SequenceIconFrame = nil
+    -- GSE no longer sets WoW's key up/down CVar; a press runs one step either way.
+    GSEOptions.CvarActionButtonState = nil
     if GSE.isEmpty(GSEOptions.Updates["3200"]) then
         GSE3Storage = nil
         GSEOptions.Updates["3200"] = true

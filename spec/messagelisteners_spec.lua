@@ -1,7 +1,7 @@
 -- AceEvent keeps ONE handler per message per object. Several modules
 -- registered GSE_SEQUENCE_UPDATED (and GSE_MODS_VISIBLE) on the GSE object
 -- itself, so each replaced the last and only whichever loaded last ran -- the
--- QoL checksum stamp, the Tracker refresh and the editor's reload could not all
+-- QoL checksum stamp, the debugger and the editor's reload could not all
 -- happen. Each module now listens through an object of its own; this keeps a
 -- registration on GSE from coming back.
 --
@@ -10,7 +10,7 @@ local FILES = {
   "GSE/API/Events.lua", "GSE/API/Storage.lua", "GSE/API/Init.lua",
   "GSE_GUI/Editor.lua", "GSE_GUI/Editor_Metadata.lua", "GSE_GUI/Editor_Keybind.lua",
   "GSE_GUI/Editor_Tree.lua", "GSE_GUI/DebugWindow.lua",
-  "GSE_Utils/Tracker.lua", "GSE_Utils/Events.lua", "GSE_Utils/Utils.lua",
+  "GSE_Utils/Events.lua", "GSE_Utils/Utils.lua",
   "GSE_QoL/QoL.lua", "GSE_LDB/LDBProvider.lua", "GSE_Options/Options.lua",
 }
 

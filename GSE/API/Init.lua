@@ -135,18 +135,14 @@ function GSE.TOCFlavour(toc)
     return "exp" .. tocMajor
 end
 
--- WoW's controller update -- Forever first, then Retail at 12.1.7 -- stopped
--- honouring the keybinds GSE made for itself with SetBindingClick, which no
--- Bindings.xml declares. There a sequence reaches a key only through an action
--- button: any bar's (Button Bindings), or the GSE Action Bar's, whose buttons
--- are declared bindings (GSE_Actionbar). GSE.KeybindingsEnabled reads this.
---
--- The other clients still honour those keybinds for a patch or two, but GSE
--- works one way on every client (Tim, #2235: "migrating all clients at the
--- same time so as not needing to maintain multiple setups within the mod"),
--- so they are retired everywhere: no Keybindings pages, and a character's
--- keybinds move onto the GSE Action Bar (Events.lua, enableActionBarForKeybinds).
-GSE.DirectKeybindsRetired = true
+-- GSE binds no keys to sequences itself. WoW's controller update -- Forever
+-- first, then Retail at 12.1.7 -- stopped honouring keybinds made with
+-- SetBindingClick that no Bindings.xml declares, and GSE works one way on
+-- every client (#2235), Classic included. A sequence reaches a key only
+-- through an action button: any bar's (Button Bindings), or the GSE Action
+-- Bar's, whose buttons are declared bindings (GSE_Actionbar). Keys a character
+-- had bound before move onto the GSE Action Bar (Events.lua,
+-- enableActionBarForKeybinds; GSE_Actionbar/Migration.lua).
 
 --- This function takes a version String and returns a version number.
 function GSE.ParseVersion(version)

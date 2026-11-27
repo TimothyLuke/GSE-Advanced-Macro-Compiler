@@ -30,7 +30,6 @@ local SETTINGS = {
     MacroResetModifiers = true, ShiftPause = true, CtrlPause = true, AltPause = true,
     SkyRidingBinds = true,
     showActionBarWatermark = true, showActionBarLabel = true,
-    CvarActionButtonState = true,
 }
 GSE.ProfileSettingNames = SETTINGS
 

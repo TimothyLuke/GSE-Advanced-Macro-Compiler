@@ -3,11 +3,10 @@
 -- which Larry's change of 2026-11-20 had made the only way.
 --
 -- Bindings is a tab of the Editor with a tree of its own (editortabs_spec):
--- Button Bindings, and a Keybindings section. Where GSE still binds keys to
--- sequences itself that section has its spec pages; it does not on any client
--- now, and there the section shows the keybind guide, a picture of the steps,
--- while GSE's help is turned on (GSE_Help; helpkeybindguide_spec), and is
--- left out while it is not.
+-- Button Bindings, and a Keybindings section. GSE binds no keys to sequences
+-- itself on any client, so that section has no pages: it shows the keybind
+-- guide, a picture of the steps, while GSE's help is turned on (GSE_Help;
+-- helpkeybindguide_spec), and is left out while it is not.
 -- The GSE_GUI files cannot be loaded here, so this reads them as text (line
 -- endings normalised).
 local function readSource(path)
@@ -33,9 +32,10 @@ describe("the editor's Bindings area", function()
     local build = body(keybind, "local function buildKeybindMenu()", "\nend\n")
     assert.is_nil(build:find("table.remove(tree, 1)", 1, true), "Button Bindings is taken out")
     assert.is_nil(build:find("return nil", 1, true), "no Bindings area")
-    assert.truthy(build:find("    if not GSE.KeybindingsEnabled() then\n        if GSE.HelpEnabled() then\n"
-      .. "            tree[2].children = nil\n        else\n            table.remove(tree, 2)\n        end\n    end\n", 1, true),
-      "no spec pages under Keybindings; no section at all without the help")
+    assert.truthy(build:find("    if not GSE.HelpEnabled() then\n        table.remove(tree, 2)\n    end\n", 1, true),
+      "no section at all without the help")
+    assert.is_nil(build:find("tree[2].children", 1, true), "no spec pages under Keybindings")
+    assert.is_nil(build:find("SetBinding", 1, true), "GSE binds and unbinds no keys")
   end)
 
   it("asks whether GSE's help is turned on without loading it", function()
@@ -67,11 +67,15 @@ describe("the editor's Bindings area", function()
   end)
 
   it("binds no keys itself on any client, so no client has the Keybindings pages", function()
-    local init = readSource("GSE/API/Init.lua")
-    assert.truthy(init:find("\nGSE.DirectKeybindsRetired = true\n", 1, true))
-    assert.is_nil(init:find("120107", 1, true), "retired by client version again")
-    local enabled = body(readSource("GSE/API/CharacterFunctions.lua"), "function GSE.KeybindingsEnabled()", "\nend\n")
-    assert.truthy(enabled:find("return not GSE.DirectKeybindsRetired and not GSE.ActionBarEnabled()", 1, true))
+    for _, path in ipairs({ "GSE/API/Init.lua", "GSE/API/CharacterFunctions.lua", "GSE/API/Events.lua",
+      "GSE/API/Storage.lua", "GSE_GUI/Editor_Keybind.lua", "GSE_GUI/Editor_Tree.lua", "GSE_GUI/Editor.lua",
+      "GSE_Utils/Utils.lua" }) do
+      local src = readSource(path)
+      assert.is_nil(src:find("DirectKeybindsRetired", 1, true), path .. " still asks whether keybinds are retired")
+      assert.is_nil(src:find("KeybindingsEnabled", 1, true), path .. " still asks whether GSE binds keys")
+      assert.is_nil(src:find("SetBindingClick(", 1, true), path .. " binds a key to a sequence")
+    end
+    assert.is_nil(readSource("GSE/API/Events.lua"):find("GSE.GameMode == 5", 1, true), "MoP's override layer")
     local notes = readSource("GSE/Localization/ModL_enUS.lua")
     assert.is_nil(notes:find("your GSE keybinds still work", 1, true), "What's New says some clients keep them")
   end)
@@ -84,14 +88,15 @@ describe("the editor's Bindings area", function()
 
   it("opens Button Bindings where GSE binds no keys, and the guide from the Keybindings section", function()
     local click = body(tree, "local function onClick_KEYBINDINGS(editframe, container, group, unique)", "\nend\n")
-    assert.is_nil(click:find("if not GSE.KeybindingsEnabled() then return end", 1, true), "no page at all")
-    local gate = assert(click:find('if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then', 1, true))
+    local gate = assert(click:find('if #unique == 1 or unique[2] == "KB" then', 1, true))
     local guide = assert(click:find('if unique[2] == "KB" and GSE.HelpEnabled() then', gate, true))
     local draw = assert(click:find("GSE.GUI.DrawKeybindGuide(container)", guide, true))
     local page = assert(click:find('SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))', draw, true),
       "the Bindings node, and a keybind page from a past session, land on Button Bindings")
     assert.is_true(page < assert(click:find('if #unique == 2 or #unique == 3', 1, true)))
     assert.truthy(click:find('editframe.showKeybind(nil, nil, specialization, loadout, "AO", rc)', 1, true))
+    assert.is_nil(click:find('"KB", rc)', 1, true), "a keybind page")
+    assert.is_nil(click:find("showKeybindChooser", 1, true), "the chooser between two areas")
   end)
 
   it("opens the Bindings tab on its own window, down to Button Bindings", function()

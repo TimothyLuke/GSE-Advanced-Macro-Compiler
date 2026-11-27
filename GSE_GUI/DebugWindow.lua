@@ -3280,7 +3280,10 @@ local function UpdateHardwareStateFromPayload(_, payload, mods)
     hardwareState.mouseButton = (type(payload) == "table" and payload.HardwareEvent) or modSource.MOUSEBUTTON
     local sequenceId = type(payload) == "table" and payload.SequenceID
     hardwareState.sequenceName = (sequenceId and (GSE.SequenceName(sequenceId) or sequenceId)) or tostring(payload or "None")
-    hardwareState.spamKey = (type(payload) == "table" and payload.SpamKey) or "None"
+    -- SpamKey is there only when something supplies it
+    -- (GSE.SequenceIconResolveSpamKey, Storage.lua); without it, the button or
+    -- key event that made the click.
+    hardwareState.spamKey = (type(payload) == "table" and (payload.SpamKey or payload.HardwareEvent)) or "None"
     hardwareState.lastUpdate = date and date("%H:%M:%S") or "Now"
     hardwareState.lastSeen = GetTime and GetTime() or 0
     DebugFrame:AppendHardwareModifierLog(payload)
@@ -3291,8 +3294,7 @@ if GSE.RegisterMessage and GSE.Static and GSE.Static.Messages and GSE.Static.Mes
     -- AceEvent signature: :RegisterMessage(name, methodNameOrFunc). The 1914
     -- Native.lua reimplementation accepted an extra "key" arg between name
     -- and the callback; AceEvent does not, so pass the function directly.
-    -- A listener of its own: AceEvent keeps ONE handler per message per object,
-    -- and the Tracker listens for this message too.
+    -- A listener of its own: AceEvent keeps ONE handler per message per object.
     LibStub("AceEvent-3.0"):Embed({}):RegisterMessage(GSE.Static.Messages.GSE_MODS_VISIBLE, UpdateHardwareStateFromPayload)
 end
 
@@ -4570,8 +4572,6 @@ DebugFrame.DebugOptionsViewButton = DebugFrame.DebugCreateButton("Options")
 DebugFrame.DebugReloadViewButton = DebugFrame.DebugCreateButton("Reload")
 DebugFrame.DebugResourcesViewButton = DebugFrame.DebugCreateButton("|cFFFFFFFFGS|r|cFF00FFFFE|r|cFFFFFFFF:|r |cFFFFD100Resources|r")
 DebugFrame.DebugResourcesViewButton:SetSize(DEBUG_UI.RESOURCE_BUTTON_WIDTH, DEBUG_UI.BUTTON_HEIGHT)
-DebugFrame.DebugTrackerViewButton = DebugFrame.DebugCreateButton("Tracker: On")
-DebugFrame.DebugTrackerViewButton:SetSize(DEBUG_UI.HARDWARE_BUTTON_WIDTH, DEBUG_UI.BUTTON_HEIGHT)
 
 GSE.SetDebuggerButtonTooltip(
     DebugFrame.DebugEnableViewButton,
@@ -4595,7 +4595,6 @@ GSE.SetDebuggerButtonTooltip(DebugFrame.DebugClearViewButton, DebuggerLabel("Cle
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugExportOutputButton, DebuggerLabel("Export"), "Opens a copy window for the current debugger output.")
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugOptionsViewButton, DebuggerLabel("Options"), DebuggerLabel("Opens the GSE Options window"))
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugResourcesViewButton, "Resources", "All GSE Support, Tools, Sequences, Community, Patreon Links.")
-GSE.SetDebuggerButtonTooltip(DebugFrame.DebugTrackerViewButton, "Tracker", "Master on/off switch for the GSE Tracker (sequence icons, text panel, successful cast, assisted highlight). Mirrors the Options panel Tracker toggle.")
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugHardwareViewButton, "Hardware Events", "Opens or closes the Hardware Events window.")
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugReloadViewButton, DebuggerLabel("Reload"), "Reloads the user interface.")
 GSE.SetDebuggerButtonTooltip(DebugFrame.DebugStatsViewButton, "Debug Stats", "Opens or closes the Debug Stats window.")
@@ -4729,7 +4728,6 @@ function DebugFrame.UpdateDebuggerLayout()
     end
     if DebugFrame.DebugStatsViewButton then GSE.SetDebuggerButtonText(DebugFrame.DebugStatsViewButton, statsWidget:IsShown() and "Stats: On" or "Stats: Off") end
     if DebugFrame.DebugHardwareViewButton then GSE.SetDebuggerButtonText(DebugFrame.DebugHardwareViewButton, hardwareWidget:IsShown() and "Hardware: On" or "Hardware: Off") end
-    if DebugFrame.DebugTrackerViewButton then GSE.SetDebuggerButtonText(DebugFrame.DebugTrackerViewButton, (GSEOptions and GSEOptions.SequenceIconFrame and GSEOptions.SequenceIconFrame.Enabled) and "Tracker: On" or "Tracker: Off") end
 
     ApplyColumnLayout()
     UpdateRows(false)
@@ -4772,7 +4770,6 @@ function DebugFrame.UpdateDebuggerLayout()
 
     local secondaryButtons = {
         DebugFrame.DebugHardwareViewButton,
-        DebugFrame.DebugTrackerViewButton,
         DebugFrame.DebugReloadViewButton,
         DebugFrame.DebugStatsViewButton
     }
@@ -5028,20 +5025,6 @@ end)
 DebugFrame.DebugResourcesViewButton:SetScript("OnClick", function()
     if GSE.GUI and GSE.GUI.ShowResourcesPopup then GSE.GUI.ShowResourcesPopup(DebugFrame) end
     GSE.GUIDebugAppendLine("GSE resources opened.")
-end)
-
-DebugFrame.DebugTrackerViewButton:SetScript("OnClick", function()
-    -- Toggle the same GSEOptions.SequenceIconFrame.Enabled flag the Options
-    -- panel "Tracker On / Off" checkbox uses, via the same GSE.SetSequenceIconFrameEnabled
-    -- setter, so the two controls mirror each other.
-    GSEOptions.SequenceIconFrame = GSEOptions.SequenceIconFrame or {}
-    local enabled = not GSEOptions.SequenceIconFrame.Enabled
-    GSEOptions.SequenceIconFrame.Enabled = enabled
-    if GSE.SetSequenceIconFrameEnabled then
-        GSE.SetSequenceIconFrameEnabled(enabled)
-    end
-    GSE.SetDebuggerButtonText(DebugFrame.DebugTrackerViewButton, enabled and "Tracker: On" or "Tracker: Off")
-    GSE.GUIDebugAppendLine(enabled and "GSE Tracker enabled." or "GSE Tracker disabled.")
 end)
 
 if GSE.UnsavedOptions["DebugSequenceExecution"] then

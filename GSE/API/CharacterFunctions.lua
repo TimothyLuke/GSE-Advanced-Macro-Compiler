@@ -336,20 +336,6 @@ end
 function GSE.SetActionBarEnabled(enabled)
     GSEOptions.ActionBarEnabled = enabled and true or false
     GSE.StartActionBar()
-    -- Off where WoW still honours GSE's own keybinds: they take over again,
-    -- and GSE binds them at login, so ask for one.
-    if not enabled and not GSE.DirectKeybindsRetired then
-        GSE.GUICall("GUIConfirmReloadUI")
-    end
-end
-
---- Does GSE bind keys to sequences itself (the Keybindings pages, /gse bind)?
---- Not where WoW ignores those binds (GSE.DirectKeybindsRetired), and not with
---- the GSE Action Bar turned on: its buttons' keys are WoW's own, and the keys
---- GSE bound before were moved onto them. The setting, not whether the bar
---- has loaded yet, so the answer is the same before it loads at login.
-function GSE.KeybindingsEnabled()
-    return not GSE.DirectKeybindsRetired and not GSE.ActionBarEnabled()
 end
 
 --- Obtain the Click Rate from GSE Options or from the characters internal options
@@ -372,29 +358,6 @@ function GSE.GetResetOOC()
         return GSE_C.resetOOC
     end
     return GSEOptions.resetOOC
-end
-
-function GSE.setActionButtonUseKeyDown()
-    local state = GSEOptions.CvarActionButtonState and GSEOptions.CvarActionButtonState or "DONTFORCE"
-
-    if state == "UP" then
-        C_CVar.SetCVar("ActionButtonUseKeyDown", 0)
-        GSE.Print(
-            L[
-                "The UI has been set to KeyUp configuration.  The /click command needs to be `/click TEMPLATENAME` You will need to check your macros and adjust your click commands."
-            ],
-            L["Troubleshooting"]
-        )
-    elseif state == "DOWN" then
-        C_CVar.SetCVar("ActionButtonUseKeyDown", 1)
-        GSE.Print(
-            L[
-                "The UI has been set to KeyDown configuration.  The /click command needs to be `/click TEMPLATENAME LeftButton t` (Note the 't' here is required along with the LeftButton.)  You will need to check your macros and adjust your click commands."
-            ],
-            L["Troubleshooting"]
-        )
-    end
-    GSE.ReloadSequences()
 end
 
 --- Key identifying the current talent loadout for keybinding and action bar

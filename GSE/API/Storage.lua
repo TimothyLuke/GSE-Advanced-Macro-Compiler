@@ -1892,8 +1892,10 @@ function GSE.DeleteSequence(classid, id)
         GSE.ReloadKeyBindings()
     end
 
-    -- Remove any keybindings that reference this sequence
-    if not InCombatLockdown() and not GSE.isEmpty(GSE_C["KeyBindings"]) then
+    -- Remove any saved keybinds that reference this sequence. Only the saved
+    -- entry: GSE binds no keys itself, so the key is whatever the player has
+    -- on it now and is left alone.
+    if not GSE.isEmpty(GSE_C["KeyBindings"]) then
         for _, specData in pairs(GSE_C["KeyBindings"]) do
             local toDelete = {}
             for key, seqName in pairs(specData) do
@@ -1902,7 +1904,6 @@ function GSE.DeleteSequence(classid, id)
                 end
             end
             for _, key in ipairs(toDelete) do
-                SetBinding(key)
                 specData[key] = nil
             end
             if not GSE.isEmpty(specData["LoadOuts"]) then
@@ -1914,7 +1915,6 @@ function GSE.DeleteSequence(classid, id)
                         end
                     end
                     for _, key in ipairs(toDeleteLO) do
-                        SetBinding(key)
                         loadoutData[key] = nil
                     end
                 end
@@ -4079,6 +4079,7 @@ function GSE.UpdateIcon(self, reseticon)
             HardwareEvent = modlist.MOUSEBUTTON,
             ClickSerial = clickSerial
         }
+        -- Hooks for a tracker addon: GSE ships none of its own now.
         if GSE.SequenceIconResolveSpamKey then
             trackerPayload.SpamKey = GSE.SequenceIconResolveSpamKey(gsebutton, modlist, gsebutton)
         end
@@ -4653,9 +4654,7 @@ local function PCallCreateGSE3Button(spelllist, name, combatReset)
     -- ActionButtonUseKeyDown CVar. The action-bar override delegate
     -- (SecureActionButton type="click") forwards clickbutton:Click(button) with
     -- NO down argument, i.e. down=false, so the executor must cast on down=false
-    -- to work under both CVar states. Direct key-DOWN latency is provided by a
-    -- separate relay button (see GSE.GetKeybindClickTarget) rather than by
-    -- letting this button follow the CVar.
+    -- to work under both CVar states.
     gsebutton:SetAttribute("useOnKeyDown", false)
 
     -- Modifier-pause attributes. Read inside the secure OnClick handler
@@ -4850,52 +4849,6 @@ function GSE.CreateGSE3Button(spelllist, name, combatReset, label)
         if GSE.PrintDebugMessage then GSE.PrintDebugMessage(tostring(err), "Storage") end
         --@end-debug@
     end
-end
-
---- Return the frame name a keybind should click for sequence `name`.
---
--- The executor button casts on the key-UP edge (down=false) so it stays
--- compatible with the action-bar override delegate, which forwards Click(button)
--- with no down flag. That means a direct keybind bound straight to the executor
--- also resolves on key-up -- fine, except a player running
--- ActionButtonUseKeyDown=1 expects key-DOWN latency.
---
--- When the CVar is on we hand the keybind a thin relay button instead: it fires
--- on AnyDown (useOnKeyDown=true) and forwards into the executor via type="click"
--- (Click(button) -> down=false), so the cast lands on the key-down edge without
--- double-stepping. This mirrors how an action-bar override button already relays
--- into the sequence. When the CVar is off (or we are in combat and cannot build
--- the relay) we bind straight to the executor, which resolves on key-up.
-function GSE.GetKeybindClickTarget(name)
-    if GSE.isEmpty(name) or GSE.isEmpty(_G[name]) then
-        return name
-    end
-    if C_CVar.GetCVar("ActionButtonUseKeyDown") ~= "1" then
-        return name
-    end
-    local relayName = name .. "_KD"
-    local relay = _G[relayName]
-    if GSE.isEmpty(relay) then
-        if InCombatLockdown() then
-            -- RegisterForClicks/SetAttribute are restricted on protected frames
-            -- in combat; fall back to the executor until the next OOC rebind.
-            return name
-        end
-        relay = CreateFrame("Button", relayName, nil, "SecureActionButtonTemplate")
-        relay.gseKeyDownRelay = true
-        relay:RegisterForClicks("AnyDown")
-    elseif not relay.gseKeyDownRelay then
-        -- A frame already owns this name and it is NOT one of our relays (e.g. a
-        -- user sequence literally named "<name>_KD"). Don't clobber it -- bind
-        -- the keybind straight to the executor (resolves on key-up) instead.
-        return name
-    end
-    if not InCombatLockdown() then
-        relay:SetAttribute("type", "click")
-        relay:SetAttribute("clickbutton", _G[name])
-        relay:SetAttribute("useOnKeyDown", true)
-    end
-    return relayName
 end
 
 function GSE.UpdateVariable(variable, name, status)

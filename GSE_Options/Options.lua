@@ -1132,98 +1132,6 @@ local function GetMaxDebuggerWidth()
     return MAX_DEBUGGER_WIDTH
 end
 
--- =========================================================================
--- SECTION 4 -- Tracker / Sequence-Icon-Frame option helpers
---
--- The Tracker frame (Sequence Icon Frame, Tracker Text, Successful
--- Casts indicator, Assisted Highlight) has a large per-character
--- option block under GSEOptions.SequenceIconFrame. This section
--- defines:
---   * EnsureSequenceIconFrameOptions -- mirror of Tracker.lua's own
---     version; backfills defaults on every call so the option panel
---     and the tracker itself agree on what's set
---   * ResetTrackerToDefaultLayout -- exposed via GSE.* (used by the
---     /gseresettracker slash command and the OnDefault button)
---   * AttachTrackerDefaultsHandler -- wires the "Restore Defaults"
---     button on the Tools & Diagnostics subcategory to call the reset
--- =========================================================================
-
-local function EnsureSequenceIconFrameOptions()
-    if not GSEOptions then GSEOptions = {} end
-    if GSE.isEmpty(GSEOptions.SequenceIconFrame) then
-        GSEOptions.SequenceIconFrame = {}
-    end
-
-    local opts = GSEOptions.SequenceIconFrame
-    opts.Enabled = opts.Enabled == true
-    opts.IconSize = 100
-    opts.IconCount = ClampNumber(opts.IconCount, 1, 10, 10)
-    opts.Scale = 0.50
-    opts.Orientation = (opts.Orientation == "VERTICAL") and "VERTICAL" or "HORIZONTAL"
-    if opts.ShowSequenceName == nil then opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName end
-    if opts.ShowSuccessfulCasts == nil then opts.ShowSuccessfulCasts = true end
-    if opts.TextLocked == nil then opts.TextLocked = true end
-    if opts.SuccessfulCastsLocked == nil then opts.SuccessfulCastsLocked = true end
-    if opts.AssistedSuccessLocked == nil then opts.AssistedSuccessLocked = true end
-    -- Default widget position. Mirrors Tracker.lua's DefaultWidgetX/Y so the
-    -- tracker has a defined home even if this function runs before Tracker.lua's
-    -- own EnsureSequenceIconFrameOptions (observed on Classic / BoA / MoP where
-    -- the position wasn't being persisted on a fresh character). "Only if nil"
-    -- so existing saved positions aren't clobbered.
-    if opts.WidgetPoint         == nil then opts.WidgetPoint         = "LEFT" end
-    if opts.WidgetRelativePoint == nil then opts.WidgetRelativePoint = "LEFT" end
-    if opts.WidgetX             == nil then opts.WidgetX             = 1126 end
-    if opts.WidgetY             == nil then opts.WidgetY             = 285  end
-    return opts
-end
-
-local function ResetTrackerToDefaultLayout()
-    local opts = EnsureSequenceIconFrameOptions()
-    opts.Enabled = true
-    opts.IconSize = 100
-    opts.IconCount = 10
-    opts.Scale = 0.50
-    opts.Orientation = "HORIZONTAL"
-    opts.TextMoved = false
-    opts.TextX = nil
-    opts.TextY = nil
-    opts.TextWidth = 902
-    opts.TextHeight = 593
-    opts.WidgetPoint = "LEFT"
-    opts.WidgetRelativePoint = "LEFT"
-    opts.WidgetX = 1126
-    opts.WidgetY = 285
-    opts.BaseVerticalLayoutVersion = 3
-    opts.ShowSuccessfulCasts = true
-    opts.ShowSequenceName = Statics.TrackerConfig.DefaultShowSequenceName
-
-    if GSE.SetSequenceIconFrameEnabled then GSE.SetSequenceIconFrameEnabled(true) end
-    if GSE.SetSuccessfulCastFrameEnabled then GSE.SetSuccessfulCastFrameEnabled(true) end
-    if GSE.ResetSequenceIconFramePosition then GSE.ResetSequenceIconFramePosition() end
-    if GSE.ResetSequenceTextFramePosition then GSE.ResetSequenceTextFramePosition() end
-    if GSE.ResetSuccessfulCastFramePosition then GSE.ResetSuccessfulCastFramePosition() end
-    if GSE.ResetAssistedSuccessFramePosition then GSE.ResetAssistedSuccessFramePosition() end
-    if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-end
-
--- Expose ResetTrackerToDefaultLayout on the GSE namespace so external
--- callers (the /gseresettracker slash command registered in
--- GSE_Utils/SlashCommands.lua, as well as plugins or layered builds that
--- want to reuse it) can invoke
--- it. The local reference above remains the canonical implementation;
--- the local AttachTrackerDefaultsHandler / OnDefault wiring continues to
--- use it directly so internal Options behaviour stays stable even if
--- GSE.ResetTrackerToDefaultLayout is later replaced from outside.
-GSE.ResetTrackerToDefaultLayout = ResetTrackerToDefaultLayout
-
-local function AttachTrackerDefaultsHandler(target)
-    if not target then return end
-    pcall(function() target.OnDefault = ResetTrackerToDefaultLayout end)
-    pcall(function()
-        if target.SetDefaultCallback then target:SetDefaultCallback(ResetTrackerToDefaultLayout) end
-    end)
-end
-
 local function RefreshOpenEditorTrees()
     for _, editor in ipairs((GSE.GUI and GSE.GUI.editors) or {}) do
         if editor and editor.frame and editor.frame.IsShown and editor.frame:IsShown() and editor.ManageTree then
@@ -1271,7 +1179,7 @@ end
 -- 4.1 - Frame location + sequence editor option helpers
 --
 -- GSEOptions.frameLocations stores per-frame anchor/position data for
--- the Toolbar, Editor, Debug Window, and various trackers. The
+-- the Toolbar, Editor and Debug Window. The
 -- EnsureFrameLocations / EnsureSequenceEditorOptions backfill missing
 -- subtables so accessors elsewhere never have to nil-check. The
 -- editor option group (RefreshOpenEditorTrees / GetOptionsEditor /
@@ -1626,40 +1534,6 @@ local function AddActionBarKeyChangesOption(optionsCategory, parent)
     end
 end
 
-local function AddActionBarClickBehaviorOptions(optionsCategory)
-    do
-        local layout = SettingsPanel:GetLayout(optionsCategory)
-        layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Action Button CVar", tooltip = L["CVar Settings"]}))
-    end
-    do
-        local function GetValue()
-            local value = C_CVar.GetCVar("ActionButtonUseKeyDown")
-            return tonumber(value) == 1
-        end
-        local function SetValue(val)
-            local ok, err = pcall(function()
-                return C_CVar.SetCVar("ActionButtonUseKeyDown", val and 1 or 0)
-            end)
-            if not ok then
-                --@debug@
-                GSE.PrintDebugMessage("SetCVar ActionButtonUseKeyDown error: " .. tostring(err), "Options")
-                --@end-debug@
-                return
-            end
-            -- Rebind keys so the key-down relay (GSE.GetKeybindClickTarget) is
-            -- built or dropped to match the new CVar state without a manual
-            -- /reload. Combat-safe: LoadKeyBindings guards its SetBindingClick
-            -- calls with InCombatLockdown(), so a toggle mid-combat simply takes
-            -- effect on the next out-of-combat rebind.
-            if GSE.ReloadKeyBindings then
-                GSE.ReloadKeyBindings()
-            end
-        end
-        local setting = Settings.RegisterProxySetting(optionsCategory, "GSE_ActionButtonUseKeyDown", Settings.VarType.Boolean, L["ActionButtonUseKeyDown"], false, GetValue, SetValue)
-        Settings.CreateCheckbox(optionsCategory, setting, L["A WoW setting shared by every addon: on, your action buttons act when you press a key; off, when you let it go. Neither up nor down affects GSE's buttons: a press runs one step either way, on GSE's action bar, any other bar, or a GSE keybind."])
-    end
-end
-
 local function AddOutOfCombatQueueOptions(optionsCategory)
     do
         local layout = SettingsPanel:GetLayout(optionsCategory)
@@ -1959,7 +1833,7 @@ end
 local function createAboutPanel()
     local panel = CreateFrame("Frame")
     panel.OnCommit = function() end
-    panel.OnDefault = ResetTrackerToDefaultLayout
+    panel.OnDefault = function() end
     panel.OnRefresh = function() end
 
     local built = false
@@ -2141,11 +2015,9 @@ end
 --     MS Click Timing, Companion App, Import & Export defaults, Editor
 --     sequence-list filters, and the GSE Toolbar / Editor open
 --     buttons.
---   * Tools & Diagnostics -- the Action Button CVar (ActionButtonUseKeyDown),
---     the "Modifier Hold to Pause" section
---     (added in upstream 3.3.19-10), Spell Cache controls, Tracker /
---     Keybind Diagnostics with the sequence icon frame and successful
---     cast frame toggles, master tracker enable, and the Plugins
+--   * Tools & Diagnostics -- the "Modifier Hold to Pause" section
+--     (added in upstream 3.3.19-10), Spell Cache controls, Keypress
+--     Diagnostics (print the modifiers seen on each click), and the Plugins
 --     sub-subcategory for any registered plugins.
 --   * Plugins -- placeholder list, populated by GSE.RegisterPlugin
 --     calls from external addons; shows "No plugins are currently
@@ -2173,7 +2045,6 @@ end
 local function createBlizzOptions(category, pluginOptions, colourOptions, generalOptions)
     local windowOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Windows & Layout")
     local troubleOptions = Settings.RegisterVerticalLayoutSubcategory(category, "Tools & Diagnostics")
-    AttachTrackerDefaultsHandler(troubleOptions)
     -- Skyriding / Vehicle Keybinds (Retail only) is registered as a sub-part of
     -- Tools & Diagnostics (nested under it, like Developer Debug). Its slot
     -- buttons/initializers are populated later by GSE_QoL/QoL.lua, which loads
@@ -2192,16 +2063,12 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
     -- 7.1 - Tools & Diagnostics subcategory body (troubleshooting controls)
     --
     -- Populates the "Tools & Diagnostics" left-rail entry with the
-    -- following groups in order: Action Button CVar, Modifier Hold to
+    -- following groups in order: Modifier Hold to
     -- Pause (Shift / Alt /
-    -- Ctrl checkboxes), Spell Cache, Tracker / Keybind Diagnostics
-    -- (sequence icon frame + successful cast frame toggles, master
-    -- tracker enable, Linked checkbox, the various Lock checkboxes),
+    -- Ctrl checkboxes), Spell Cache, Keypress Diagnostics
+    -- (print the modifiers seen on each click),
     -- and a per-sequence reset list (one row per loaded sequence).
     -- ---------------------------------------------------------------------
-    -- WoW's key-down setting: GSE works the same either way, so it sits
-    -- here rather than on the General page.
-    AddActionBarClickBehaviorOptions(troubleOptions)
     -- Troubleshooting
     do
         -- Modifier-held pause toggles. The reload prompt is required: the
@@ -2348,158 +2215,8 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
 
         do
             local layout = SettingsPanel:GetLayout(troubleOptions)
-            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Tracker / Keybind Diagnostics", tooltip = L["Keybinding Tools"]}))
+            layout:AddInitializer(Settings.CreateElementInitializer("SettingsListSectionHeaderTemplate", {name = "Keypress Diagnostics", tooltip = L["Keybinding Tools"]}))
         end
-        do
-            local function GetValue()
-                return EnsureSequenceIconFrameOptions().Enabled
-            end
-            local function SetValue(val)
-                local opts = EnsureSequenceIconFrameOptions()
-                opts.Enabled = val == true
-                if GSE.SetSequenceIconFrameEnabled then
-                    GSE.SetSequenceIconFrameEnabled(opts.Enabled)
-                elseif GSE.SequenceIconFrame then
-                    if opts.Enabled then
-                        GSE.SequenceIconFrame:Show()
-                    else
-                        GSE.SequenceIconFrame:Hide()
-                    end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showSequenceIcons", Settings.VarType.Boolean, "Tracker On / Off", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Master on/off switch for the GSE Tracker (sequence icons, text panel, successful cast, assisted highlight). Turning this off hides every tracker frame.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().PreserveScaleOnZoom == true end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().PreserveScaleOnZoom = val == true
-                if GSE.SequenceIconApplyTrackerFrameScale then GSE.SequenceIconApplyTrackerFrameScale() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "trackerPreserveScaleOnZoom", Settings.VarType.Boolean, "Preserve Scale On Zoom", false, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "When the Tracker Frame Scale slider changes, keep each tracker frame centred on its current on-screen position instead of letting it shift. Off uses the default scale-only behaviour.")
-        end
-        do
-            local function GetValue()
-                return EnsureSequenceIconFrameOptions().ShowSuccessfulCasts
-            end
-            local function SetValue(val)
-                local opts = EnsureSequenceIconFrameOptions()
-                opts.ShowSuccessfulCasts = val == true
-                if GSE.SetSuccessfulCastFrameEnabled then
-                    GSE.SetSuccessfulCastFrameEnabled(opts.ShowSuccessfulCasts)
-                elseif GSE.SuccessfulCastFrame then
-                    if opts.ShowSuccessfulCasts then
-                        GSE.SuccessfulCastFrame:Show()
-                    else
-                        GSE.SuccessfulCastFrame:Hide()
-                    end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showSuccessfulCasts", Settings.VarType.Boolean, "GSE Successful Casts", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the assisted highlight icon and the successful cast icon.")
-        end
-        do
-            local function GetValue()
-                local opts = EnsureSequenceIconFrameOptions()
-                return opts.ShowTrackerText ~= false
-            end
-            local function SetValue(val)
-                local opts = EnsureSequenceIconFrameOptions()
-                opts.ShowTrackerText = val == true
-                if GSE.SetSequenceIconTextFrameEnabled then
-                    GSE.SetSequenceIconTextFrameEnabled(opts.ShowTrackerText)
-                elseif GSE.SequenceIconTextFrame then
-                    if opts.ShowTrackerText and opts.Enabled then
-                        GSE.SequenceIconTextFrame:Show()
-                    else
-                        GSE.SequenceIconTextFrame:Hide()
-                    end
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showTrackerText", Settings.VarType.Boolean, "GSE Tracker Text", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Tracker text panel (Status / Sequence Name / Activation Key / ModKey / Casts / Step / Blk / Hardware Events).")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowPlayerStatus ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowPlayerStatus = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showPlayerStatus", Settings.VarType.Boolean, "Player Status", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Status line (the player's combat status: Combat / No Combat) in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowSequenceName ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowSequenceName = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showSequenceName", Settings.VarType.Boolean, "Sequence Name", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Sequence Name line in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowHardwareEvents ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowHardwareEvents = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showHardwareEvents", Settings.VarType.Boolean, "Hardware Events", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Hardware Events line (mouse buttons / modifier keys that are currently TRUE) in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowActivationKey ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowActivationKey = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showActivationKey", Settings.VarType.Boolean, "Activation Key", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Activation Key line (the spam key registered for this sequence) in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowClientModKey ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowClientModKey = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showClientModKey", Settings.VarType.Boolean, "Client ModKey", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Client ModKey line (modifier keys the client passed to the sequence at click time) in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowBlock ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowBlock = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showBlock", Settings.VarType.Boolean, "Block", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Block line (last sequence block path executed) in the Tracker text panel.")
-        end
-        do
-            local function GetValue() return EnsureSequenceIconFrameOptions().ShowStep ~= false end
-            local function SetValue(val)
-                EnsureSequenceIconFrameOptions().ShowStep = val == true
-                if GSE.RefreshSequenceIconFrame then GSE.RefreshSequenceIconFrame() end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "showStep", Settings.VarType.Boolean, "Step", true, GetValue, SetValue)
-            Settings.CreateCheckbox(troubleOptions, setting, "Show the Step line (last sequence step index executed) in the Tracker text panel.")
-        end
-
-        do
-            local layout = SettingsPanel:GetLayout(troubleOptions)
-            layout:AddInitializer(CreateGSESettingsLabelButtonInitializer(
-                troubleOptions,
-                "gseSwapLayout",
-                "Swap Layout X / Y",
-                "Swap",
-                function()
-                    if GSE.SequenceIconSwapTrackerLayout then
-                        GSE.SequenceIconSwapTrackerLayout()
-                    end
-                end,
-                "Toggle between Tracker Layout X and Layout Y in one click. If the target slot is empty, captures the current positions into it."
-            ))
-        end
-
         do
             local function GetValue() return GSEOptions.DebugPrintModConditionsOnKeyPress end
             local function SetValue(val)
@@ -2508,27 +2225,6 @@ local function createBlizzOptions(category, pluginOptions, colourOptions, genera
             end
             local setting = Settings.RegisterProxySetting(troubleOptions, "printKeyPressModifiers", Settings.VarType.Boolean, L["Print Active Modifiers on Click"], false, GetValue, SetValue)
             Settings.CreateCheckbox(troubleOptions, setting, L["Print to the chat window if the alt, shift, control modifiers as well as the button pressed on each sequence keypress."])
-        end
-        -- Tracker Frame Scale: scales the three on-screen tracker frames
-        -- (SC Icon, Sequence Icon Scroll, Tracker Text) together as one
-        -- group. Independent of GSE Editor Scale. Range 0.50 -- 1.50 (1.00 centered).
-        do
-            local MIN_TRK = 0.50
-            local MAX_TRK = 1.50
-            local function GetValue()
-                return GSE.SequenceIconGetTrackerFrameScale and GSE.SequenceIconGetTrackerFrameScale() or 1
-            end
-            local function SetValue(value)
-                if GSE.SequenceIconSetTrackerFrameScale then
-                    GSE.SequenceIconSetTrackerFrameScale(value)
-                end
-            end
-            local setting = Settings.RegisterProxySetting(troubleOptions, "gseTrackerFrameScale", Settings.VarType.Number, "Tracker Frame Scale", 1.0, GetValue, SetValue)
-            local options = Settings.CreateSliderOptions(MIN_TRK, MAX_TRK)
-            options:SetLabelFormatter(MinimalSliderWithSteppersMixin.Label.Right, function(value)
-                return string.format("%.2f", math.max(MIN_TRK, math.min(MAX_TRK, value)))
-            end)
-            Settings.CreateSlider(troubleOptions, setting, options, "Scale the SC Icon, Sequence Icon Scroll, and Tracker Text frames together. Does not affect the GSE editor windows.")
         end
     end
 
@@ -2924,7 +2620,6 @@ function GSE:CreateConfigPanels()
 
         local aboutPanel = createAboutPanel()
         local category = Settings.RegisterCanvasLayoutCategory(aboutPanel, addonName)
-        AttachTrackerDefaultsHandler(category)
         Settings.RegisterAddOnCategory(category)
         GSE.MenuCategoryID = category:GetID()
 
