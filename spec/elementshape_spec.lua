@@ -172,6 +172,27 @@ describe("Variable and macro shape", function()
       assert.is_nil((GSE.BooleanVariables or {})["GSE.V['Quiet']()"], "and is not a boolean")
     end)
 
+    -- Larry, 2026-11-25: opening Edit Mode threw from a variable calling
+    -- AuraUtil.FindAuraByName, while Edit Mode had swapped AuraUtil's data
+    -- source, and the reload of every sequence stopped there.
+    it("reloads past a variable that errors, and the others still load", function()
+      GSE.BooleanVariables = GSE.BooleanVariables or {}  -- GSE/API/Init.lua makes it in game
+      GSE.UpdateVariable({MetaData = {Default = 1}, Versions = {
+        {funct = "function() return true end"},
+      }}, "Fine")
+      assert.has_no.errors(function()
+        GSE.UpdateVariable({MetaData = {Default = 1}, Versions = {
+          {funct = "function() error('attempt to call a nil value') end"},
+        }}, "Broken")
+      end, "saved")
+      assert.has_no.errors(function() GSE.ReloadVariables() end, "reloaded")
+      assert.equals("function", type(rawget(GSE.V, "Broken")), "still compiled")
+      assert.is_nil((GSE.BooleanVariables or {})["GSE.V['Broken']()"], "not a boolean")
+      assert.is_true(GSE.V.Fine(), "the others still load")
+      assert.equals("GSE.V['Fine']()", (GSE.BooleanVariables or {})["GSE.V['Fine']()"])
+      GSE.Store("variable").Broken = nil
+    end)
+
     it("loads a variable that listens to events though no sequence names it", function()
       GSE.Store("variable").Watcher = {MetaData = {Default = 1}, Versions = {
         {funct = "function() return 'w' end", eventEnabled = true, eventNames = {"UNIT_AURA"}},
