@@ -4969,6 +4969,24 @@ local function createTreeButton(widget)
             if self.disabled then return end
             if mouseButton == "LeftButton" and self.hasChildren then
                 local status = widget.status or widget.localstatus
+                -- A tree can have a click on a row go to the row's page every
+                -- time, open or not, selected or not, and leave opening and
+                -- closing to the row's +/- box (widget.rowClickSelects, asked
+                -- with the row's value). Without it an open row's click only
+                -- closed it, and one already selected never drew its page
+                -- again (Larry, 2026-11-24, the Editor's Bindings rows).
+                if widget.rowClickSelects and widget.rowClickSelects(self.uniquevalue)
+                    and not (self.toggle.IsMouseOver and self.toggle:IsMouseOver(4, -4, -4, 4)) then
+                    if not status.groups[self.uniquevalue] then
+                        status.groups[self.uniquevalue] = true
+                        widget:Fire("OnGroupExpanded", self.uniquevalue, true)
+                    end
+                    status.selected = self.uniquevalue
+                    widget:RefreshTree()
+                    widget:Fire("OnGroupSelected", self.uniquevalue)
+                    UI:ClearFocus()
+                    return
+                end
                 if status.groups[self.uniquevalue] then
                     status.groups[self.uniquevalue] = nil
                     widget:Fire("OnGroupExpanded", self.uniquevalue, false)
@@ -5725,35 +5743,16 @@ local function createTreeGroup()
     widget.navWindowFrame = navWindow          -- raw frame for show/hide from Editor.lua
     widget.RefreshNavWindow = refreshNavWindow -- call to reposition/show after restore
 
-    -- Invisible full-height click zone on the left edge — covers the visible sidebar
-    -- (treeContentPadX inside border + frameContentX chrome to the left of it)
-    -- navStrip parented to UIParent so its hitbox is never clipped by border
-    -- (border starts at frame's left edge; anything left of that was invisible to clicks)
-    -- Parented to the editor frame itself (NOT UIParent) so the strip rides the
-    -- frame's Raise()/strata automatically and always sits above the frame's
-    -- content. The top-level editor frame does not clip children, so anchoring
-    -- the strip outside its left edge is safe.
-    local navStrip = CreateFrame("Button", nil, frame)
-    if navStrip.SetClipsChildren then navStrip:SetClipsChildren(false) end
-    navStrip:SetWidth(50)
-    navStrip:SetPoint("TOPLEFT",    frame, "TOPLEFT",    -35, 0)
-    navStrip:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", -35, 0)
-    navStrip:EnableMouse(true)
-    -- Hide/show with the editor
-    frame:HookScript("OnShow", function() navStrip:Show() end)
-    frame:HookScript("OnHide", function() navStrip:Hide() end)
-    if not frame:IsShown() then navStrip:Hide() end
-
     -- Chevron icon — points left when nav open (click to close), right when closed (click to open).
     -- Parented to UIParent so it is never clipped by the border frame whose left
-    -- edge sits at frame's left edge (navStrip centre is ~11px outside that edge).
+    -- edge sits at frame's left edge.
     -- The size of the window's close button, whose place it mirrors.
+    -- The arrow is all there is to click (Larry, 2026-11-24: "the click zone
+    -- should only be as big as the button"): an unseen strip 50 wide down the
+    -- whole of the tree's edge opened and closed the tree too.
     local chevronSize = CLOSE_BUTTON_WIDTH
     local CHEVRON_LEFT  = "Interface\\AddOns\\GSE_GUI\\Assets\\chevron-left.png"
     local CHEVRON_RIGHT = "Interface\\AddOns\\GSE_GUI\\Assets\\chevron-right.png"
-    navStrip:SetNormalTexture("")
-    navStrip:SetHighlightTexture("")
-    navStrip:SetPushedTexture("")
     local chevronFrame = CreateFrame("Frame", nil, frame)
     chevronFrame:SetSize(chevronSize, CLOSE_BUTTON_HEIGHT)
     chevronFrame:SetPoint("CENTER", frame, "LEFT", -11, 0)
@@ -5763,28 +5762,21 @@ local function createTreeGroup()
     local function updateChevron()
         chevron:SetTexture(navVisible and CHEVRON_RIGHT or CHEVRON_LEFT)
     end
-    -- navStrip and chevronFrame must share the same strata tier (one above the editor
-    -- frame so they clear its border/backdrop children).  chevronFrame sits one level
-    -- above navStrip within that tier so the icon is never covered by the hit-zone button.
-    -- As children of the editor frame they inherit its strata and ride Raise().
-    -- Set their level a fixed amount above the frame's current base level so they
-    -- stay above the editor's own content children, while remaining in the same
-    -- strata (so other windows at higher strata still draw over them).
+    -- chevronFrame sits one strata tier above the editor frame, so it clears
+    -- its border/backdrop children, at a level a fixed amount above the
+    -- frame's current base level.
     local STRATA_ABOVE = { BACKGROUND = "LOW", LOW = "MEDIUM", MEDIUM = "HIGH", HIGH = "DIALOG",
         DIALOG = "FULLSCREEN", FULLSCREEN = "FULLSCREEN_DIALOG", FULLSCREEN_DIALOG = "TOOLTIP" }
     local function syncChevronStrata()
         -- The chevron must clear the MAIN editor window's NineSlice border
         -- (level ~500) and chrome (~532). The left nav is created inside the
-        -- TreeGroup (a separate low-level frame), so re-parent the strip+chevron
-        -- to the real editor window (getEditorFrame()) and level off ITS base,
-        -- exactly like the working right side. Falls back to the TreeGroup frame
-        -- until the editor window is wired up.
+        -- TreeGroup (a separate low-level frame), so the chevron is levelled
+        -- off the real editor window (getEditorFrame()), exactly like the
+        -- working right side. Falls back to the TreeGroup frame until the
+        -- editor window is wired up.
         local win = getEditorFrame() or frame
-        if navStrip:GetParent() ~= win then navStrip:SetParent(win) end
         local s = win:GetFrameStrata() or "MEDIUM"
         local base = win:GetFrameLevel() or 0
-        navStrip:SetFrameStrata(s)
-        navStrip:SetFrameLevel(base + 600)
         -- The arrow one strata above its window: the tree panel is a window of
         -- its own in the window's strata, and its edge lies over the arrow's.
         -- And not the window's child. As its child the arrow went back under
@@ -5819,8 +5811,9 @@ local function createTreeGroup()
         -- window's middle is lower: its bottom bar is taller than its title
         -- bar; Larry, 2026-11-23, "its lower than center").
         local winLeft, areaLeft = win:GetLeft(), frame:GetLeft()
-        -- Two further left than the close button's mirror (Larry, 2026-11-23).
-        local nudge = -2
+        -- Ten further left than the close button's mirror (Larry, 2026-11-23:
+        -- two; 2026-11-24: "move this 4 left", then "4 more left").
+        local nudge = -10
         if cx and right and winLeft and areaLeft then
             chevronFrame:SetPoint("CENTER", frame, "LEFT", (winLeft - areaLeft) + (right - cx) + nudge, 0)
         elseif cx and right then
@@ -5830,14 +5823,13 @@ local function createTreeGroup()
         end
     end
     frame:HookScript("OnShow",      function()
-        navStrip:Show()
         if not (GSE.GUI and GSE.GUI.navDetached) then chevronFrame:Show() end
         syncChevronStrata()
         -- Again once the window is placed, for the arrow's corner.
         C_Timer.After(0, syncChevronStrata)
         if updateNavControls then updateNavControls() end
     end)
-    frame:HookScript("OnHide",      function() navStrip:Hide(); chevronFrame:Hide() end)
+    frame:HookScript("OnHide",      function() chevronFrame:Hide() end)
     frame:HookScript("OnMouseDown", function() syncChevronStrata() end)
     -- IsVisible, not IsShown: the arrow is not the window's child, so it does
     -- not go with a window that is hidden.
@@ -5855,30 +5847,23 @@ local function createTreeGroup()
     navWindow:HookScript("OnHide", function() syncChevronStrata() end)
     widget.ToggleNavWindow = toggleNavWindow
 
-    navStrip:SetScript("OnClick", function()
-        -- While the tree is floating, the edge controls can't act on it.
-        if GSE.GUI and GSE.GUI.navDetached then return end
-        toggleNavWindow()
-    end)
-    -- The arrow is in the title bar now, off the strip: it takes its own click.
+    -- The arrow takes its own click. While the tree is floating, it can't
+    -- act on it.
     chevronFrame:EnableMouse(true)
     chevronFrame:SetScript("OnMouseUp", function(_, button)
         if button ~= "LeftButton" or (GSE.GUI and GSE.GUI.navDetached) then return end
         toggleNavWindow()
     end)
 
-    -- When the Left Tree is floating (detached), the per-editor edge controls —
-    -- the chevron arrow, the invisible click/hover strip, and the gold hover bar —
-    -- have nothing to dock/undock, so deactivate them on every editor until the
+    -- When the Left Tree is floating (detached), the per-editor chevron arrow
+    -- has nothing to dock/undock, so it is put away on every editor until the
     -- tree is reattached. Re-runs from refreshNavWindow, so detach/dock/snap and
     -- editor activation all keep it in sync.
     updateNavControls = function()
         local detached = GSE.GUI and GSE.GUI.navDetached
         if detached or navTucked then
-            navStrip:EnableMouse(false)
             if chevronFrame then chevronFrame:Hide() end
         else
-            navStrip:EnableMouse(true)
             if chevronFrame and frame:IsVisible() then chevronFrame:Show() end
             updateChevron()
         end

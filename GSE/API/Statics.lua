@@ -631,6 +631,8 @@ Statics.Icons.Variables = "Interface\\Addons\\GSE_GUI\\Assets\\variables.png"
 Statics.Icons.Import = "Interface\\Addons\\GSE_GUI\\Assets\\import.png"
 Statics.Icons.Macros = "Interface\\Addons\\GSE_GUI\\Assets\\macro.png"
 Statics.Icons.Options = "Interface\\Addons\\GSE_GUI\\Assets\\cog.png"
+-- Blizzard's own question mark, on every client.
+Statics.Icons.Help = "Interface\\Icons\\INV_Misc_QuestionMark"
 Statics.Icons.Close = "Interface\\Addons\\GSE_GUI\\Assets\\close.png"
 Statics.Icons.Logo = "Interface\\Addons\\GSE_GUI\\Assets\\GSE-Logo.png"
 Statics.Icons.Discord = "Interface\\Addons\\GSE_GUI\\Assets\\discord.png"

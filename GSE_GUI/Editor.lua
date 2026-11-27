@@ -2152,9 +2152,10 @@ end
 -- What GSE's toolbar opened is a tab down the Editor's right edge (Larry,
 -- 2026-11-23). Editor, Variables and Macros each show their own part of the
 -- left tree (Editor_Tree.lua, narrowTreeToTab) and come back on the page they
--- were left on. So does Bindings (Timothy, 2026-11-24): Button Bindings, and
--- a Keybindings section that shows the keybind guide while GSE's help is
--- turned on. Import is a page in the pane, beside the tree as it was left
+-- were left on. So does Bindings (Timothy, 2026-11-24): Button Bindings. The
+-- keybind guide from GSE's help is a page of its own, opened by a ? beside
+-- the Bindings tab and on the Button Bindings page while the help is turned
+-- on. Import is a page in the pane, beside the tree as it was left
 -- (GSE.GUI.OpenEditorPage): a tab opens no window of its own. Options opens
 -- WoW's Options, as the toolbar's button did.
 --
@@ -2177,6 +2178,9 @@ local EDITOR_TAB_GAP = 12    -- the spellbook's sit 17 apart; closer here (Larry
 local EDITOR_TAB_TOP = -40
 -- The tree's top node on each tab that has a tree.
 local EDITOR_TAB_ROOT = { sequences = "Sequences", variables = "VARIABLES", macros = "Macro", bindings = "KEYBINDINGS" }
+-- Bindings' top row is its two levels in one (Editor_Tree.lua, foldBindings):
+-- the row's own value, opened and closed with the tab as the top nodes are.
+local EDITOR_TAB_FOLDED_ROOT = { bindings = "KEYBINDINGS\001AO" }
 -- The title over the tree on each.
 local EDITOR_TAB_TITLE = { sequences = "Sequences", variables = "Variables", macros = "Macros", bindings = "Bindings" }
 -- The box under the tree on each: its text, the setting behind it
@@ -2243,15 +2247,37 @@ function GSE.GUI.SetEditorTab(editframe, tab, quiet)
     local status = tree and (tree.status or tree.localstatus)
     if status then
         status.groups = status.groups or {}
+        -- Turned to another tab: the other tabs' parts of the tree close, so
+        -- the whole tree shows the open tab's part alone (Larry, 2026-11-24).
+        -- Only the top node: what was open inside it is as it was when the
+        -- Editor is turned back to that tab.
+        if changed then
+            for key, root in pairs(EDITOR_TAB_ROOT) do
+                if key ~= tab then
+                    status.groups[root] = nil
+                    if EDITOR_TAB_FOLDED_ROOT[key] then status.groups[EDITOR_TAB_FOLDED_ROOT[key]] = nil end
+                end
+            end
+        end
         status.groups[EDITOR_TAB_ROOT[tab]] = true
+        if EDITOR_TAB_FOLDED_ROOT[tab] then status.groups[EDITOR_TAB_FOLDED_ROOT[tab]] = true end
     end
     if changed and not quiet and not whole and editframe.ManageTree then editframe.ManageTree() end
 end
 
---- The Bindings tab's Keybindings section: the guide picture (GSE_Help,
---- loaded when it is asked for), in a group of the pane's own so that it
---- leaves with the page.
-function GSE.GUI.DrawKeybindGuide(container)
+-- Where the Button Bindings page's ? is drawn, from the pane's top right
+-- corner (Editor_Tree.lua, addSectionDivider): the scroll bar's 24, the
+-- page's 20 and the row's 10 in, the page's 10 down, and the 1 its 28 sits
+-- inside its 30. The help page's way back to Button Bindings is drawn on the
+-- same spot (Larry, 2026-11-24: "same location as the ? icon"), so the
+-- pointer that clicked one is on the other.
+local PAGE_CORNER_ICON = { size = 28, right = 55, top = 11 }
+
+--- The help page: the guide picture (GSE_Help, loaded when it is asked for),
+--- in a group of the pane's own so that it leaves with the page.
+--- back: icon, text (its tooltip) and click, for a button in the page's top
+--- right corner that leads back from it.
+function GSE.GUI.DrawKeybindGuide(container, back)
     local outer = UI:Create("SimpleGroup")
     outer:SetFullWidth(true)
     outer:SetFullHeight(true)
@@ -2260,7 +2286,10 @@ function GSE.GUI.DrawKeybindGuide(container)
     outer:SetCallback("OnRelease", function()
         if GSE.HideKeybindGuide then GSE.HideKeybindGuide() end
     end)
-    if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame) end
+    if back then
+        back.size, back.right, back.top = PAGE_CORNER_ICON.size, PAGE_CORNER_ICON.right, PAGE_CORNER_ICON.top
+    end
+    if GSE.CheckHelp() and GSE.ShowKeybindGuideIn then GSE.ShowKeybindGuideIn(outer.frame, back) end
 end
 
 --- Turn an editor to a tab with a page of its own and no tree: "import".
@@ -2269,21 +2298,32 @@ end
 --- Editor back to that node's tab. With the tabs turned off Import is its
 --- own window, as it was before them.
 function GSE.GUI.OpenEditorPage(editframe, page)
-    if not (editframe and page == "import") then return end
-    if GSE.GUI.EditorTabsHidden() then return GSE.ShowImport() end
+    if not (editframe and (page == "import" or page == "help")) then return end
+    if page == "import" and GSE.GUI.EditorTabsHidden() then return GSE.ShowImport() end
     if editframe.editorPage == page and editframe.loaded then
         editframe:Show()
         return
     end
     local container = editframe.treeContainer
     editframe.editorPage = page
-    for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == page) end
+    -- Help has no tab of its own: it is the Bindings tab's flyout.
+    local lit = page == "help" and "bindings" or page
+    for key, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(key == lit) end
     container:ReleaseChildren()
     editframe.loaded = nil
-    SetSequenceEditorOpenPreference(true, page)
+    -- Help is not where a reload comes back: the Editor does, where it was.
+    SetSequenceEditorOpenPreference(true, page == "import" and page or nil)
     editframe:Show()
-    editframe:SetTitle("GSE: " .. L["Import"])
-    GSE.GUI.DrawImportPage(container, editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0)
+    if page == "help" then
+        editframe:SetTitle("GSE: " .. L["Help"])
+        -- A key in the corner leads back to the Bindings (Larry, 2026-11-24),
+        -- with the tabs off too.
+        GSE.GUI.DrawKeybindGuide(container, { icon = Statics.Icons.Keybindings, text = L["Button Bindings"],
+            click = function() GSE.ShowKeyBindings(editframe) end })
+    else
+        editframe:SetTitle("GSE: " .. L["Import"])
+        GSE.GUI.DrawImportPage(container, editframe.GetScrollAreaHeight and editframe.GetScrollAreaHeight() or 0)
+    end
     editframe.loaded = true
 end
 
@@ -2386,15 +2426,22 @@ local function createEditorTab(editframe, index, def, flat)
     return tab
 end
 
--- The Editor tab's flyout: a + beside it while the mouse is on the tab or on
--- the +, which opens another Editor window (Larry, 2026-11-23). Only where
--- more than one window can be open (GSE.CanMultiWindow, GSE_QoL): without it
--- GSE.CreateEditor hands back the window there already is.
+-- A tab's flyout: a button beside it while the mouse is on the tab or on the
+-- button. The Editor tab's is a +, which opens another Editor window (Larry,
+-- 2026-11-23), only where more than one window can be open
+-- (GSE.CanMultiWindow, GSE_QoL): without it GSE.CreateEditor hands back the
+-- window there already is. The Bindings tab's is a ?, which opens GSE's help
+-- -- the keybind guide -- as a page (Timothy, 2026-11-24: a ? should have been
+-- added; Larry: "make it a Flyout from the Keybind Tab"), only while the help
+-- is turned on in the AddOn list (GSE.HelpEnabled). Nothing loads until it is
+-- clicked.
+-- def: icon, inset (how far in from the button's edges it sits), text (its
+-- tooltip), click.
 local EDITOR_FLYOUT_GAP = 6
 local EDITOR_FLYOUT_ICON_INSET = 5   -- the + a bit smaller than its button (Larry, 2026-11-23)
-local EDITOR_FLYOUT_LINGER = 0.2   -- seconds, to cross from the tab to the +
-local function addEditorTabFlyout(tab, flat)
-    local plus = newEditorTabButton(tab, Statics.ActionsIcons.Add, flat, EDITOR_FLYOUT_ICON_INSET)
+local EDITOR_FLYOUT_LINGER = 0.2   -- seconds, to cross from the tab to the flyout
+local function addEditorTabFlyout(tab, flat, def)
+    local plus = newEditorTabButton(tab, def.icon, flat, def.inset)
     plus:SetPoint("LEFT", tab, "RIGHT", EDITOR_FLYOUT_GAP, 0)
     plus:Hide()
     local function hideOnceLeft()
@@ -2408,7 +2455,7 @@ local function addEditorTabFlyout(tab, flat)
         self.tabHovered = true
         self:PaintTab()
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["New Editor Window"], 1, 1, 1)
+        GameTooltip:SetText(def.text, 1, 1, 1)
         GameTooltip:Show()
     end)
     plus:SetScript("OnLeave", function(self)
@@ -2420,8 +2467,7 @@ local function addEditorTabFlyout(tab, flat)
     plus:SetScript("OnClick", function(self)
         self:Hide()
         GameTooltip:Hide()
-        -- Asked for with no editor of its own: a new window.
-        GSE.ShowSequences()
+        def.click()
     end)
     return plus
 end
@@ -2438,9 +2484,17 @@ function GSE.GUI.CreateEditorTabs(editframe)
     -- Room for them when the window is held on screen, the flyout too.
     local room = EDITOR_TAB_SIZE + 4
     if GSE.CanMultiWindow and GSE.CanMultiWindow() then
-        editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat)
-        room = room + EDITOR_FLYOUT_GAP + EDITOR_TAB_SIZE
+        editframe.tabFlyout = addEditorTabFlyout(editframe.tabButtons.sequences, flat,
+            { icon = Statics.ActionsIcons.Add, inset = EDITOR_FLYOUT_ICON_INSET, text = L["New Editor Window"],
+              -- Asked for with no editor of its own: a new window.
+              click = function() GSE.ShowSequences() end })
     end
+    if GSE.HelpEnabled() then
+        editframe.helpFlyout = addEditorTabFlyout(editframe.tabButtons.bindings, flat,
+            { icon = Statics.Icons.Help, text = L["Help"],
+              click = function() GSE.GUI.OpenEditorPage(editframe, "help") end })
+    end
+    if editframe.tabFlyout or editframe.helpFlyout then room = room + EDITOR_FLYOUT_GAP + EDITOR_TAB_SIZE end
     editframe.tabRoom = room
     GSE.GUI.ApplyEditorTabsHidden(editframe)
 end
