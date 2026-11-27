@@ -25,7 +25,7 @@ describe("Sequence step icon", function()
     byID[info.spellID] = info
   end
   for id, info in pairs(byID) do known[id] = info end
-  local GLOBALS = { "SecureCmdOptionParse", "C_Item", "gmatch", "strlower", "IsPlayerSpell" }
+  local GLOBALS = { "SecureCmdOptionParse", "C_Item", "gmatch", "strlower", "IsPlayerSpell", "QueryCastSequence" }
   local saved, savedGetSpellInfo, savedExec
 
   -- WoW's parser out of combat: a clause needing combat is false, the rest
@@ -119,6 +119,41 @@ describe("Sequence step icon", function()
     start()
     GSE.SequencesExec = { seqA = { { type = "macro", macrotext = SURVIVAL } } }
     assert.are.equal(101, GSE.GetCurrentButtonIconInfo(button("seqA"), false).iconID)
+  end)
+
+  -- Larry, 2026-11-25: "a castsequence lines icon should advance the same as
+  -- if the sequence was moving to a new Block".
+  it("moves a /castsequence line's icon on as WoW moves the line on", function()
+    start()
+    local asked = {}
+    local at = 1
+    _G.QueryCastSequence = function(sequence)
+      asked[#asked + 1] = sequence
+      return at
+    end
+    assert.are.equal(101, GSE.GetMacroTextIconInfo(SURVIVAL).iconID, "at the start")
+    assert.are.equal("reset=3/combat Survival of the Fittest, Exhilaration", asked[1], "asked by the text after the conditions")
+    at = 2
+    assert.are.equal(102, GSE.GetMacroTextIconInfo(SURVIVAL).iconID, "once the first has gone off")
+    GSE.SequencesExec = { seqA = { { type = "macro", macrotext = SURVIVAL } } }
+    assert.are.equal(102, GSE.GetCurrentButtonIconInfo(button("seqA"), false).iconID, "on the button")
+    assert.are.equal(102, icon("/castsequence Survival of the Fittest, !Exhilaration"), "a ! is not the spell's name")
+    at = 5
+    assert.are.equal(101, GSE.GetMacroTextIconInfo(SURVIVAL).iconID, "past its end: the start")
+    _G.QueryCastSequence = function() error("no") end
+    assert.are.equal(101, GSE.GetMacroTextIconInfo(SURVIVAL).iconID, "an error: the start")
+    _G.QueryCastSequence = nil
+  end)
+
+  it("looks at the icons again as a /castsequence line moves on or starts again", function()
+    local fh = assert(io.open("GSE/API/Events.lua", "r"))
+    local events = fh:read("*a"):gsub("\r\n", "\n")
+    fh:close()
+    assert.truthy(events:find('castSequenceWatcher:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player", "pet")', 1, true))
+    for _, event in ipairs({ "PLAYER_TARGET_CHANGED", "PLAYER_REGEN_ENABLED", "PLAYER_DEAD" }) do
+      assert.truthy(events:find('castSequenceWatcher:RegisterEvent("' .. event .. '")', 1, true), event)
+    end
+    assert.truthy(events:find('castSequenceWatcher:SetScript("OnEvent", function() queueCurrentSpellIconRefresh() end)', 1, true))
   end)
 
   it("shows the block's own icon over what its macro resolves to (#2187)", function()
