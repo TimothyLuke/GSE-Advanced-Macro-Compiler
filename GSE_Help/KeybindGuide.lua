@@ -38,19 +38,43 @@ local KEYBIND_GUIDE_LINES = { left = 40, right = 460, top = 542, height = 27.25 
 local KEYBIND_GUIDE_DIM   = 0.6    -- how dark the rest of the picture goes
 local guide, picture, dim, litStep, pointedAt
 local spots, zones = {}, {}
+-- Zoom and drag (Larry, 2026-11-24: "when the user mouses over it when its
+-- small they can zoom in on the image parts and move it around as needed"):
+-- the wheel over the picture zooms about the point under the cursor, and the
+-- left button drags it while zoomed. Zoomed in, the picture spreads across
+-- the page's room before it is cut, so a wide page has no black sides
+-- (Larry, 2026-11-24: "the black sides should go way when small"). Zoomed,
+-- it is drawn from the larger file, as far in as one of that file's pixels
+-- to a screen pixel.
+local KEYBIND_GUIDE_ZOOM_STEP = 1.25   -- each turn of the wheel
+-- zoom: the page's units to one of the file's pixels, nil for the whole
+-- picture fitted (fitSide square, fitZoom). view: the part of the picture
+-- that shows, in the file's pixels. room: what the page has for it.
+local zoom, fitZoom, mostZoom, fitSide = nil, 1, 1, 1
+local view = { left = 0, top = 0, width = KEYBIND_GUIDE_PIXELS, height = KEYBIND_GUIDE_PIXELS }
+local roomWidth, roomHeight, pictureFile, dragFrom = 1, 1, nil, nil
 
 local function keybindLineBox(step)
     local list = KEYBIND_GUIDE_LINES
     return list.left, list.top + (step - 1) * list.height, list.right, list.top + step * list.height
 end
 
--- Put a region over a box of the picture, at the size the picture is shown.
--- The box is in the picture's pixels.
+-- Put a region over a box of the picture, at the size the picture is shown,
+-- cut to the part of the picture that shows. The box is in the picture's
+-- pixels. Returns the part of it that shows, or hides the region and returns
+-- nil when none does.
 local function placeOnPicture(region, left, top, right, bottom)
-    local scale = picture:GetWidth() / KEYBIND_GUIDE_PIXELS
+    left, top = math.max(left, view.left), math.max(top, view.top)
+    right, bottom = math.min(right, view.left + view.width), math.min(bottom, view.top + view.height)
+    if right <= left or bottom <= top then
+        region:Hide()
+        return nil
+    end
+    local scale = picture:GetWidth() / view.width
     region:ClearAllPoints()
-    region:SetPoint("TOPLEFT", picture, "TOPLEFT", left * scale, -top * scale)
+    region:SetPoint("TOPLEFT", picture, "TOPLEFT", (left - view.left) * scale, -(top - view.top) * scale)
     region:SetSize((right - left) * scale, (bottom - top) * scale)
+    return left, top, right, bottom
 end
 
 -- A step's boxes in the larger file's pixels, and how far to move them so the
@@ -73,11 +97,13 @@ local function grownKeybindBoxes(boxes)
     return large, move(left, right), move(top, bottom)
 end
 
--- Draw a box of a file over the picture, moved by dx, dy.
+-- Draw a box of a file over the picture, moved by dx, dy: the part of it that
+-- shows.
 local function lightKeybindSpot(spot, texture, pixels, left, top, right, bottom, dx, dy)
+    left, top, right, bottom = placeOnPicture(spot, left + dx, top + dy, right + dx, bottom + dy)
+    if not left then return end
     spot:SetTexture(texture)
-    spot:SetTexCoord(left / pixels, right / pixels, top / pixels, bottom / pixels)
-    placeOnPicture(spot, left + dx, top + dy, right + dx, bottom + dy)
+    spot:SetTexCoord((left - dx) / pixels, (right - dx) / pixels, (top - dy) / pixels, (bottom - dy) / pixels)
     spot:Show()
 end
 
@@ -99,6 +125,41 @@ local function lightKeybindStep(step)
     end
 end
 
+-- The picture's size on the page at a zoom: the fitted square, or as much
+-- of the zoomed picture as the room holds each way.
+local function keybindPictureSize(z)
+    if not z then return fitSide, fitSide end
+    return math.min(roomWidth, KEYBIND_GUIDE_PIXELS * z), math.min(roomHeight, KEYBIND_GUIDE_PIXELS * z)
+end
+
+-- Show the part of the picture in view, and put what lies over it there too.
+local function setKeybindView(z, left, top)
+    z = z and math.min(mostZoom, z)
+    if z and z <= fitZoom then z = nil end
+    zoom = z
+    local whole = KEYBIND_GUIDE_PIXELS
+    local width, height = keybindPictureSize(z)
+    picture:SetSize(width, height)
+    if z then
+        view.width, view.height = width / z, height / z
+    else
+        view.width, view.height = whole, whole
+    end
+    view.left = math.max(0, math.min(left, whole - view.width))
+    view.top = math.max(0, math.min(top, whole - view.height))
+    local file = z and KEYBIND_GUIDE_LARGE_TEXTURE or KEYBIND_GUIDE_TEXTURE
+    if file ~= pictureFile then
+        pictureFile = file
+        picture:SetTexture(file)
+    end
+    picture:SetTexCoord(view.left / whole, (view.left + view.width) / whole,
+        view.top / whole, (view.top + view.height) / whole)
+    for _, zone in ipairs(zones) do
+        if placeOnPicture(zone, unpack(zone.box)) then zone:Show() end
+    end
+    if litStep then lightKeybindStep(litStep) end
+end
+
 -- The picture's own size where it fits, else as large as the page has room
 -- for.
 local function fitKeybindGuide()
@@ -107,10 +168,66 @@ local function fitKeybindGuide()
         local _, screenHeight = GetPhysicalScreenSize()
         side = side * 768 / screenHeight / guide:GetEffectiveScale()
     end
-    local room = math.min(guide:GetWidth(), guide:GetHeight()) - KEYBIND_GUIDE_PAD * 2
-    picture:SetSize(math.max(1, math.min(side, room)), math.max(1, math.min(side, room)))
-    for _, zone in ipairs(zones) do placeOnPicture(zone, unpack(zone.box)) end
-    if litStep then lightKeybindStep(litStep) end
+    roomWidth = math.max(1, guide:GetWidth() - KEYBIND_GUIDE_PAD * 2)
+    roomHeight = math.max(1, guide:GetHeight() - KEYBIND_GUIDE_PAD * 2)
+    fitSide = math.max(1, math.min(side, roomWidth, roomHeight))
+    fitZoom = fitSide / KEYBIND_GUIDE_PIXELS
+    -- side is the whole picture one small-file pixel to a screen pixel; the
+    -- larger file goes a quarter further.
+    mostZoom = math.max(fitZoom, side / KEYBIND_GUIDE_PIXELS * KEYBIND_GUIDE_LARGE_PIXELS / KEYBIND_GUIDE_PIXELS)
+    setKeybindView(zoom, view.left, view.top)
+end
+
+-- The picture's top left corner on the page, at a width: it hangs from the
+-- middle of the page's top.
+local function keybindPictureCorner(width)
+    local left, top = guide:GetLeft(), guide:GetTop()
+    if not (left and top) then return nil end
+    return left + (guide:GetWidth() - width) / 2, top - KEYBIND_GUIDE_PAD
+end
+
+-- The cursor in the page's units; nil off the picture.
+local function cursorOnPicture()
+    local width, height = picture:GetWidth(), picture:GetHeight()
+    local left, top = keybindPictureCorner(width)
+    if not left then return nil end
+    local x, y = GetCursorPosition()
+    local scale = guide:GetEffectiveScale()
+    x, y = x / scale, y / scale
+    if x < left or x > left + width or y > top or y < top - height then return nil end
+    return x, y
+end
+
+-- The point under the cursor stays under it, the picture's size and all.
+local function zoomKeybindGuide(_, delta)
+    local x, y = cursorOnPicture()
+    if not x then return end
+    local now = zoom or fitZoom
+    local left, top = keybindPictureCorner(picture:GetWidth())
+    local fileX, fileY = view.left + (x - left) / now, view.top + (top - y) / now
+    local new = math.max(fitZoom, math.min(mostZoom, now * KEYBIND_GUIDE_ZOOM_STEP ^ delta))
+    local newLeft = keybindPictureCorner((keybindPictureSize(new > fitZoom and new or nil)))
+    setKeybindView(new, fileX - (x - newLeft) / new, fileY - (top - y) / new)
+end
+
+local function stopDraggingKeybindGuide()
+    dragFrom = nil
+    guide:SetScript("OnUpdate", nil)
+end
+
+local function dragKeybindGuide()
+    if not (zoom and IsMouseButtonDown("LeftButton")) then return stopDraggingKeybindGuide() end
+    local x, y = GetCursorPosition()
+    -- Screen units to the file's pixels.
+    local perUnit = 1 / zoom / guide:GetEffectiveScale()
+    setKeybindView(zoom, dragFrom.left - (x - dragFrom.x) * perUnit, dragFrom.top + (y - dragFrom.y) * perUnit)
+end
+
+local function startDraggingKeybindGuide(_, button)
+    if button ~= "LeftButton" or not zoom or not cursorOnPicture() then return end
+    local x, y = GetCursorPosition()
+    dragFrom = { x = x, y = y, left = view.left, top = view.top }
+    guide:SetScript("OnUpdate", dragKeybindGuide)
 end
 
 --- Show the guide in a frame, filling it.
@@ -153,19 +270,28 @@ function GSE.ShowKeybindGuideIn(parent)
                 pointedAt = nil
                 lightKeybindStep(nil)
             end)
+            -- It takes the mouse, so it drags the picture too.
+            zone:SetScript("OnMouseDown", startDraggingKeybindGuide)
+            zone:SetScript("OnMouseUp", stopDraggingKeybindGuide)
             table.insert(zones, zone)
         end
         for step = 1, #KEYBIND_GUIDE_STEPS do addZone(step, keybindLineBox(step)) end
         for step, boxes in ipairs(KEYBIND_GUIDE_STEPS) do
             for _, box in ipairs(boxes) do addZone(step, unpack(box)) end
         end
+        guide:EnableMouse(true)
+        guide:EnableMouseWheel(true)
+        guide:SetScript("OnMouseWheel", zoomKeybindGuide)
+        guide:SetScript("OnMouseDown", startDraggingKeybindGuide)
+        guide:SetScript("OnMouseUp", stopDraggingKeybindGuide)
         guide:SetScript("OnSizeChanged", fitKeybindGuide)
-        -- The picture is in memory only while it shows.
-        guide:SetScript("OnShow", function()
-            picture:SetTexture(KEYBIND_GUIDE_TEXTURE)
-            fitKeybindGuide()
-        end)
+        -- The picture is in memory only while it shows, and it comes back
+        -- whole.
+        guide:SetScript("OnShow", fitKeybindGuide)
         guide:SetScript("OnHide", function()
+            stopDraggingKeybindGuide()
+            zoom, view.left, view.top = nil, 0, 0
+            pictureFile = nil
             picture:SetTexture(nil)
             lightKeybindStep(nil)
             for _, spot in ipairs(spots) do spot:SetTexture(nil) end
@@ -175,7 +301,6 @@ function GSE.ShowKeybindGuideIn(parent)
     guide:ClearAllPoints()
     guide:SetAllPoints(parent)
     guide:SetFrameLevel(parent:GetFrameLevel() + 1)
-    picture:SetTexture(KEYBIND_GUIDE_TEXTURE)
     guide:Show()
     fitKeybindGuide()
 end
