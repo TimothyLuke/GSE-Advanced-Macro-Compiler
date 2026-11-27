@@ -2718,6 +2718,31 @@ do
             end
         end
         local function stateLabel(k) return k == "Default" and L["Default"] or states[k] end
+        -- The sequence a state holds, so each State choice says what is on it:
+        -- "Battle Stance: Armsie", "Defensive Stance: Def" (Tim, 2026-11-27:
+        -- "i cant tell that i have Armsie or def set on this stance"). On a
+        -- button showing a sequence the ticks move that one, and the names
+        -- follow them.
+        local function stateHolder(k)
+            local held
+            if k == "Default" then
+                held = GSE.ButtonOverrideDefaults and GSE.ButtonOverrideDefaults[buttonName]
+                    and GSE.ButtonOverrides and GSE.ButtonOverrides[buttonName]
+            else
+                held = GSE.ButtonOverrideStates and GSE.ButtonOverrideStates[buttonName]
+                    and GSE.ButtonOverrideStates[buttonName][k]
+            end
+            if existingSequence then
+                if toStates[k] then return existingSequence end
+                if held == existingSequence then return nil end
+            end
+            return held or nil
+        end
+        local function stateChoiceText(k)
+            local held = stateHolder(k)
+            if not held then return stateLabel(k) end
+            return stateLabel(k) .. ": " .. (GSE.SequenceName(held) or held)
+        end
         -- The ticked states, in the menu's order.
         local function pickedStates()
             local picked = {}
@@ -2739,9 +2764,17 @@ do
             end)
             for _, choice in ipairs(choices) do
                 local create = multi and row.CreateCheckbox or row.CreateRadio
-                create(row, choice.text, choice.isSelected, function()
+                -- text: a string, or a function for one that changes with the
+                -- picks.
+                local text = choice.text
+                local element = create(row, type(text) == "function" and text() or text, choice.isSelected, function()
                     return choice.select() or MenuResponse.Refresh
                 end)
+                if type(text) == "function" and element and element.AddInitializer then
+                    element:AddInitializer(function(frame)
+                        if frame.fontString then frame.fontString:SetText(text()) end
+                    end)
+                end
             end
         end
 
@@ -2796,7 +2829,16 @@ do
         local function generator(ownerRegion, rootDescription)
             if existingSequence then
                 -- gse-button holds the sequence's id; show its label.
-                rootDescription:CreateTitle(L["GSE"] .. ": " .. (GSE.SequenceName(existingSequence) or existingSequence))
+                -- And the state it is on here, where the button has more
+                -- than one: "GSE: Armsie (Battle Stance)".
+                local where = ""
+                if states then
+                    local now = GSE.OverrideStateFor and GSE.OverrideStateFor(self)
+                    now = now ~= nil and states[tostring(now)] and tostring(now) or "Default"
+                    where = " (" .. stateLabel(now) .. ")"
+                end
+                rootDescription:CreateTitle(L["GSE"] .. ": "
+                    .. (GSE.SequenceName(existingSequence) or existingSequence) .. where)
                 if layer == "loadout" then
                     rootDescription:CreateTitle(string.format(L["From talent loadout %s"], loadoutName or ""))
                 end
@@ -2832,7 +2874,7 @@ do
                 local choices = {}
                 for _, k in ipairs(stateOrder) do
                     choices[#choices + 1] = {
-                        text = stateLabel(k),
+                        text = function() return stateChoiceText(k) end,
                         isSelected = function() return toStates[k] == true end,
                         select = function()
                             -- On a button showing a sequence the ticks are
