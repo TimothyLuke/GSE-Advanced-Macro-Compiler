@@ -1056,7 +1056,10 @@ local SECTION_ICON_SIZE      = 28   -- icon size
 local SECTION_FONT_HEIGHT    = 30   -- text row height
 local SECTION_HEADER_TOP     = 10   -- container top padding for any grey-line section header
 
-local function addSectionDivider(container, title, icon)
+-- help: a function. The row then has a ? at its right end that runs it, for
+-- a page whose help is otherwise a tab's flyout, which goes with the tabs
+-- (Larry, 2026-11-24: "add a ? Icon incase the user has the tabs off").
+local function addSectionDivider(container, title, icon, help)
     if title then
         -- Account for container top padding so content centres in the full visible space
         local containerTop = GSE.GUI.CONTENT_PADDING or 20
@@ -1097,6 +1100,29 @@ local function addSectionDivider(container, title, icon)
             end
         end
         headerRow:AddChild(heading)
+        if help then
+            local helpIcon = UI:Create("Icon")
+            helpIcon:SetImage(Statics.Icons.Help)
+            helpIcon:SetImageSize(SECTION_ICON_SIZE, SECTION_ICON_SIZE)
+            helpIcon:SetWidth(SECTION_ICON_SIZE + 2)
+            helpIcon:SetHeight(SECTION_FONT_HEIGHT)
+            helpIcon:SetCallback("OnEnter", function(widget)
+                GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["Help"], 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            helpIcon:SetCallback("OnLeave", function() GameTooltip:Hide() end)
+            helpIcon:SetCallback("OnClick", function()
+                GameTooltip:Hide()
+                help()
+            end)
+            -- At the row's right end, as far in as the title is at the left.
+            -- The help page's way back is drawn on this spot (Editor.lua,
+            -- PAGE_CORNER_ICON): move one, move the other.
+            helpIcon.flowRightAlign = true
+            helpIcon.flowXOffset = -SECTION_HEADER_LEFT
+            headerRow:AddChild(helpIcon)
+        end
         container:AddChild(headerRow)
     end
 
@@ -1410,17 +1436,11 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
     if not unique then return end
 
     -- Where GSE binds no keys itself (buildKeybindMenu) there is no chooser
-    -- and there are no keybind pages. The Keybindings section shows the
-    -- keybind guide from GSE's help while that is turned on; the Bindings
-    -- node, and anything else, land on the current spec's Button Bindings.
+    -- and there are no keybind pages: the Bindings node, and a Keybindings
+    -- node saved by an older build, land on the current spec's Button
+    -- Bindings.
     if not GSE.KeybindingsEnabled() and (#unique == 1 or unique[2] == "KB") then
-        if unique[2] == "KB" and GSE.HelpEnabled() then
-            ShowSectionFooter(editframe)
-            container:ReleaseChildren()
-            GSE.GUI.DrawKeybindGuide(container)
-            editframe.loaded = true
-            editframe:SetTitle("GSE: " .. L["Keybindings"])
-        elseif editframe.treeContainer and editframe.treeContainer.SelectByValue then
+        if editframe.treeContainer and editframe.treeContainer.SelectByValue then
             editframe.forceTreeSelection = true
             editframe.treeContainer:SelectByValue(GSE.GUI.BindingsPath("AO", GSE.CurrentSpecKey()))
         end
@@ -1472,7 +1492,7 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         -- spec + button combinations) exceeds the editor's visible height.
         local rc = makeScrollableRightPane(container)
         if withDivider then
-            addSectionDivider(rc, withDivider.title, withDivider.icon)
+            addSectionDivider(rc, withDivider.title, withDivider.icon, withDivider.help)
         end
         return rc
     end
@@ -1485,7 +1505,11 @@ local function onClick_KEYBINDINGS(editframe, container, group, unique)
         editframe:SetTitle("GSE: " .. (L["Keybindings"] or "Keybindings"))
     elseif kbtype == "AO" and specialization then
         if editframe.loaded then container:ReleaseChildren(); editframe.loaded = nil end
-        local rc = makeRightContainer({title = L["Button Bindings"] or "Button Bindings", icon = Statics.Icons.Button})
+        -- The keybind guide, while GSE's help is turned on: reachable here
+        -- with the tabs off, where the Bindings tab's ? is not.
+        local help = GSE.HelpEnabled() and function() GSE.GUI.OpenEditorPage(editframe, "help") end or nil
+        -- The key, as its row in the tree has (Larry, 2026-11-24).
+        local rc = makeRightContainer({title = L["Button Bindings"] or "Button Bindings", icon = Statics.Icons.Keybindings, help = help})
         editframe.showKeybind(nil, nil, specialization, loadout, "AO", rc)
         editframe.loaded = true
         editframe:SetTitle("GSE: " .. (L["Button Bindings"] or "Button Bindings"))
@@ -2091,6 +2115,20 @@ local function copyNode(n)
     return c
 end
 
+-- Bindings with one area in it is one row, not a row inside a row (Larry,
+-- 2026-11-24: "fold them into one row - use the Keybind Icon"): the area's
+-- name, Button Bindings, under the Bindings' own key icon. That is every
+-- client now, where GSE binds no keys itself and Keybindings is left out
+-- (buildKeybindMenu). The row's value is both levels' ("KEYBINDINGS\001AO"),
+-- so every path under it is what it was, and a node saved by its path -- the
+-- last one open, what was expanded -- is still found.
+local function foldBindings(bindings)
+    local area = bindings and bindings.children and #bindings.children == 1 and bindings.children[1]
+    if not area then return bindings end
+    return { value = bindings.value .. "\001" .. area.value, text = area.text, icon = bindings.icon,
+        children = area.children }
+end
+
 -- `bindings`: the Bindings node (buildKeybindMenu), for the class grouping,
 -- which puts it in the player's class's group.  It is this character's
 -- class's, so inside that group it drops its own class level: each area
@@ -2178,7 +2216,7 @@ local function buildGroupedTree(editframe, grouping, classtree, bindings)
                 pathOf[byType .. "\001" .. tostring(cid)] = grouped
             end
             pathOf["KEYBINDINGS"] = group.value .. "\001KEYBINDINGS"
-            table.insert(group.children, bindings)
+            table.insert(group.children, foldBindings(bindings))
         end
         table.sort(groups, function(a, b)
             if a.value == GROUP_PREFIX .. "class:0" then return false end
@@ -2526,7 +2564,7 @@ local function ManageTree(editframe)
         table.insert(tree, { value = "VARIABLES\001NEWVARIABLES", text = L["New Variable"],
             icon = Statics.ActionsIcons.Add })
         for _, g in ipairs(groups) do table.insert(tree, g) end
-        if grouping ~= "class" and bindings then table.insert(tree, bindings) end
+        if grouping ~= "class" and bindings then table.insert(tree, foldBindings(bindings)) end
         editframe.treeGroupedPaths = pathOf
     else
         local subtree = {
@@ -2591,7 +2629,7 @@ local function ManageTree(editframe)
         table.insert(tree, subtree)
         -- nil where the editor has no Bindings area (buildKeybindMenu).
         local bindings = editframe.buildKeybindMenu()
-        if bindings then table.insert(tree, bindings) end
+        if bindings then table.insert(tree, foldBindings(bindings)) end
         local variables, variablePaths = editframe.buildVariablesMenu()
         table.insert(tree, variables)
         -- "VARIABLES\001<name>" -> its place in its class folder.
@@ -2641,6 +2679,12 @@ local function ManageTree(editframe)
         end
         treeContainer.gseGroupedSelect = true
     end
+    -- A click on any row of Bindings goes to that row's page, whether the
+    -- row is open, or already the selected one, or a page of the Editor's
+    -- own (Help) is up over it; its +/- box opens and closes it (Larry,
+    -- 2026-11-24: "single clicking any of Bindings Tree should bring the user
+    -- back to that level on the page").
+    treeContainer.rowClickSelects = function(path) return GSE.GUI.TabOfTreePath(path) == "bindings" end
     if not GSE.GUI.EditorTreeWhole() then
         tree = narrowTreeToTab(tree, editframe.editorTab or "sequences")
     elseif GSE.GUI.EditorTabsHidden() then
@@ -2886,6 +2930,15 @@ local function ManageTree(editframe)
                     end
                 end
             else
+                -- A node picked by hand draws its page over a page of the
+                -- Editor's own (Import, Help), which is then no longer up:
+                -- left as up, asking for that page again did nothing. The
+                -- tree's own tab lights again.
+                if editframe.editorPage then
+                    editframe.editorPage = nil
+                    local open = editframe.editorTab or "sequences"
+                    for tabKey, button in pairs(editframe.tabButtons or {}) do button:SetTabChecked(tabKey == open) end
+                end
                 -- Reopen in the area last used, on the node last used in it.
                 -- openMode otherwise stays whatever first opened the editor.
                 if area == "Sequences" then

@@ -503,15 +503,10 @@ local function buildKeybindMenu()
     -- Keybindings: its spec pages where GSE still binds keys to sequences
     -- itself. It does not on any client now (Init.lua,
     -- GSE.DirectKeybindsRetired); there the section has no pages of its own
-    -- and shows the keybind guide from GSE's help (Editor_Tree.lua,
-    -- onClick_KEYBINDINGS), and with the help turned off it is left out.
-    if not GSE.KeybindingsEnabled() then
-        if GSE.HelpEnabled() then
-            tree[2].children = nil
-        else
-            table.remove(tree, 2)
-        end
-    end
+    -- and is left out (Larry, 2026-11-24: "remove this from the Tree"). The
+    -- keybind guide it showed is the help page now: the ? beside the
+    -- Bindings tab and on the Button Bindings page.
+    if not GSE.KeybindingsEnabled() then table.remove(tree, 2) end
 
     -- Covers BOTH of its children: an override binds a sequence to a button,
     -- a keybind binds it to a key. Naming the parent "Keybindings" put a
@@ -1708,9 +1703,24 @@ local function sizeGlyphs(text, size)
     end))
 end
 
+-- A key in short: s, c and a for Shift, Ctrl and Alt, then the key by WoW's
+-- name for it, a + between -- s+F1, a+c+1 (Larry, 2026-11-24: "use s c and a
+-- for shift ctrl alt + Key", then "s-F1, a-c-1 > s+F1, a+c+1"). Built from
+-- the binding's own text (SHIFT-F1), which is the same on every client.
+local KEY_MODIFIER_LETTERS = { SHIFT = "s", CTRL = "c", ALT = "a", META = "m" }
+local function shortKeyText(key)
+    local modifiers, base = "", key
+    while true do
+        local modifier, rest = string.match(base, "^(%u+)%-(.+)$")
+        local letter = modifier and KEY_MODIFIER_LETTERS[modifier]
+        if not letter then break end
+        modifiers, base = modifiers .. letter .. "+", rest
+    end
+    return modifiers .. (GetBindingText and GetBindingText(base) or base)
+end
+
 -- Every key on the binding, as Key Bindings lists them (Move Forward: W and
--- Up Arrow), joined by `separator` -- ", " in the column, a line each in the
--- tooltip, where the column is too narrow to show more than one.
+-- Up Arrow), each in short (shortKeyText), joined by `separator`.
 local function buttonKeysText(buttonName, separator)
     if GSE.isEmpty(buttonName) then return nil end
     local keys = {}
@@ -1728,7 +1738,7 @@ local function buttonKeysText(buttonName, separator)
     -- ConsolePort's buttons are the pad buttons themselves.
     if #keys == 0 and string.sub(buttonName, 1, 4) == "CPB_" then keys = {string.sub(buttonName, 5)} end
     local shown = {}
-    for _, key in ipairs(keys) do shown[#shown + 1] = GetBindingText and GetBindingText(key) or key end
+    for _, key in ipairs(keys) do shown[#shown + 1] = shortKeyText(key) end
     if #shown > 0 then return table.concat(shown, separator or ", ") end
     local frame = _G[buttonName]
     local hotKey = type(frame) == "table" and ((frame.TextOverlayContainer and frame.TextOverlayContainer.HotKey)
@@ -1738,81 +1748,25 @@ local function buttonKeysText(buttonName, separator)
     return nil
 end
 
--- A LibActionButton button's states; Blizzard's main bar's and Dominos'
--- stance, form and stealth pages (7-10); and the state a row is saved for
--- (saved), so it is never lost from the list.
-local BONUS_PAGES = {"7", "8", "9", "10"}
--- The form, stance or stealth that puts a class on each of those pages
--- (6 + its bonus bar). Shadowform and a monk's stances leave the bar where it
--- is, and Soar brings up the Skyriding bar (11), so none of them name a page.
--- A spell this client doesn't have names nothing; the page shows its number.
-local FORM_PAGES = {
-    DRUID = {["7"] = 768, ["8"] = 33891, ["9"] = 5487, ["10"] = 24858},
-    ROGUE = {["7"] = 1784, ["8"] = 51713},
-}
--- Warriors' stances page the bar up to Cataclysm, and on WoW Forever; from
--- Mists of Pandaria on they leave it where it is.
-if GSE.GameMode < 5 or GSE.IsForever then
-    FORM_PAGES.WARRIOR = {["7"] = 2457, ["8"] = 71, ["9"] = 2458}
-end
--- A button's states by name, "5 (Cat Form / Prowl)": from its bar's page
--- driver (GSE.PageDriverNames), where the bar addon lets the player choose
--- the pages; Blizzard's main bar and Dominos by the pages above. A state
--- nothing names shows its number.
-local function stateNamer(buttonName)
-    local classfile = GetClassInfo and select(2, GetClassInfo(GSE.GetCurrentClassID()))
-    local driver = GSE.ButtonPageDriver and GSE.ButtonPageDriver(buttonName)
-    local names = driver and GSE.PageDriverNames(driver, classfile)
-    return function(k)
-        local name
-        if names then
-            name = names[k] and table.concat(names[k], " / ")
-        elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
-            local spell = classfile and FORM_PAGES[classfile] and FORM_PAGES[classfile][k]
-            local info = spell and GSE.GetSpellInfo(spell)
-            name = info and info.name
-        end
-        return name and (k .. " (" .. name .. ")") or k
-    end
-end
+-- A button's states to choose from, and their order, Default first -- or nil
+-- when it has only the one. GSE.OverrideStatesFor's (Profiles.lua), less any
+-- nothing names, as the buttons' right-click menu offers them: a page no
+-- form, stance or stealth of this class brings up on this client, or one the
+-- character has not learned, is no choice (Larry, 2026-11-24: "hide the
+-- states my class cant reach" -- a rogue was offered 8, 9 and 10). The state
+-- a row is saved for (saved) stays, named or not, so it is never lost.
 local function stateListFor(buttonName, saved)
-    local frame = buttonName and _G[buttonName]
-    local states, order = {["Default"] = "Default"}, {"Default"}
-    local stateLabel = stateNamer(buttonName)
-    local function add(k)
-        if k ~= nil and not states[k] then
-            states[k] = stateLabel(k)
-            table.insert(order, k)
+    local states, order = GSE.OverrideStatesFor(buttonName, saved)
+    if not states then return nil end
+    local list, kept = {}, {}
+    for _, k in ipairs(order) do
+        if k == "Default" or states[k] ~= k or k == saved then
+            list[k] = states[k]
+            kept[#kept + 1] = k
         end
     end
-    if frame and frame.state_types then
-        local default = stateDefaultFor(buttonName)
-        for k in pairs(frame.state_types) do
-            if k ~= default and k ~= buttonName then add(k) end
-        end
-    elseif GSE.ButtonPagesWithForms and GSE.ButtonPagesWithForms(buttonName) then
-        -- A bar paging by its own driver (EllesmereUI): the pages it sends a
-        -- form or modifier to. Blizzard's main bar and Dominos: 7-10.
-        local pages = BONUS_PAGES
-        if frame.SetShowGridInsecure == nil and GSE.ButtonPageDriver(buttonName) then
-            pages = {}
-            for page = 1, 10 do
-                if GSE.DriverStateForPage(buttonName, page) then pages[#pages + 1] = tostring(page) end
-            end
-        end
-        for _, k in ipairs(pages) do add(k) end
-    end
-    add(saved)
-    if #order == 1 then return nil end
-    -- Default, then the pages by number, then any state named otherwise.
-    table.sort(order, function(a, b)
-        if a == "Default" or b == "Default" then return a == "Default" and b ~= "Default" end
-        local na, nb = tonumber(a), tonumber(b)
-        if na and nb then return na < nb end
-        if na or nb then return na ~= nil end
-        return tostring(a) < tostring(b)
-    end)
-    return states, order
+    if #kept < 2 then return nil end
+    return list, kept
 end
 
 -- ponytail: a second copy of the keybind panel's skeleton (header, headings,
@@ -2274,23 +2228,12 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
         end
 
         -- The button's key and its backup key: its first binding in WoW's Key
-        -- Bindings, then the rest, as that panel lists them.  Shown only: keys
-        -- are set in WoW's own Key Bindings, and the row follows (UPDATE_BINDINGS).
-        local function keyCell(width)
-            local cell = UI:Create("InteractiveLabel")
-            cell:SetWidth(width)
-            cell:SetJustifyH("CENTER")
-            cell:SetJustifyV("MIDDLE")
-            cell:SetCallback("OnEnter", function()
-                local hint = L["Set for this button in WoW's Key Bindings.  Change this in WoW's Options -> Keybindings."]
-                local all = buttonKeysText(model.bind, "\n")
-                GSE.CreateToolTip(L["Key"], all and (all .. "\n\n" .. hint) or hint, editframe)
-            end)
-            cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
-            return cell
-        end
-        local key, keys = keyCell(cols.key), keyCell(cols.keys)
-        local refreshButtonText
+        -- Bindings, then the rest, as that panel lists them.  Buttons (Larry,
+        -- 2026-11-24: "make these Buttons again"), shown and never set here:
+        -- a click opens WoW's own Key Bindings at this button's section, as
+        -- the bar buttons' right-click Keybind row does, and the row follows
+        -- (UPDATE_BINDINGS).  They narrow with their columns
+        -- (fitOverrideColumns), so the row stays one line at the narrowest.
         -- WoW's keys for the button: the first, then every further one.
         local function keyTexts()
             local all = buttonKeysText(model.bind, "\001")
@@ -2299,6 +2242,30 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             if not first then return all end
             return first, (string.gsub(rest, "\001", ", "))
         end
+        local function keyCell(width)
+            local cell = UI:Create("Button")
+            cell:SetWidth(width)
+            cell:SetHeight(KB_ROW_HEIGHT)
+            -- What a click does, and no more: three short lines, centred
+            -- (Larry, 2026-11-24).  The keys are on the buttons already.
+            cell:SetCallback("OnEnter", function()
+                GSE.CreateToolTip("", L["Click to Open and Set in\nBlizzard's Keybind\nMenu"], editframe)
+            end)
+            cell:SetCallback("OnLeave", function() GSE.ClearTooltip(editframe) end)
+            cell:SetCallback("OnClick", function()
+                GSE.ClearTooltip(editframe)
+                if GSE.isEmpty(model.bind) then return end
+                -- Opening WoW's Options is protected in combat.
+                if InCombatLockdown() then
+                    GSE.Print(L["Button Bindings"] .. ": " .. (ERR_NOT_IN_COMBAT or "not in combat"))
+                    return
+                end
+                GSE.GUIOpenButtonKeyBindings(model.bind)
+            end)
+            return cell
+        end
+        local key, keys = keyCell(cols.key), keyCell(cols.keys)
+        local refreshButtonText
         local function fillKeyCell(cell, width, text)
             if text and text:find("|A:", 1, true) then
                 -- Controller glyphs: sized to the row (their atlases carry
@@ -2306,8 +2273,8 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
                 -- through the |A..|a markup prints it as text.
                 cell:SetText(sizeGlyphs(text, 22))
             else
-                if text then text = fitText(cell.text, text, width - 4) end
-                cell:SetText(KB_INHERITED_COLOUR .. (text or "-") .. Statics.StringReset)
+                if text then text = fitText(cell.text, text, width - 12) end
+                cell:SetText(text or "-")
             end
             cell:SetHeight(KB_ROW_HEIGHT)
         end
@@ -2315,6 +2282,9 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
             local first, second = keyTexts()
             fillKeyCell(key, cols.key, first)
             fillKeyCell(keys, cols.keys, second)
+            -- No button yet, nothing to bind: greyed until one is picked.
+            key:SetDisabled(GSE.isEmpty(model.bind))
+            keys:SetDisabled(GSE.isEmpty(model.bind))
             if refreshButtonText then refreshButtonText() end
         end
         -- A key set in WoW's Key Bindings while the pane is open shows at once.
@@ -2579,7 +2549,10 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     end
     local headerText = iconText(GSE.GetClassIcon(classid), classColour .. (classname or "") .. Statics.StringReset, 22)
     if specname then
-        headerText = headerText .. "  -  " .. iconText(specicon, classColour .. specname .. Statics.StringReset, 22)
+        -- The spec's icon after its name, as the class's is before its own:
+        -- the line reads between its two icons (Larry, 2026-11-24).
+        headerText = headerText .. "  -  " .. classColour .. specname .. Statics.StringReset
+            .. (specicon and (" |T" .. specicon .. ":22:22|t") or "")
     end
     -- Sized to its text, so the centred row centres it: a label as wide as
     -- every column together is wider than the pane, and the layout then
@@ -2710,7 +2683,19 @@ showOverridePanel = function(editframe, specialization, loadout, rightContainer)
     end
 
     if rightContainer.SetListGap then rightContainer:SetListGap(4) end
-    rightContainer:AddChild(centeredRow(headerLabel))
+    -- The heading centred on the page, not on the page less the strip its
+    -- right edge keeps for a scroll bar: centred on what was left, it sat
+    -- 12.5 left of the page's middle at every width (measured in game, Larry,
+    -- 2026-11-24: "keep this row centered on the window", on the page area).
+    -- Half that strip, read off the pane each layout, puts it back.
+    local headerRow = centeredRow(headerLabel)
+    headerRow.beforeLayout = function()
+        local pane, view = rightContainer.frame, rightContainer.scrollframe
+        local paneRight = pane and pane.GetRight and pane:GetRight()
+        local viewRight = view and view.GetRight and view:GetRight()
+        headerLabel.flowXOffset = (paneRight and viewRight) and math.floor((paneRight - viewRight) / 2 + 0.5) or 0
+    end
+    rightContainer:AddChild(headerRow)
     -- As on the keybind panel: no loadout line without talent loadouts.
     if loadout or GSE.HasTalentLoadouts() then rightContainer:AddChild(loadoutRow) end
     local sharedRow = not loadout and sharedProfileRow(editframe, specialization, classname) or nil
